@@ -1,15 +1,24 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 
+<<<<<<< HEAD
 export default function Pricing({ onOrderCreated, currentUser, onOpenLogin }) {
+=======
+export default function Pricing({ onOrderCreated }) {
+>>>>>>> e2e81f391c4379bdef82cb04f6e1e391fed0e7bc
   const [plans, setPlans] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
   // State Modal Checkout
   const [selectedPlan, setSelectedPlan] = useState(null);
+<<<<<<< HEAD
   const [customerName, setCustomerName] = useState(currentUser ? currentUser.name : 'Muhammad Hasran (UMKM Donat)');
   const [customerEmail, setCustomerEmail] = useState(currentUser ? currentUser.email : 'hasran.donat@gmail.com');
+=======
+  const [customerName, setCustomerName] = useState('Muhammad Hasran (UMKM Donat)');
+  const [customerEmail, setCustomerEmail] = useState('hasran.donat@gmail.com');
+>>>>>>> e2e81f391c4379bdef82cb04f6e1e391fed0e7bc
   const [paymentMethod, setPaymentMethod] = useState('Virtual Account');
   const [paymentChannel, setPaymentChannel] = useState('BCA Virtual Account');
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -17,6 +26,7 @@ export default function Pricing({ onOrderCreated, currentUser, onOpenLogin }) {
 
   const API_BASE = 'http://localhost:5000/api';
 
+<<<<<<< HEAD
   // Sinkronisasi data user aktif saat checkout
   useEffect(() => {
     if (currentUser) {
@@ -25,6 +35,8 @@ export default function Pricing({ onOrderCreated, currentUser, onOpenLogin }) {
     }
   }, [currentUser]);
 
+=======
+>>>>>>> e2e81f391c4379bdef82cb04f6e1e391fed0e7bc
   // 1. Fetch katalog produk dari backend Node.js menggunakan Axios
   useEffect(() => {
     fetchProducts();
@@ -63,7 +75,11 @@ export default function Pricing({ onOrderCreated, currentUser, onOpenLogin }) {
     setIsSubmitting(true);
     try {
       const payload = {
+<<<<<<< HEAD
         user_id: currentUser ? currentUser.id : 2, // Sesuai user yang login (default: Hasran)
+=======
+        user_id: 2, // Sesuai customer persona LKM (Muhammad Hasran)
+>>>>>>> e2e81f391c4379bdef82cb04f6e1e391fed0e7bc
         plan_id: selectedPlan.id,
         payment_method: selectedPlan.price === 0 || selectedPlan.price === '0.00' ? 'Free Activation' : paymentMethod,
         payment_channel: selectedPlan.price === 0 || selectedPlan.price === '0.00' ? 'System' : paymentChannel

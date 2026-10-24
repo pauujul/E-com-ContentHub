@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 
+<<<<<<< HEAD
 export default function OrderHistory({ refreshKey, currentUser, onOpenLogin }) {
   const [orders, setOrders] = useState([]);
   const [stats, setStats] = useState(null);
@@ -49,11 +50,36 @@ export default function OrderHistory({ refreshKey, currentUser, onOpenLogin }) {
     } catch (err) {
       console.error('Error fetching data:', err);
       setError('Gagal memuat data transaksi dari server backend.');
+=======
+export default function OrderHistory({ refreshKey }) {
+  const [orders, setOrders] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  const API_BASE = 'http://localhost:5000/api';
+
+  useEffect(() => {
+    fetchOrders();
+  }, [refreshKey]);
+
+  const fetchOrders = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const res = await axios.get(`${API_BASE}/orders`);
+      if (res.data && res.data.data) {
+        setOrders(res.data.data);
+      }
+    } catch (err) {
+      console.error('Error fetching orders:', err);
+      setError('Gagal memuat data transaksi dari backend.');
+>>>>>>> e2e81f391c4379bdef82cb04f6e1e391fed0e7bc
     } finally {
       setLoading(false);
     }
   };
 
+<<<<<<< HEAD
   // Khusus Admin: Update status pembayaran pesanan
   const handleUpdateStatus = async (orderId, newStatus) => {
     try {
@@ -74,6 +100,8 @@ export default function OrderHistory({ refreshKey, currentUser, onOpenLogin }) {
     }
   };
 
+=======
+>>>>>>> e2e81f391c4379bdef82cb04f6e1e391fed0e7bc
   const formatRupiah = (val) => {
     const num = parseFloat(val);
     if (isNaN(num) || num === 0) return 'Rp 0 (Gratis)';
@@ -86,6 +114,7 @@ export default function OrderHistory({ refreshKey, currentUser, onOpenLogin }) {
 
   return (
     <div className="container" style={{ padding: '32px 20px 64px' }}>
+<<<<<<< HEAD
       {/* Header Halaman */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '24px', flexWrap: 'wrap', gap: '16px' }}>
         <div>
@@ -202,6 +231,35 @@ export default function OrderHistory({ refreshKey, currentUser, onOpenLogin }) {
       )}
 
       {loading && <p style={{ textAlign: 'center', padding: '30px', color: '#64748b' }}>Memuat transaksi dari PostgreSQL...</p>}
+=======
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+        <div>
+          <h2 style={{ fontSize: '24px', fontWeight: 800, color: '#0f172a' }}>
+            💳 Riwayat Transaksi & Langganan
+          </h2>
+          <p style={{ color: '#64748b', fontSize: '14px' }}>
+            Data tersinkronisasi langsung dari database PostgreSQL (`orders` & `users`).
+          </p>
+        </div>
+        <button 
+          onClick={fetchOrders}
+          style={{
+            padding: '8px 16px',
+            background: '#e0e7ff',
+            color: '#4338ca',
+            border: 'none',
+            borderRadius: '8px',
+            cursor: 'pointer',
+            fontWeight: 600,
+            fontSize: '13px'
+          }}
+        >
+          🔄 Refresh Data
+        </button>
+      </div>
+
+      {loading && <p style={{ textAlign: 'center', padding: '30px', color: '#64748b' }}>Memuat transaksi...</p>}
+>>>>>>> e2e81f391c4379bdef82cb04f6e1e391fed0e7bc
 
       {error && (
         <div style={{ background: '#fef2f2', color: '#991b1b', padding: '12px 16px', borderRadius: '8px' }}>
@@ -221,14 +279,22 @@ export default function OrderHistory({ refreshKey, currentUser, onOpenLogin }) {
                 <th>Metode Bayar</th>
                 <th>Status</th>
                 <th>Waktu Transaksi</th>
+<<<<<<< HEAD
                 {isAdmin && <th>Aksi Admin</th>}
+=======
+>>>>>>> e2e81f391c4379bdef82cb04f6e1e391fed0e7bc
               </tr>
             </thead>
             <tbody>
               {orders.length === 0 ? (
                 <tr>
+<<<<<<< HEAD
                   <td colSpan={isAdmin ? 8 : 7} style={{ textAlign: 'center', padding: '36px', color: '#94a3b8' }}>
                     Belum ada riwayat transaksi pada akun ini. Silakan pilih paket di menu Katalog Paket!
+=======
+                  <td colSpan="7" style={{ textAlign: 'center', padding: '30px', color: '#94a3b8' }}>
+                    Belum ada riwayat transaksi. Silakan lakukan pemesanan di menu Paket & Harga!
+>>>>>>> e2e81f391c4379bdef82cb04f6e1e391fed0e7bc
                   </td>
                 </tr>
               ) : (
@@ -242,6 +308,7 @@ export default function OrderHistory({ refreshKey, currentUser, onOpenLogin }) {
                       <div style={{ fontSize: '12px', color: '#64748b' }}>{ord.customer_email}</div>
                     </td>
                     <td>
+<<<<<<< HEAD
                       <div style={{ fontWeight: 600 }}>{ord.plan_name}</div>
                       <span style={{ fontSize: '12px', color: '#64748b' }}>({ord.billing_cycle})</span>
                     </td>
@@ -250,11 +317,22 @@ export default function OrderHistory({ refreshKey, currentUser, onOpenLogin }) {
                     <td>
                       <span className={`badge-status ${ord.status.toLowerCase()}`}>
                         {ord.status === 'Paid' ? '✓ LUNAS' : ord.status === 'Pending' ? '⏳ PENDING' : '✕ BATAL'}
+=======
+                      <div>{ord.plan_name}</div>
+                      <span style={{ fontSize: '12px', color: '#64748b' }}>({ord.billing_cycle})</span>
+                    </td>
+                    <td style={{ fontWeight: 600 }}>{formatRupiah(ord.total_amount)}</td>
+                    <td>{ord.payment_channel || ord.payment_method}</td>
+                    <td>
+                      <span className={`badge-status ${ord.status.toLowerCase()}`}>
+                        {ord.status}
+>>>>>>> e2e81f391c4379bdef82cb04f6e1e391fed0e7bc
                       </span>
                     </td>
                     <td style={{ fontSize: '13px', color: '#64748b' }}>
                       {new Date(ord.created_at).toLocaleString('id-ID')}
                     </td>
+<<<<<<< HEAD
                     {isAdmin && (
                       <td>
                         {ord.status === 'Pending' ? (
@@ -282,6 +360,8 @@ export default function OrderHistory({ refreshKey, currentUser, onOpenLogin }) {
                         )}
                       </td>
                     )}
+=======
+>>>>>>> e2e81f391c4379bdef82cb04f6e1e391fed0e7bc
                   </tr>
                 ))
               )}

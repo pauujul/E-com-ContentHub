@@ -15,6 +15,7 @@ app.get('/', (req, res) => {
   res.json({
     status: 'success',
     message: 'ContentHub Backend API berjalan aktif!',
+<<<<<<< HEAD
     version: '1.1.0',
     tim: 'Amigos Team',
     endpoints: [
@@ -27,6 +28,15 @@ app.get('/', (req, res) => {
       'POST /api/orders',
       'PATCH /api/orders/:id/status',
       'GET /api/admin/stats'
+=======
+    version: '1.0.0',
+    tim: 'Amigos Team',
+    endpoints: [
+      'GET /api/health',
+      'GET /api/products',
+      'GET /api/orders',
+      'POST /api/orders'
+>>>>>>> e2e81f391c4379bdef82cb04f6e1e391fed0e7bc
     ]
   });
 });
@@ -49,6 +59,7 @@ app.get('/api/health', async (req, res) => {
 });
 
 // ==========================================
+<<<<<<< HEAD
 // 1. ENDPOINT AUTENTIKASI: LOGIN & USER LIST
 // ==========================================
 
@@ -265,6 +276,9 @@ app.get('/api/auth/me', async (req, res) => {
 
 // ==========================================
 // 2. ENDPOINT: KATALOG PAKET PRODUK (GET /api/products)
+=======
+// 1. ENDPOINT: KATALOG PAKET PRODUK (GET /api/products)
+>>>>>>> e2e81f391c4379bdef82cb04f6e1e391fed0e7bc
 // ==========================================
 app.get('/api/products', async (req, res) => {
   try {
@@ -287,13 +301,21 @@ app.get('/api/products', async (req, res) => {
 });
 
 // ==========================================
+<<<<<<< HEAD
 // 3. ENDPOINT: PEMBUATAN ORDER (POST /api/orders)
+=======
+// 2. ENDPOINT: SIMULASI PEMBUATAN ORDER (POST /api/orders)
+>>>>>>> e2e81f391c4379bdef82cb04f6e1e391fed0e7bc
 // ==========================================
 app.post('/api/orders', async (req, res) => {
   const client = await db.pool.connect();
   try {
     const {
+<<<<<<< HEAD
       user_id = 2, // Default fallback jika belum ditentukan
+=======
+      user_id = 2, // Default: Muhammad Hasran (Customer Persona UMKM)
+>>>>>>> e2e81f391c4379bdef82cb04f6e1e391fed0e7bc
       plan_id,
       payment_method = 'Virtual Account',
       payment_channel = 'BCA Virtual Account'
@@ -397,6 +419,7 @@ app.post('/api/orders', async (req, res) => {
 });
 
 // ==========================================
+<<<<<<< HEAD
 // 4. ENDPOINT: RIWAYAT ORDER (GET /api/orders)
 // Mendukung filter ?user_id=... untuk user biasa & tanpa filter untuk Admin
 // ==========================================
@@ -409,6 +432,16 @@ app.get('/api/orders', async (req, res) => {
         o.id, 
         o.order_number, 
         o.user_id,
+=======
+// 3. ENDPOINT TAMBAHAN: RIWAYAT ORDER (GET /api/orders)
+// ==========================================
+app.get('/api/orders', async (req, res) => {
+  try {
+    const query = `
+      SELECT 
+        o.id, 
+        o.order_number, 
+>>>>>>> e2e81f391c4379bdef82cb04f6e1e391fed0e7bc
         u.name AS customer_name, 
         u.email AS customer_email,
         sp.name AS plan_name, 
@@ -417,11 +450,15 @@ app.get('/api/orders', async (req, res) => {
         o.status, 
         o.payment_method, 
         o.payment_channel,
+<<<<<<< HEAD
         o.paid_at,
+=======
+>>>>>>> e2e81f391c4379bdef82cb04f6e1e391fed0e7bc
         o.created_at
       FROM orders o
       JOIN users u ON o.user_id = u.id
       JOIN subscription_plans sp ON o.plan_id = sp.id
+<<<<<<< HEAD
     `;
 
     const params = [];
@@ -433,6 +470,11 @@ app.get('/api/orders', async (req, res) => {
     query += ` ORDER BY o.created_at DESC;`;
 
     const result = await db.query(query, params);
+=======
+      ORDER BY o.created_at DESC;
+    `;
+    const result = await db.query(query);
+>>>>>>> e2e81f391c4379bdef82cb04f6e1e391fed0e7bc
     res.json({
       success: true,
       count: result.rows.length,
@@ -448,6 +490,7 @@ app.get('/api/orders', async (req, res) => {
   }
 });
 
+<<<<<<< HEAD
 // GET /api/orders/:id (Detail satu order berdasarkan ID atau order_number)
 app.get('/api/orders/:id', async (req, res) => {
   try {
@@ -597,6 +640,8 @@ app.get('/api/admin/stats', async (req, res) => {
   }
 });
 
+=======
+>>>>>>> e2e81f391c4379bdef82cb04f6e1e391fed0e7bc
 // Menjalankan Server Node.js Express
 app.listen(PORT, '0.0.0.0', () => {
   console.log(`🚀 ContentHub Backend Server running on http://localhost:${PORT}`);
