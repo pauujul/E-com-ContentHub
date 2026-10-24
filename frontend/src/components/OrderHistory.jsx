@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 
-<<<<<<< HEAD
 export default function OrderHistory({ refreshKey, currentUser, onOpenLogin }) {
   const [orders, setOrders] = useState([]);
   const [stats, setStats] = useState(null);
@@ -46,46 +45,20 @@ export default function OrderHistory({ refreshKey, currentUser, onOpenLogin }) {
       } else {
         setStats(null);
       }
-
     } catch (err) {
       console.error('Error fetching data:', err);
       setError('Gagal memuat data transaksi dari server backend.');
-=======
-export default function OrderHistory({ refreshKey }) {
-  const [orders, setOrders] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-
-  const API_BASE = 'http://localhost:5000/api';
-
-  useEffect(() => {
-    fetchOrders();
-  }, [refreshKey]);
-
-  const fetchOrders = async () => {
-    try {
-      setLoading(true);
-      setError(null);
-      const res = await axios.get(`${API_BASE}/orders`);
-      if (res.data && res.data.data) {
-        setOrders(res.data.data);
-      }
-    } catch (err) {
-      console.error('Error fetching orders:', err);
-      setError('Gagal memuat data transaksi dari backend.');
->>>>>>> e2e81f391c4379bdef82cb04f6e1e391fed0e7bc
     } finally {
       setLoading(false);
     }
   };
 
-<<<<<<< HEAD
   // Khusus Admin: Update status pembayaran pesanan
   const handleUpdateStatus = async (orderId, newStatus) => {
     try {
       setUpdatingId(orderId);
       const res = await axios.patch(`${API_BASE}/orders/${orderId}/status`, {
-        status: newStatus
+        status: newStatus,
       });
 
       if (res.data && res.data.success) {
@@ -100,41 +73,32 @@ export default function OrderHistory({ refreshKey }) {
     }
   };
 
-=======
->>>>>>> e2e81f391c4379bdef82cb04f6e1e391fed0e7bc
   const formatRupiah = (val) => {
     const num = parseFloat(val);
     if (isNaN(num) || num === 0) return 'Rp 0 (Gratis)';
     return new Intl.NumberFormat('id-ID', {
       style: 'currency',
       currency: 'IDR',
-      maximumFractionDigits: 0
+      maximumFractionDigits: 0,
     }).format(num);
   };
 
   return (
     <div className="container" style={{ padding: '32px 20px 64px' }}>
-<<<<<<< HEAD
       {/* Header Halaman */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '24px', flexWrap: 'wrap', gap: '16px' }}>
         <div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-            <h2 style={{ fontSize: '24px', fontWeight: 800, color: '#0f172a' }}>
-              {isAdmin ? '👑 Dashboard Admin - Manajemen Transaksi' : '💳 Riwayat Pesanan & Langganan'}
-            </h2>
-            <span className={`role-pill ${isAdmin ? 'pill-admin' : 'pill-customer'}`}>
-              {isAdmin ? 'Mode Administrator' : 'Mode Pelanggan UMKM'}
-            </span>
+            <h2 style={{ fontSize: '24px', fontWeight: 800, color: '#0f172a' }}>{isAdmin ? '👑 Dashboard Admin - Manajemen Transaksi' : '💳 Riwayat Pesanan & Langganan'}</h2>
+            <span className={`role-pill ${isAdmin ? 'pill-admin' : 'pill-customer'}`}>{isAdmin ? 'Mode Administrator' : 'Mode Pelanggan UMKM'}</span>
           </div>
           <p style={{ color: '#64748b', fontSize: '14px', marginTop: '4px' }}>
-            {isAdmin 
-              ? 'Administrator memiliki hak istimewa melihat semua transaksi pelanggan UMKM dan mengonfirmasi pembayaran.'
-              : `Menampilkan riwayat langganan untuk akun: ${currentUser?.name || 'Tamu / Default'}`}
+            {isAdmin ? 'Administrator memiliki hak istimewa melihat semua transaksi pelanggan UMKM dan mengonfirmasi pembayaran.' : `Menampilkan riwayat langganan untuk akun: ${currentUser?.name || 'Tamu / Default'}`}
           </p>
         </div>
 
         <div style={{ display: 'flex', gap: '10px' }}>
-          <button 
+          <button
             onClick={fetchData}
             style={{
               padding: '9px 16px',
@@ -144,7 +108,7 @@ export default function OrderHistory({ refreshKey }) {
               borderRadius: '8px',
               cursor: 'pointer',
               fontWeight: 600,
-              fontSize: '13px'
+              fontSize: '13px',
             }}
           >
             🔄 Refresh Data
@@ -154,16 +118,18 @@ export default function OrderHistory({ refreshKey }) {
 
       {/* Alert Notifikasi Sukses / Pesan */}
       {feedbackMsg && (
-        <div style={{
-          background: '#dcfce7',
-          color: '#15803d',
-          padding: '12px 18px',
-          borderRadius: '8px',
-          marginBottom: '20px',
-          fontWeight: 600,
-          fontSize: '14px',
-          border: '1px solid #86efac'
-        }}>
+        <div
+          style={{
+            background: '#dcfce7',
+            color: '#15803d',
+            padding: '12px 18px',
+            borderRadius: '8px',
+            marginBottom: '20px',
+            fontWeight: 600,
+            fontSize: '14px',
+            border: '1px solid #86efac',
+          }}
+        >
           ✅ {feedbackMsg}
         </div>
       )}
@@ -179,7 +145,9 @@ export default function OrderHistory({ refreshKey }) {
           <div className="admin-stat-card">
             <div className="stat-title">Total Seluruh Pesanan</div>
             <div className="stat-value">{stats.total_orders} Pesanan</div>
-            <div className="stat-desc">{stats.paid_orders} Lunas • {stats.pending_orders} Menunggu</div>
+            <div className="stat-desc">
+              {stats.paid_orders} Lunas • {stats.pending_orders} Menunggu
+            </div>
           </div>
           <div className="admin-stat-card">
             <div className="stat-title">Pesanan Butuh Verifikasi</div>
@@ -194,78 +162,47 @@ export default function OrderHistory({ refreshKey }) {
         </div>
       )}
 
-      {/* Banner info akun jika belum login atau bukan admin */}
+      {/* Banner info akun jika belum login */}
       {!currentUser && (
-        <div style={{
-          background: '#eff6ff',
-          border: '1px solid #bfdbfe',
-          padding: '14px 18px',
-          borderRadius: '10px',
-          marginBottom: '20px',
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center'
-        }}>
+        <div
+          style={{
+            background: '#eff6ff',
+            border: '1px solid #bfdbfe',
+            padding: '14px 18px',
+            borderRadius: '10px',
+            marginBottom: '20px',
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+          }}
+        >
           <div>
             <strong style={{ color: '#1e40af' }}>Ingin melihat tampilan sebagai Admin atau User lain?</strong>
-            <p style={{ color: '#3b82f6', fontSize: '13px', margin: 0 }}>
-              Gunakan fitur login untuk beralih antara akun Administrator (Jerry Hernis) dan Pelanggan UMKM (Muhammad Hasran).
-            </p>
+            <p style={{ color: '#3b82f6', fontSize: '13px', margin: 0 }}>Gunakan fitur login untuk beralih antara akun Administrator dan Pelanggan UMKM.</p>
           </div>
-          <button 
-            onClick={onOpenLogin}
-            style={{
-              background: '#2563eb',
-              color: '#ffffff',
-              padding: '8px 16px',
-              border: 'none',
-              borderRadius: '8px',
-              fontWeight: 700,
-              fontSize: '13px',
-              cursor: 'pointer'
-            }}
-          >
-            Pilih Akun Login
-          </button>
+          {onOpenLogin && (
+            <button
+              onClick={onOpenLogin}
+              style={{
+                background: '#2563eb',
+                color: '#ffffff',
+                padding: '8px 16px',
+                border: 'none',
+                borderRadius: '8px',
+                fontWeight: 700,
+                fontSize: '13px',
+                cursor: 'pointer',
+              }}
+            >
+              Pilih Akun Login
+            </button>
+          )}
         </div>
       )}
 
       {loading && <p style={{ textAlign: 'center', padding: '30px', color: '#64748b' }}>Memuat transaksi dari PostgreSQL...</p>}
-=======
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-        <div>
-          <h2 style={{ fontSize: '24px', fontWeight: 800, color: '#0f172a' }}>
-            💳 Riwayat Transaksi & Langganan
-          </h2>
-          <p style={{ color: '#64748b', fontSize: '14px' }}>
-            Data tersinkronisasi langsung dari database PostgreSQL (`orders` & `users`).
-          </p>
-        </div>
-        <button 
-          onClick={fetchOrders}
-          style={{
-            padding: '8px 16px',
-            background: '#e0e7ff',
-            color: '#4338ca',
-            border: 'none',
-            borderRadius: '8px',
-            cursor: 'pointer',
-            fontWeight: 600,
-            fontSize: '13px'
-          }}
-        >
-          🔄 Refresh Data
-        </button>
-      </div>
 
-      {loading && <p style={{ textAlign: 'center', padding: '30px', color: '#64748b' }}>Memuat transaksi...</p>}
->>>>>>> e2e81f391c4379bdef82cb04f6e1e391fed0e7bc
-
-      {error && (
-        <div style={{ background: '#fef2f2', color: '#991b1b', padding: '12px 16px', borderRadius: '8px' }}>
-          {error}
-        </div>
-      )}
+      {error && <div style={{ background: '#fef2f2', color: '#991b1b', padding: '12px 16px', borderRadius: '8px' }}>{error}</div>}
 
       {!loading && !error && (
         <div className="data-table-container">
@@ -279,60 +216,36 @@ export default function OrderHistory({ refreshKey }) {
                 <th>Metode Bayar</th>
                 <th>Status</th>
                 <th>Waktu Transaksi</th>
-<<<<<<< HEAD
                 {isAdmin && <th>Aksi Admin</th>}
-=======
->>>>>>> e2e81f391c4379bdef82cb04f6e1e391fed0e7bc
               </tr>
             </thead>
             <tbody>
               {orders.length === 0 ? (
                 <tr>
-<<<<<<< HEAD
                   <td colSpan={isAdmin ? 8 : 7} style={{ textAlign: 'center', padding: '36px', color: '#94a3b8' }}>
                     Belum ada riwayat transaksi pada akun ini. Silakan pilih paket di menu Katalog Paket!
-=======
-                  <td colSpan="7" style={{ textAlign: 'center', padding: '30px', color: '#94a3b8' }}>
-                    Belum ada riwayat transaksi. Silakan lakukan pemesanan di menu Paket & Harga!
->>>>>>> e2e81f391c4379bdef82cb04f6e1e391fed0e7bc
                   </td>
                 </tr>
               ) : (
                 orders.map((ord) => (
                   <tr key={ord.id}>
-                    <td style={{ fontFamily: 'monospace', fontWeight: 700, color: '#4f46e5' }}>
-                      {ord.order_number}
-                    </td>
+                    <td style={{ fontFamily: 'monospace', fontWeight: 700, color: '#4f46e5' }}>{ord.order_number}</td>
                     <td>
-                      <div><strong>{ord.customer_name}</strong></div>
+                      <div>
+                        <strong>{ord.customer_name}</strong>
+                      </div>
                       <div style={{ fontSize: '12px', color: '#64748b' }}>{ord.customer_email}</div>
                     </td>
                     <td>
-<<<<<<< HEAD
                       <div style={{ fontWeight: 600 }}>{ord.plan_name}</div>
                       <span style={{ fontSize: '12px', color: '#64748b' }}>({ord.billing_cycle})</span>
                     </td>
                     <td style={{ fontWeight: 700 }}>{formatRupiah(ord.total_amount)}</td>
                     <td>{ord.payment_channel || ord.payment_method}</td>
                     <td>
-                      <span className={`badge-status ${ord.status.toLowerCase()}`}>
-                        {ord.status === 'Paid' ? '✓ LUNAS' : ord.status === 'Pending' ? '⏳ PENDING' : '✕ BATAL'}
-=======
-                      <div>{ord.plan_name}</div>
-                      <span style={{ fontSize: '12px', color: '#64748b' }}>({ord.billing_cycle})</span>
+                      <span className={`badge-status ${ord.status ? ord.status.toLowerCase() : 'pending'}`}>{ord.status === 'Paid' ? '✓ LUNAS' : ord.status === 'Pending' ? '⏳ PENDING' : '✕ BATAL'}</span>
                     </td>
-                    <td style={{ fontWeight: 600 }}>{formatRupiah(ord.total_amount)}</td>
-                    <td>{ord.payment_channel || ord.payment_method}</td>
-                    <td>
-                      <span className={`badge-status ${ord.status.toLowerCase()}`}>
-                        {ord.status}
->>>>>>> e2e81f391c4379bdef82cb04f6e1e391fed0e7bc
-                      </span>
-                    </td>
-                    <td style={{ fontSize: '13px', color: '#64748b' }}>
-                      {new Date(ord.created_at).toLocaleString('id-ID')}
-                    </td>
-<<<<<<< HEAD
+                    <td style={{ fontSize: '13px', color: '#64748b' }}>{new Date(ord.created_at).toLocaleString('id-ID')}</td>
                     {isAdmin && (
                       <td>
                         {ord.status === 'Pending' ? (
@@ -347,21 +260,17 @@ export default function OrderHistory({ refreshKey }) {
                               borderRadius: '6px',
                               fontSize: '12px',
                               fontWeight: 700,
-                              cursor: 'pointer'
+                              cursor: 'pointer',
                             }}
                             title="Konfirmasi pembayaran pelanggan telah diterima"
                           >
                             {updatingId === ord.id ? '...' : '✅ Set Lunas'}
                           </button>
                         ) : (
-                          <span style={{ fontSize: '12px', color: '#10b981', fontWeight: 600 }}>
-                            Selesai
-                          </span>
+                          <span style={{ fontSize: '12px', color: '#10b981', fontWeight: 600 }}>Selesai</span>
                         )}
                       </td>
                     )}
-=======
->>>>>>> e2e81f391c4379bdef82cb04f6e1e391fed0e7bc
                   </tr>
                 ))
               )}
