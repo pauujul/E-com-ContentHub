@@ -1,0 +1,82 @@
+version: '3.8'
+
+services:
+  # ==========================================
+  # SERVICE 1: PostgreSQL Database Container
+  # ==========================================
+  postgres-db:
+    image: postgres:15-alpine
+    container_name: contenthub-postgres-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ecommerce_db
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: password123
+    ports:
+      - "5432:5432"
+    volumes:
+      # Data persisten agar data database tidak hilang saat container restart
+      - postgres_data:/var/lib/postgresql/data
+      # Inisialisasi skema tabel otomatis saat container pertama kali dibuat
+      - ./database/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    networks:
+      - contenthub-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U admin -d ecommerce_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  # ==========================================
+  # SERVICE 2: Backend Node.js & Express API
+  # ==========================================
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: contenthub-backend
+    restart: unless-stopped
+    ports:
+      - "5000:5000"
+    environment:
+      PORT: 5000
+      NODE_ENV: development
+      DB_HOST: postgres-db
+      DB_PORT: 5432
+      DB_USER: admin
+      DB_PASSWORD: password123
+      DB_NAME: ecommerce_db
+    depends_on:
+      postgres-db:
+        condition: service_healthy
+    networks:
+      - contenthub-network
+
+  # ==========================================
+  # SERVICE 3: Frontend React.js + Vite
+  # ==========================================
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: contenthub-frontend
+    restart: unless-stopped
+    ports:
+      - "5173:5173"
+    environment:
+      - VITE_API_URL=http://localhost:5000/api
+    depends_on:
+      - backend
+    networks:
+      - contenthub-network
+
+# ==========================================
+# VOLUMES & NETWORKS
+# ==========================================
+volumes:
+  postgres_data:
+    driver: local
+
+networks:
+  contenthub-network:
+    driver: bridge
