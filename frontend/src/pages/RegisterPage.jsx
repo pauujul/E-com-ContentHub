@@ -258,7 +258,7 @@ export default function RegisterPage() {
                 >
                   <span className="material-symbols-outlined text-sm">arrow_back</span> Kembali ke Langkah 1
                 </button>
-                <h2 className="text-3xl font-extrabold text-on-background mb-2">Profil Usaha & Peran Akun</h2>
+                <h2 className="text-3xl font-extrabold text-on-background mb-2">Profil Usaha</h2>
                 <p className="text-on-surface-variant text-sm">Sesuaikan konten dengan ceruk pasar UMKM Anda.</p>
               </div>
 
@@ -307,53 +307,6 @@ export default function RegisterPage() {
                       <option value="Kecantikan">Kecantikan & Skincare</option>
                       <option value="Retail">Retail & Toko Kelontong</option>
                     </select>
-                  </div>
-                </div>
-
-                <div className="space-y-1">
-                  <label className="text-xs font-bold uppercase tracking-wider text-on-surface-variant">
-                    Pilih Peran Akun (Role)
-                  </label>
-                  <div className="grid grid-cols-2 gap-3">
-                    <label className={`p-3 rounded-xl border cursor-pointer transition-all flex items-center gap-3 ${
-                      formData.role === 'customer'
-                        ? 'border-primary bg-primary/5 text-primary'
-                        : 'border-outline-variant/30 text-on-surface'
-                    }`}>
-                      <input
-                        type="radio"
-                        name="role"
-                        value="customer"
-                        checked={formData.role === 'customer'}
-                        onChange={handleChange}
-                        className="hidden"
-                      />
-                      <span className="material-symbols-outlined">storefront</span>
-                      <div>
-                        <p className="font-bold text-xs">Customer (UMKM)</p>
-                        <p className="text-[10px] opacity-75">Kelola kalender konten bisnis</p>
-                      </div>
-                    </label>
-
-                    <label className={`p-3 rounded-xl border cursor-pointer transition-all flex items-center gap-3 ${
-                      formData.role === 'admin'
-                        ? 'border-red-500 bg-red-50 text-red-700'
-                        : 'border-outline-variant/30 text-on-surface'
-                    }`}>
-                      <input
-                        type="radio"
-                        name="role"
-                        value="admin"
-                        checked={formData.role === 'admin'}
-                        onChange={handleChange}
-                        className="hidden"
-                      />
-                      <span className="material-symbols-outlined text-red-600">shield_person</span>
-                      <div>
-                        <p className="font-bold text-xs">Admin Console</p>
-                        <p className="text-[10px] opacity-75">Kelola pesanan & statistik</p>
-                      </div>
-                    </label>
                   </div>
                 </div>
 

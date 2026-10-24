@@ -43,11 +43,6 @@ export default function LoginPage() {
     }
   };
 
-  // Preset quick fill untuk evaluasi penguji/dosen
-  const handleQuickLogin = (presetEmail, presetPass) => {
-    setEmail(presetEmail);
-    setPassword(presetPass);
-  };
 
   return (
     <div className="bg-surface text-on-background min-h-screen">
@@ -118,31 +113,6 @@ export default function LoginPage() {
               </p>
             </div>
 
-            {/* Quick Login Presets (Untuk Penguji & Role Switching Cepat) */}
-            <div className="mb-6 p-3 bg-surface-container-low rounded-xl border border-outline-variant/15">
-              <span className="text-[10px] font-extrabold text-outline uppercase tracking-wider block mb-2">
-                Simulasi Login Akun Cepat (Database Seed):
-              </span>
-              <div className="grid grid-cols-2 gap-2">
-                <button
-                  type="button"
-                  onClick={() => handleQuickLogin('hasran.donat@gmail.com', 'hasran123')}
-                  className="px-2.5 py-1.5 bg-blue-50 hover:bg-blue-100 text-blue-700 rounded-lg text-xs font-bold text-left flex items-center gap-1.5 transition-colors border border-blue-200"
-                >
-                  <span className="w-2 h-2 rounded-full bg-blue-600"></span>
-                  Customer Hasran
-                </button>
-                <button
-                  type="button"
-                  onClick={() => handleQuickLogin('jerry.hernis@amigos.id', 'admin123')}
-                  className="px-2.5 py-1.5 bg-red-50 hover:bg-red-100 text-red-700 rounded-lg text-xs font-bold text-left flex items-center gap-1.5 transition-colors border border-red-200"
-                >
-                  <span className="w-2 h-2 rounded-full bg-red-600"></span>
-                  Admin Jerry
-                </button>
-              </div>
-            </div>
-
             {errorMsg && (
               <div className="mb-6 p-4 bg-red-50 text-red-700 rounded-xl text-sm border border-red-200 flex items-center gap-3">
                 <span className="material-symbols-outlined text-red-600">error</span>
@@ -157,27 +127,7 @@ export default function LoginPage() {
               </div>
             )}
 
-            <button
-              type="button"
-              onClick={() => handleQuickLogin('hasran.donat@gmail.com', 'hasran123')}
-              className="w-full flex items-center justify-center gap-3 bg-surface-container-low hover:bg-surface-container-high text-on-surface font-medium py-3 px-6 rounded-xl transition-all mb-6 border border-outline-variant/15 text-sm"
-            >
-              <img
-                alt="Google logo"
-                className="w-5 h-5"
-                src="https://lh3.googleusercontent.com/aida-public/AB6AXuANjoascAmPxqpr0eQpu6QMrGUnTN_jXEkgf_o5QFq3IBvjm2KrJTWGdRLDiBQ3DzKe3IvsiBoxBp9sQjNhOhUzLzjstYsxDGjN3VhskUf57Ww9Qe1fpyHXz7SuWvxj-EE5kd231vvnfrWnzkvHU6AOzKepHgnjrp_1D8RQ8XZAK6y-NijTxMACFS8SLIhWixwZfB34HjzbTZlSxQEQW3Apb2ZO16z96yh2R-ufgGYLue_Slg0jnGAgXVXP_9ThU36PzE0Qqq4zfg"
-              />
-              <span>Masuk Cepat Persona UMKM</span>
-            </button>
-
-            <div className="relative flex items-center mb-6">
-              <div className="flex-grow border-t border-outline-variant/30"></div>
-              <span className="flex-shrink mx-4 text-xs font-semibold text-outline uppercase tracking-wider">
-                Atau dengan Email
-              </span>
-              <div className="flex-grow border-t border-outline-variant/30"></div>
-            </div>
-
+           
             <form onSubmit={handleSubmit} className="space-y-5">
               <div className="space-y-1.5">
                 <label className="text-xs font-bold uppercase tracking-wider text-on-surface-variant" htmlFor="email">
