@@ -5,8 +5,8 @@ const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api'
 const apiClient = axios.create({
   baseURL: API_BASE_URL,
   headers: {
-    'Content-Type': 'application/json'
-  }
+    'Content-Type': 'application/json',
+  },
 });
 
 // Interceptor untuk inject token jika ada di localStorage
@@ -28,9 +28,24 @@ export const api = {
     const res = await apiClient.post('/auth/login', { email, password });
     return res.data;
   },
+  // Di dalam frontend/src/services/api.js
   register: async (userData) => {
-    const res = await apiClient.post('/auth/register', userData);
-    return res.data;
+    // Debug log untuk memastikan data dari form terbawa sampai sini
+    console.log('Payload yang dikirim ke backend:', userData);
+
+    const response = await fetch('http://localhost:5000/api/auth/register', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(userData), // Pastikan seluruh objek userData diteruskan
+    });
+
+    const data = await response.json();
+    if (!response.ok) {
+      throw new Error(data.message || 'Registrasi gagal');
+    }
+    return data;
   },
   getUsers: async () => {
     const res = await apiClient.get('/auth/users');
@@ -69,7 +84,7 @@ export const api = {
   getAdminStats: async () => {
     const res = await apiClient.get('/admin/stats');
     return res.data;
-  }
+  },
 };
 
 export default api;

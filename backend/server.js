@@ -1,6 +1,7 @@
 const express = require('express');
 const cors = require('cors');
 require('dotenv').config();
+const crypto = require('crypto'); // Ditambahkan untuk hashing password
 const db = require('./db');
 
 const app = express();
@@ -67,7 +68,7 @@ app.post('/api/auth/login', async (req, res) => {
     }
 
     const query = `
-      SELECT id, name, email, password, role, phone 
+      SELECT id, name, email, password, role, phone, business_name, industry 
       FROM users 
       WHERE LOWER(email) = LOWER($1)
     `;
@@ -82,7 +83,11 @@ app.post('/api/auth/login', async (req, res) => {
 
     const user = result.rows[0];
 
-    const isPasswordValid = user.password === password || user.password === `${password}_hash` || user.password.replace('_hash', '') === password;
+    // Buat hash SHA-256 dari password yang diinputkan
+    const inputHash = crypto.createHash('sha256').update(password).digest('hex');
+
+    // Validasi hash SHA-256 baru atau fallback teks biasa (akun lama)
+    const isPasswordValid = user.password === inputHash || user.password === password;
 
     if (!isPasswordValid) {
       return res.status(401).json({
@@ -112,6 +117,8 @@ app.post('/api/auth/login', async (req, res) => {
           email: user.email,
           role: user.role,
           phone: user.phone,
+          business_name: user.business_name,
+          industry: user.industry,
         },
         token,
       },
@@ -125,11 +132,11 @@ app.post('/api/auth/login', async (req, res) => {
     });
   }
 });
-
-// POST /api/auth/register
 app.post('/api/auth/register', async (req, res) => {
   try {
-    const { name, email, password, phone = '', role = 'customer' } = req.body;
+    console.log('--- DATA MASUK DARI FRONTEND ---', req.body);
+
+    const { name, email, password, phone = '', role = 'customer', business_name = null, industry = null } = req.body;
 
     if (!name || !email || !password) {
       return res.status(400).json({
@@ -149,11 +156,15 @@ app.post('/api/auth/register', async (req, res) => {
     const validRoles = ['customer', 'admin', 'editor'];
     const assignedRole = validRoles.includes(role) ? role : 'customer';
 
+    // 1. Enkripsi password menggunakan SHA-256 bawaan Node.js (tanpa perlu install bcryptjs)
+    const hashedPassword = crypto.createHash('sha256').update(password).digest('hex');
+
+    // 2. Simpan ke database beserta phone, business_name, dan industry
     const insertResult = await db.query(
-      `INSERT INTO users (name, email, password, role, phone, created_at, updated_at)
-       VALUES ($1, $2, $3, $4, $5, NOW(), NOW())
-       RETURNING id, name, email, role, phone, created_at`,
-      [name.trim(), email.trim().toLowerCase(), password, assignedRole, phone.trim()],
+      `INSERT INTO users (name, email, password, role, phone, business_name, industry, created_at, updated_at)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, NOW(), NOW())
+       RETURNING id, name, email, role, phone, business_name, industry, created_at`,
+      [name.trim(), email.trim().toLowerCase(), hashedPassword, assignedRole, phone ? phone.trim() : null, business_name ? business_name.trim() : null, industry ? industry.trim() : null],
     );
 
     const newUser = insertResult.rows[0];
@@ -188,7 +199,7 @@ app.post('/api/auth/register', async (req, res) => {
 // GET /api/auth/users
 app.get('/api/auth/users', async (req, res) => {
   try {
-    const result = await db.query('SELECT id, name, email, role, phone, created_at FROM users ORDER BY id ASC');
+    const result = await db.query('SELECT id, name, email, role, phone, business_name, industry, created_at FROM users ORDER BY id ASC');
     res.json({
       success: true,
       count: result.rows.length,
@@ -227,7 +238,7 @@ app.get('/api/auth/me', async (req, res) => {
       });
     }
 
-    const result = await db.query('SELECT id, name, email, role, phone, created_at FROM users WHERE id = $1', [targetId]);
+    const result = await db.query('SELECT id, name, email, role, phone, business_name, industry, created_at FROM users WHERE id = $1', [targetId]);
 
     if (result.rows.length === 0) {
       return res.status(404).json({

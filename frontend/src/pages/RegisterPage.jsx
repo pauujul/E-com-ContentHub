@@ -12,7 +12,7 @@ export default function RegisterPage() {
     phone: '',
     businessName: '',
     businessCategory: 'Kuliner',
-    role: 'customer'
+    role: 'customer',
   });
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
@@ -49,16 +49,19 @@ export default function RegisterPage() {
     setErrorMsg('');
 
     try {
+      // Satukan semua data dari Step 1 dan Step 2 ke backend
       const payload = {
         name: formData.name,
         email: formData.email,
         password: formData.password,
         phone: formData.phone,
-        role: formData.role
+        role: formData.role,
+        business_name: formData.businessName, // Dikirim ke kolom business_name di PostgreSQL
+        industry: formData.businessCategory, // Dikirim ke kolom industry di PostgreSQL
       };
 
       const res = await register(payload);
-      setSuccessMsg(res.message || 'Pendaftaran berhasil!');
+      setSuccessMsg(res?.message || 'Pendaftaran berhasil!');
       setStep(3);
 
       setTimeout(() => {
@@ -84,7 +87,7 @@ export default function RegisterPage() {
             className="absolute inset-0 opacity-20 pointer-events-none"
             style={{
               backgroundImage: 'radial-gradient(circle at 2px 2px, white 1px, transparent 0)',
-              backgroundSize: '32px 32px'
+              backgroundSize: '32px 32px',
             }}
           ></div>
 
@@ -93,16 +96,12 @@ export default function RegisterPage() {
               <span className="material-symbols-outlined text-3xl">layers</span>
               ContentHub
             </Link>
-            <p className="text-xl font-medium opacity-90 leading-relaxed">
-              Bangun narasi bisnis Anda dengan alat kreatif kelas dunia yang dirancang untuk UMKM.
-            </p>
+            <p className="text-xl font-medium opacity-90 leading-relaxed">Bangun narasi bisnis Anda dengan alat kreatif kelas dunia yang dirancang untuk UMKM.</p>
           </div>
 
           <div className="relative z-10 my-10">
             <div className="bg-white/10 backdrop-blur-md p-6 rounded-2xl border border-white/20 mb-8 shadow-sm">
-              <p className="italic text-base mb-4 leading-relaxed">
-                "Sejak menggunakan ContentHub, manajemen konten UMKM kami jadi jauh lebih tertata dan terlihat profesional seperti brand besar."
-              </p>
+              <p className="italic text-base mb-4 leading-relaxed">"Sejak menggunakan ContentHub, manajemen konten UMKM kami jadi jauh lebih tertata dan terlihat profesional seperti brand besar."</p>
               <div className="flex items-center gap-3">
                 <img
                   alt="Founder Portrait"
@@ -123,9 +122,7 @@ export default function RegisterPage() {
             </div>
           </div>
 
-          <div className="relative z-10 text-xs text-white/60">
-            © 2024-2026 ContentHub. Solusi E-Commerce SaaS UMKM.
-          </div>
+          <div className="relative z-10 text-xs text-white/60">© 2024-2026 ContentHub. Solusi E-Commerce SaaS UMKM.</div>
         </section>
 
         {/* Right Side: Registration Flow */}
@@ -133,29 +130,17 @@ export default function RegisterPage() {
           {/* Step Indicator */}
           <nav className="flex items-center justify-between mb-10 max-w-md mx-auto w-full">
             <div className="flex flex-col items-center gap-1">
-              <div className={`w-9 h-9 rounded-full flex items-center justify-center font-bold text-xs transition-colors ${
-                step >= 1 ? 'bg-primary text-white shadow-md shadow-primary/20' : 'bg-surface-container-high text-outline'
-              }`}>
-                1
-              </div>
+              <div className={`w-9 h-9 rounded-full flex items-center justify-center font-bold text-xs transition-colors ${step >= 1 ? 'bg-primary text-white shadow-md shadow-primary/20' : 'bg-surface-container-high text-outline'}`}>1</div>
               <span className={`text-[11px] font-bold ${step >= 1 ? 'text-primary' : 'text-outline'}`}>Akun</span>
             </div>
             <div className={`h-[2px] flex-1 mx-3 mb-4 transition-colors ${step >= 2 ? 'bg-primary' : 'bg-surface-container-high'}`}></div>
             <div className="flex flex-col items-center gap-1">
-              <div className={`w-9 h-9 rounded-full flex items-center justify-center font-bold text-xs transition-colors ${
-                step >= 2 ? 'bg-primary text-white shadow-md shadow-primary/20' : 'bg-surface-container-high text-outline'
-              }`}>
-                2
-              </div>
+              <div className={`w-9 h-9 rounded-full flex items-center justify-center font-bold text-xs transition-colors ${step >= 2 ? 'bg-primary text-white shadow-md shadow-primary/20' : 'bg-surface-container-high text-outline'}`}>2</div>
               <span className={`text-[11px] font-bold ${step >= 2 ? 'text-primary' : 'text-outline'}`}>Profil Usaha</span>
             </div>
             <div className={`h-[2px] flex-1 mx-3 mb-4 transition-colors ${step >= 3 ? 'bg-primary' : 'bg-surface-container-high'}`}></div>
             <div className="flex flex-col items-center gap-1">
-              <div className={`w-9 h-9 rounded-full flex items-center justify-center font-bold text-xs transition-colors ${
-                step >= 3 ? 'bg-green-600 text-white shadow-md' : 'bg-surface-container-high text-outline'
-              }`}>
-                3
-              </div>
+              <div className={`w-9 h-9 rounded-full flex items-center justify-center font-bold text-xs transition-colors ${step >= 3 ? 'bg-green-600 text-white shadow-md' : 'bg-surface-container-high text-outline'}`}>3</div>
               <span className={`text-[11px] font-bold ${step >= 3 ? 'text-green-600' : 'text-outline'}`}>Selesai</span>
             </div>
           </nav>
@@ -176,9 +161,7 @@ export default function RegisterPage() {
 
               <form onSubmit={handleNextStep} className="space-y-4">
                 <div className="space-y-1">
-                  <label className="text-xs font-bold uppercase tracking-wider text-on-surface-variant">
-                    Nama Lengkap
-                  </label>
+                  <label className="text-xs font-bold uppercase tracking-wider text-on-surface-variant">Nama Lengkap</label>
                   <input
                     type="text"
                     name="name"
@@ -191,9 +174,7 @@ export default function RegisterPage() {
                 </div>
 
                 <div className="space-y-1">
-                  <label className="text-xs font-bold uppercase tracking-wider text-on-surface-variant">
-                    Alamat Email Bisnis
-                  </label>
+                  <label className="text-xs font-bold uppercase tracking-wider text-on-surface-variant">Alamat Email Bisnis</label>
                   <input
                     type="email"
                     name="email"
@@ -207,9 +188,7 @@ export default function RegisterPage() {
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-1">
-                    <label className="text-xs font-bold uppercase tracking-wider text-on-surface-variant">
-                      Kata Sandi
-                    </label>
+                    <label className="text-xs font-bold uppercase tracking-wider text-on-surface-variant">Kata Sandi</label>
                     <input
                       type="password"
                       name="password"
@@ -221,9 +200,7 @@ export default function RegisterPage() {
                     />
                   </div>
                   <div className="space-y-1">
-                    <label className="text-xs font-bold uppercase tracking-wider text-on-surface-variant">
-                      Ulangi Kata Sandi
-                    </label>
+                    <label className="text-xs font-bold uppercase tracking-wider text-on-surface-variant">Ulangi Kata Sandi</label>
                     <input
                       type="password"
                       name="confirmPassword"
@@ -251,11 +228,7 @@ export default function RegisterPage() {
           {step === 2 && (
             <div>
               <div className="mb-8">
-                <button
-                  type="button"
-                  onClick={() => setStep(1)}
-                  className="text-xs font-bold text-slate-500 hover:text-primary mb-2 flex items-center gap-1"
-                >
+                <button type="button" onClick={() => setStep(1)} className="text-xs font-bold text-slate-500 hover:text-primary mb-2 flex items-center gap-1">
                   <span className="material-symbols-outlined text-sm">arrow_back</span> Kembali ke Langkah 1
                 </button>
                 <h2 className="text-3xl font-extrabold text-on-background mb-2">Profil Usaha</h2>
@@ -264,9 +237,7 @@ export default function RegisterPage() {
 
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div className="space-y-1">
-                  <label className="text-xs font-bold uppercase tracking-wider text-on-surface-variant">
-                    Nomor WhatsApp / Telepon
-                  </label>
+                  <label className="text-xs font-bold uppercase tracking-wider text-on-surface-variant">Nomor WhatsApp / Telepon</label>
                   <input
                     type="tel"
                     name="phone"
@@ -279,9 +250,7 @@ export default function RegisterPage() {
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-1">
-                    <label className="text-xs font-bold uppercase tracking-wider text-on-surface-variant">
-                      Nama Usaha / Brand
-                    </label>
+                    <label className="text-xs font-bold uppercase tracking-wider text-on-surface-variant">Nama Usaha / Brand</label>
                     <input
                       type="text"
                       name="businessName"
@@ -292,9 +261,7 @@ export default function RegisterPage() {
                     />
                   </div>
                   <div className="space-y-1">
-                    <label className="text-xs font-bold uppercase tracking-wider text-on-surface-variant">
-                      Kategori Industri
-                    </label>
+                    <label className="text-xs font-bold uppercase tracking-wider text-on-surface-variant">Kategori Industri</label>
                     <select
                       name="businessCategory"
                       value={formData.businessCategory}
@@ -336,9 +303,7 @@ export default function RegisterPage() {
                 <span className="material-symbols-outlined text-4xl">check_circle</span>
               </div>
               <h2 className="text-3xl font-extrabold text-on-surface">Pendaftaran Berhasil!</h2>
-              <p className="text-sm text-on-surface-variant max-w-sm mx-auto">
-                Akun Anda telah berhasil dibuat di database PostgreSQL ContentHub. Mengarahkan Anda ke Dashboard...
-              </p>
+              <p className="text-sm text-on-surface-variant max-w-sm mx-auto">Akun Anda telah berhasil dibuat di database PostgreSQL ContentHub. Mengarahkan Anda ke Dashboard...</p>
             </div>
           )}
 

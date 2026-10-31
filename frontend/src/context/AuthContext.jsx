@@ -17,7 +17,7 @@ export function AuthProvider({ children }) {
       name: 'Muhammad Hasran',
       email: 'hasran.donat@gmail.com',
       role: 'customer',
-      phone: '085299887766'
+      phone: '085299887766',
     };
   });
 
@@ -33,13 +33,14 @@ export function AuthProvider({ children }) {
 
   // Muat daftar pengguna untuk switcher
   useEffect(() => {
-    api.getUsers()
-      .then(res => {
+    api
+      .getUsers()
+      .then((res) => {
         if (res.success && res.data) {
           setAllUsers(res.data);
         }
       })
-      .catch(err => console.warn('Could not load users for switcher:', err.message));
+      .catch((err) => console.warn('Could not load users for switcher:', err.message));
   }, []);
 
   const login = async (email, password) => {
@@ -55,15 +56,19 @@ export function AuthProvider({ children }) {
   };
 
   const register = async (userData) => {
-    const res = await api.register(userData);
-    if (res.success && res.data) {
-      setCurrentUser(res.data.user);
-      setToken(res.data.token);
-      localStorage.setItem('contenthub_user', JSON.stringify(res.data.user));
-      localStorage.setItem('contenthub_token', res.data.token);
-      return res.data;
+    // Pastikan seluruh objek userData (termasuk business_name & industry) dikirim ke api.register
+    console.log('Data yang masuk ke AuthContext:', userData);
+
+    const response = await api.register(userData);
+
+    if (response.data && response.data.token) {
+      localStorage.setItem('contenthub_token', response.data.token);
+      localStorage.setItem('contenthub_user', JSON.stringify(response.data.user));
+      setCurrentUser(response.data.user);
+      setToken(response.data.token);
     }
-    throw new Error(res.message || 'Registrasi gagal');
+
+    return response;
   };
 
   const switchUser = (user) => {
@@ -81,17 +86,19 @@ export function AuthProvider({ children }) {
   const isAdmin = currentUser?.role === 'admin';
 
   return (
-    <AuthContext.Provider value={{
-      currentUser,
-      token,
-      allUsers,
-      isAdmin,
-      login,
-      register,
-      switchUser,
-      logout,
-      setCurrentUser
-    }}>
+    <AuthContext.Provider
+      value={{
+        currentUser,
+        token,
+        allUsers,
+        isAdmin,
+        login,
+        register,
+        switchUser,
+        logout,
+        setCurrentUser,
+      }}
+    >
       {children}
     </AuthContext.Provider>
   );
