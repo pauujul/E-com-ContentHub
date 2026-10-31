@@ -32,11 +32,11 @@ CREATE TABLE users (
     phone VARCHAR(30),
 <<<<<<< HEAD
 =======
-    nama_bisnis VARCHAR(150),
->>>>>>> e2e81f391c4379bdef82cb04f6e1e391fed0e7bc
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
-);
+--     nama_bisnis VARCHAR(150),
+-- >>>>>>> e2e81f391c4379bdef82cb04f6e1e391fed0e7bc
+--     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+--     updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+-- );
 
 <<<<<<< HEAD
 -- 3. Tabel Subscription Plans / Products (Katalog Paket SaaS)
