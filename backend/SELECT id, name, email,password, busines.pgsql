@@ -1,0 +1,1 @@
+SELECT id, name, email,password, business_name, industry FROM users ORDER BY id ASC;

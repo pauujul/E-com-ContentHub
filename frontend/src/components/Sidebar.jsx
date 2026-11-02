@@ -59,10 +59,10 @@ export default function Sidebar() {
             <span>Template Library</span>
           </Link>
 
-          <Link to="/templates/search" className={navItemClass('/templates/search')}>
+          {/* <Link to="/templates/search" className={navItemClass('/templates/search')}>
             <span className="material-symbols-outlined text-xl">search</span>
             <span>Cari Template</span>
-          </Link>
+          </Link> */}
 
           <Link to="/templates/add" className={navItemClass('/templates/add')}>
             <span className="material-symbols-outlined text-xl">add_circle</span>

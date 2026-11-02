@@ -78,10 +78,10 @@ export default function CalendarPage() {
                 Drag & Drop Planner
               </Link>
 
-              <Link to="/calendar/pick-date" className="px-5 py-2.5 bg-gradient-primary text-white rounded-xl text-xs font-bold shadow-md shadow-primary/20 flex items-center gap-1.5 hover:scale-105 active:scale-95 transition-all">
+              {/* <Link to="/calendar/pick-date" className="px-5 py-2.5 bg-gradient-primary text-white rounded-xl text-xs font-bold shadow-md shadow-primary/20 flex items-center gap-1.5 hover:scale-105 active:scale-95 transition-all">
                 <span className="material-symbols-outlined text-base">add</span>
                 Jadwalkan Konten
-              </Link>
+              </Link> */}
 
               {/* View Switcher: Day, Week, Month */}
               <div className="flex p-1 bg-surface-container-high rounded-xl gap-1">

@@ -13,12 +13,8 @@ export default function AboutPage() {
         <section className="relative overflow-hidden pt-24 pb-28 px-8">
           <div className="max-w-7xl mx-auto relative z-10">
             <div className="flex flex-col items-center text-center max-w-4xl mx-auto">
-              <span className="text-primary font-bold tracking-widest text-xs uppercase mb-6 bg-primary-fixed px-4 py-2 rounded-full">
-                Our Vision & Mission
-              </span>
-              <h1 className="text-4xl md:text-6xl font-extrabold tracking-tight text-on-background mb-8 leading-tight">
-                Menjadi Platform Konten Terpercaya untuk Setiap UMKM Indonesia
-              </h1>
+              <span className="text-primary font-bold tracking-widest text-xs uppercase mb-6 bg-primary-fixed px-4 py-2 rounded-full">Our Vision & Mission</span>
+              <h1 className="text-4xl md:text-6xl font-extrabold tracking-tight text-on-background mb-8 leading-tight">Menjadi Platform Konten Terpercaya untuk Setiap UMKM Indonesia</h1>
               <p className="text-lg md:text-xl text-on-surface-variant font-medium max-w-3xl leading-relaxed">
                 Memberdayakan pelaku UMKM lokal untuk menyuarakan kisah brand mereka melalui konten media sosial berkualitas profesional, terencana, dan konsisten.
               </p>
@@ -63,15 +59,12 @@ export default function AboutPage() {
             </div>
 
             <div className="space-y-6">
-              <span className="text-xs font-bold text-primary uppercase tracking-widest bg-primary-fixed px-3 py-1 rounded-full">
-                The Problem We Solve
-              </span>
-              <h2 className="text-3xl md:text-4xl font-bold tracking-tight text-on-background">
-                Mengatasi "Consistency Gap" pada Bisnis Kecil
-              </h2>
+              <span className="text-xs font-bold text-primary uppercase tracking-widest bg-primary-fixed px-3 py-1 rounded-full">The Problem We Solve</span>
+              <h2 className="text-3xl md:text-4xl font-bold tracking-tight text-on-background">Mengatasi "Consistency Gap" pada Bisnis Kecil</h2>
               <div className="space-y-4 text-on-surface-variant leading-relaxed text-base">
                 <p>
-                  Banyak pelaku UMKM Indonesia kesulitan bukan karena kualitas produk mereka kurang baik, melainkan karena ekosistem digital menuntut konsistensi konten setiap hari yang sulit dipertahankan sendirian di tengah kesibukan operasional bisnis.
+                  Banyak pelaku UMKM Indonesia kesulitan bukan karena kualitas produk mereka kurang baik, melainkan karena ekosistem digital menuntut konsistensi konten setiap hari yang sulit dipertahankan sendirian di tengah kesibukan
+                  operasional bisnis.
                 </p>
                 <p>
                   ContentHub lahir dari titik permasalahan nyata ini. Kami membangun ruang kerja editorial yang menyederhanakan perencanaan dari hulu ke hilir—memungkinkan pelaku usaha mengatur jadwal 1 bulan penuh hanya dalam waktu 1 jam.
@@ -80,9 +73,7 @@ export default function AboutPage() {
 
               <div className="flex gap-4 items-start p-6 bg-surface-container-lowest rounded-xl border border-outline-variant/15 shadow-sm">
                 <span className="material-symbols-outlined text-secondary text-3xl">lightbulb</span>
-                <p className="text-sm font-medium italic text-on-surface">
-                  "Misi kami adalah mengubah kebingungan dan beban pembuatan konten menjadi proses kreatif yang terstruktur dan berdampak nyata bagi pertumbuhan omzet bisnis."
-                </p>
+                <p className="text-sm font-medium italic text-on-surface">"Misi kami adalah mengubah kebingungan dan beban pembuatan konten menjadi proses kreatif yang terstruktur dan berdampak nyata bagi pertumbuhan omzet bisnis."</p>
               </div>
             </div>
           </div>
@@ -112,7 +103,7 @@ export default function AboutPage() {
                     src="https://lh3.googleusercontent.com/aida-public/AB6AXuApuRdYNFf16KtpxvvaaWy6buWkvuJTiwF5wTgZ5Q3EN03d80AE8YJnqTFxVq1YOkXkOQ0tqwwKM74Bff2HLKE_CWiRAGLWnnrEEz_wKPCgcyhc0gplly495v4SZ7juGc9efWxEnR30T1-6cEpA__u2hpVyWPJKBJv3gjs6tfVm7cVQRxqACGvTT-t1kbxw5u5vL3tre2MuAxUkdENWPioZN-6GRtO8KxE_D21qROdu_g9qOG04-IAdUb0S1G7xBitGBQ5Sritnuw"
                   />
                 </div>
-                <h3 className="font-bold text-base text-on-surface">M. Fajar</h3>
+                <h3 className="font-bold text-base text-on-surface">Zico Aryhton</h3>
                 <p className="text-xs font-semibold text-primary uppercase tracking-wider">Project Lead</p>
               </div>
 
@@ -125,7 +116,7 @@ export default function AboutPage() {
                     src="https://lh3.googleusercontent.com/aida-public/AB6AXuAEJ_RRYKebGx-ClyKZBB9LV5ZhiZLZ_-b9NYecWH3_NjzhGndoEKLoG6kTAWalSur4xjLqi3vWV6hJiI8LEJmn_6-h0Wq383ruD1ZcWDWk26aLzTFF9gAv5ITEvLQpB30EqAnZ4mJN7oFjM4sFO0MX8TMTThpcB9uLmo1U7y3sJxNDAANLHdFU5RriPUDZPoLbENJaIWgce3QR4ykFC9th54evU6EXhJWLkuljx8AjXmjr5-ypPBgTt8KtdtPJvylEF63Z17HZLw"
                   />
                 </div>
-                <h3 className="font-bold text-base text-on-surface">Zahra A.</h3>
+                <h3 className="font-bold text-base text-on-surface">Firman syah</h3>
                 <p className="text-xs font-semibold text-primary uppercase tracking-wider">UI/UX Designer</p>
               </div>
 
@@ -164,7 +155,7 @@ export default function AboutPage() {
                     src="https://lh3.googleusercontent.com/aida-public/AB6AXuAMYUu4pu74D8oi8XA3zlLEMrB96ZOA0kqdLqXRngZvrHnBmSK9p6SYNwg4OcE9gR7b3vWtd6EvClyNz5q1XfTNqO7HasxFSSKXmp6CTvpzRY9yQJevqRoJotKVvkKlZrpX_4yvteIH_4N5Qh19WuyumJQwwaeGyClq6pnOWyWSdRDnNVmFZLuT4bXeA6auN0toEFgxPOS5alnYcOy9KNsGQM3jACJgI5SWcMSEebRhiUYqsjDB7o0gB88Eu1s0lsXz8rnteKmdNA"
                   />
                 </div>
-                <h3 className="font-bold text-base text-on-surface">Muhammad Hasran</h3>
+                <h3 className="font-bold text-base text-on-surface">Wahyudi</h3>
                 <p className="text-xs font-semibold text-secondary uppercase tracking-wider">UMKM Persona Owner</p>
               </div>
             </div>
@@ -176,20 +167,12 @@ export default function AboutPage() {
           <div className="max-w-6xl mx-auto">
             <div className="bg-gradient-to-r from-primary to-primary-container rounded-3xl p-12 md:p-16 text-center text-on-primary shadow-xl">
               <h2 className="text-3xl md:text-5xl font-bold mb-6">Siap Mengembangkan Konten Bisnis Anda?</h2>
-              <p className="text-base md:text-lg mb-10 opacity-90 max-w-2xl mx-auto">
-                Bergabunglah bersama ribuan UMKM Indonesia yang telah mentransformasi produktivitas media sosial mereka.
-              </p>
+              <p className="text-base md:text-lg mb-10 opacity-90 max-w-2xl mx-auto">Bergabunglah bersama ribuan UMKM Indonesia yang telah mentransformasi produktivitas media sosial mereka.</p>
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                <Link
-                  to="/pricing"
-                  className="bg-white text-primary font-bold px-8 py-4 rounded-xl hover:shadow-lg transition-all"
-                >
+                <Link to="/pricing" className="bg-white text-primary font-bold px-8 py-4 rounded-xl hover:shadow-lg transition-all">
                   Pilih Paket Berlangganan
                 </Link>
-                <Link
-                  to="/register"
-                  className="border-2 border-white/40 text-white font-bold px-8 py-4 rounded-xl hover:bg-white/10 transition-all"
-                >
+                <Link to="/register" className="border-2 border-white/40 text-white font-bold px-8 py-4 rounded-xl hover:bg-white/10 transition-all">
                   Daftar Akun Baru
                 </Link>
               </div>
