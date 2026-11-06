@@ -1,10 +1,20 @@
+
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import Sidebar from '../components/Sidebar';
+import Navbar from '../components/Navbar';
+import { useAuth } from '../context/AuthContext';
 
 export default function HelpCenterPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [openFaq, setOpenFaq] = useState(0);
+
+  const { token } = useAuth();
+
+  // Memeriksa sesi login sebenarnya, bukan akun default AuthContext.
+  const isLoggedIn =
+    (Boolean(token) || Boolean(localStorage.getItem('contenthub_user'))) &&
+    localStorage.getItem('contenthub_logged_out') !== 'true';
 
   const faqs = [
     {
@@ -34,27 +44,43 @@ export default function HelpCenterPage() {
   ];
 
   const filteredFaqs = faqs.filter(
-    (f) => f.q.toLowerCase().includes(searchQuery.toLowerCase()) || f.a.toLowerCase().includes(searchQuery.toLowerCase())
+    (f) =>
+      f.q.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      f.a.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
   return (
     <div className="min-h-screen bg-slate-50/70 text-slate-800">
-      <Sidebar />
 
-      <main className="ml-0 md:ml-64 p-6 sm:p-8 lg:p-10 min-h-screen transition-all">
+      {isLoggedIn ? <Sidebar /> : <Navbar publicMode />}
+
+      <main
+        className={`min-h-screen transition-all ${
+          isLoggedIn
+            ? 'ml-0 md:ml-64 p-6 sm:p-8 lg:p-10'
+            : 'pt-24 px-6 pb-6 sm:px-8 lg:px-10'
+        }`}
+      >
         <div className="max-w-6xl mx-auto space-y-10">
-          
+
           {/* Top Breadcrumb & Page Title */}
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-200/80">
             <div>
               <div className="flex items-center gap-2 text-xs font-bold text-slate-400 mb-1">
-                <Link to="/dashboard" className="hover:text-primary transition-colors">Workspace</Link>
+                <Link
+                  to={isLoggedIn ? '/dashboard' : '/'}
+                  className="hover:text-primary transition-colors"
+                >
+                  {isLoggedIn ? 'Workspace' : 'Home'}
+                </Link>
                 <span>/</span>
                 <span className="text-primary">Pusat Bantuan & Panduan</span>
               </div>
+
               <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">
                 Pusat Bantuan ContentHub
               </h1>
+
               <p className="text-xs sm:text-sm text-slate-500 mt-1">
                 Panduan operasional lengkap, integrasi Canva, regulasi legal, serta FAQ untuk mitra UMKM.
               </p>
@@ -76,14 +102,16 @@ export default function HelpCenterPage() {
           {/* Hero Search Box */}
           <section className="relative rounded-3xl overflow-hidden bg-gradient-to-br from-indigo-900 via-primary to-blue-700 p-8 sm:p-12 text-center text-white shadow-lg">
             <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(255,255,255,0.15),transparent_50%)] pointer-events-none"></div>
-            
+
             <div className="relative z-10 max-w-2xl mx-auto space-y-4">
               <span className="inline-block text-[11px] font-extrabold tracking-widest uppercase bg-white/20 backdrop-blur-md px-3.5 py-1 rounded-full text-white border border-white/20">
                 Help Center & Knowledge Base
               </span>
+
               <h2 className="text-2xl sm:text-4xl font-extrabold tracking-tight">
                 Ada yang bisa kami bantu hari ini?
               </h2>
+
               <p className="text-white/80 text-xs sm:text-sm font-medium leading-relaxed">
                 Ketik kata kunci kebutuhan Anda untuk menemukan panduan instan, aturan layanan, atau solusi teknis.
               </p>
@@ -92,6 +120,7 @@ export default function HelpCenterPage() {
                 <span className="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 text-xl pointer-events-none">
                   search
                 </span>
+
                 <input
                   type="text"
                   value={searchQuery}
@@ -107,12 +136,17 @@ export default function HelpCenterPage() {
           <section className="space-y-4">
             <div className="flex items-center justify-between">
               <div>
-                <h2 className="text-lg sm:text-xl font-extrabold text-slate-900">Akses Cepat Informasi Utama</h2>
-                <p className="text-xs text-slate-500 mt-0.5">Pilih dokumen resmi atau modul integrasi yang ingin Anda jelajahi:</p>
+                <h2 className="text-lg sm:text-xl font-extrabold text-slate-900">
+                  Akses Cepat Informasi Utama
+                </h2>
+                <p className="text-xs text-slate-500 mt-0.5">
+                  Pilih dokumen resmi atau modul integrasi yang ingin Anda jelajahi:
+                </p>
               </div>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-5">
+
               {/* Card 1: Syarat & Ketentuan */}
               <Link
                 to="/terms"
@@ -122,12 +156,15 @@ export default function HelpCenterPage() {
                   <div className="w-12 h-12 rounded-xl bg-blue-50 text-blue-600 border border-blue-100 flex items-center justify-center mb-4 group-hover:scale-110 group-hover:bg-blue-600 group-hover:text-white transition-all shadow-xs">
                     <span className="material-symbols-outlined text-2xl">gavel</span>
                   </div>
+
                   <span className="text-[10px] font-bold uppercase tracking-wider text-blue-600 bg-blue-50 px-2 py-0.5 rounded-md">
                     Legalitas SaaS
                   </span>
+
                   <h3 className="text-base font-extrabold text-slate-900 mt-2.5 mb-1.5 group-hover:text-primary transition-colors">
                     Syarat & Ketentuan
                   </h3>
+
                   <p className="text-xs text-slate-500 leading-relaxed">
                     Pedoman resmi hak cipta materi, batas kewajiban, ketentuan paket langganan, dan aturan hukum operasional.
                   </p>
@@ -150,12 +187,15 @@ export default function HelpCenterPage() {
                   <div className="w-12 h-12 rounded-xl bg-emerald-50 text-emerald-600 border border-emerald-100 flex items-center justify-center mb-4 group-hover:scale-110 group-hover:bg-emerald-600 group-hover:text-white transition-all shadow-xs">
                     <span className="material-symbols-outlined text-2xl">verified_user</span>
                   </div>
+
                   <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-md">
                     Keamanan & Data
                   </span>
+
                   <h3 className="text-base font-extrabold text-slate-900 mt-2.5 mb-1.5 group-hover:text-emerald-600 transition-colors">
                     Kebijakan & Privasi
                   </h3>
+
                   <p className="text-xs text-slate-500 leading-relaxed">
                     Perlindungan informasi pribadi UMKM, standar enkripsi sandi SHA-256, dan jaminan kerahasiaan draf jadwal.
                   </p>
@@ -178,12 +218,15 @@ export default function HelpCenterPage() {
                   <div className="w-12 h-12 rounded-xl bg-purple-50 text-purple-600 border border-purple-100 flex items-center justify-center mb-4 group-hover:scale-110 group-hover:bg-purple-600 group-hover:text-white transition-all shadow-xs">
                     <span className="material-symbols-outlined text-2xl">menu_book</span>
                   </div>
+
                   <span className="text-[10px] font-bold uppercase tracking-wider text-purple-600 bg-purple-50 px-2 py-0.5 rounded-md">
                     Wawasan & Strategi
                   </span>
+
                   <h3 className="text-base font-extrabold text-slate-900 mt-2.5 mb-1.5 group-hover:text-purple-600 transition-colors">
                     Blog & Edukasi UMKM
                   </h3>
+
                   <p className="text-xs text-slate-500 leading-relaxed">
                     Artikel panduan waktu posting optimal (prime time), taktik copywriting persuasif, dan tips menaikkan omzet.
                   </p>
@@ -206,12 +249,15 @@ export default function HelpCenterPage() {
                   <div className="w-12 h-12 rounded-xl bg-cyan-50 text-cyan-600 border border-cyan-100 flex items-center justify-center mb-4 group-hover:scale-110 group-hover:bg-cyan-600 group-hover:text-white transition-all shadow-xs">
                     <span className="material-symbols-outlined text-2xl">handshake</span>
                   </div>
+
                   <span className="text-[10px] font-bold uppercase tracking-wider text-cyan-700 bg-cyan-50 px-2 py-0.5 rounded-md">
                     Integrasi Canva
                   </span>
+
                   <h3 className="text-base font-extrabold text-slate-900 mt-2.5 mb-1.5 group-hover:text-cyan-700 transition-colors">
                     Kerja Sama & Canva
                   </h3>
+
                   <p className="text-xs text-slate-500 leading-relaxed">
                     Kolaborasi resmi ContentHub dengan ekosistem Canva: otomasi desain grafis, sinkronisasi template, dan program mitra.
                   </p>
@@ -224,6 +270,7 @@ export default function HelpCenterPage() {
                   </span>
                 </div>
               </Link>
+
             </div>
           </section>
 
@@ -231,9 +278,14 @@ export default function HelpCenterPage() {
           <section className="bg-white p-6 sm:p-8 rounded-3xl border border-slate-200 shadow-xs space-y-6">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-4 border-b border-slate-100">
               <div>
-                <h2 className="text-xl font-extrabold text-slate-900">Pertanyaan yang Sering Diajukan (FAQ)</h2>
-                <p className="text-xs text-slate-500 mt-0.5">Solusi praktis untuk pertanyaan seputar fitur kalender, pembayaran, dan akun.</p>
+                <h2 className="text-xl font-extrabold text-slate-900">
+                  Pertanyaan yang Sering Diajukan (FAQ)
+                </h2>
+                <p className="text-xs text-slate-500 mt-0.5">
+                  Solusi praktis untuk pertanyaan seputar fitur kalender, pembayaran, dan akun.
+                </p>
               </div>
+
               <span className="text-xs font-bold text-primary bg-primary/10 px-3 py-1 rounded-full self-start sm:self-auto">
                 {filteredFaqs.length} Topik Tersedia
               </span>
@@ -247,6 +299,7 @@ export default function HelpCenterPage() {
               ) : (
                 filteredFaqs.map((faq, idx) => {
                   const isOpen = openFaq === idx;
+
                   return (
                     <div key={idx} className="py-4">
                       <button
@@ -256,11 +309,14 @@ export default function HelpCenterPage() {
                         <span className={`text-xs sm:text-sm font-extrabold transition-colors ${isOpen ? 'text-primary' : 'text-slate-800 group-hover:text-primary'}`}>
                           {faq.q}
                         </span>
+
                         <div className={`w-8 h-8 rounded-full flex items-center justify-center transition-all ${isOpen ? 'bg-primary text-white rotate-180' : 'bg-slate-100 text-slate-500 group-hover:bg-slate-200'}`}>
-                          <span className="material-symbols-outlined text-base">expand_more</span>
+                          <span className="material-symbols-outlined text-base">
+                            expand_more
+                          </span>
                         </div>
                       </button>
-                      
+
                       {isOpen && (
                         <div className="mt-3 p-4 bg-slate-50 rounded-2xl border border-slate-100 text-xs sm:text-sm text-slate-600 leading-relaxed animate-in fade-in duration-200">
                           {faq.a}
@@ -276,11 +332,15 @@ export default function HelpCenterPage() {
           {/* Need Direct Help Banner */}
           <section className="bg-gradient-to-r from-slate-900 to-slate-800 rounded-3xl p-6 sm:p-8 text-white flex flex-col md:flex-row items-center justify-between gap-6 shadow-sm">
             <div className="space-y-1 text-center md:text-left">
-              <h3 className="text-lg font-extrabold">Belum menemukan jawaban yang Anda cari?</h3>
+              <h3 className="text-lg font-extrabold">
+                Belum menemukan jawaban yang Anda cari?
+              </h3>
+
               <p className="text-xs text-slate-300 max-w-xl">
                 Tim Support ContentHub siap membantu operasional dan kendala teknis akun UMKM Anda setiap hari (08.00 - 22.00 WIB).
               </p>
             </div>
+
             <div className="flex flex-wrap gap-3">
               <a
                 href="mailto:support@contenthub.id"
@@ -289,6 +349,7 @@ export default function HelpCenterPage() {
                 <span className="material-symbols-outlined text-base">mail</span>
                 <span>Kirim Email</span>
               </a>
+
               <a
                 href="https://wa.me/6281234567890"
                 target="_blank"
