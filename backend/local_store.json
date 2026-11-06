@@ -12,7 +12,7 @@
       "avatar_url": "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=200&h=200&fit=crop",
       "email_verified": true,
       "created_at": "2026-10-01T08:00:00.000Z",
-      "updated_at": "2026-11-04T04:01:11.936Z"
+      "updated_at": "2026-11-06T06:10:31.323Z"
     },
     {
       "id": 3,
@@ -142,6 +142,34 @@
   ],
   "orders": [
     {
+      "id": 5,
+      "order_number": "ORD-1793945439423-7058",
+      "user_id": 1,
+      "customer_name": "Jerry Hernis",
+      "customer_email": "jerry.hernis@amigos.id",
+      "plan_id": 2,
+      "total_amount": "98000.00",
+      "status": "Paid",
+      "payment_method": "Virtual Account",
+      "payment_channel": "BCA Virtual Account",
+      "paid_at": "2026-11-06T06:10:46.399Z",
+      "created_at": "2026-11-06T06:10:39.423Z"
+    },
+    {
+      "id": 4,
+      "order_number": "ORD-1793944623141-3166",
+      "user_id": 1,
+      "customer_name": "Pelanggan ContentHub",
+      "customer_email": "jerry.hernis@amigos.id",
+      "plan_id": 2,
+      "total_amount": "98000.00",
+      "status": "Pending",
+      "payment_method": "Virtual Account",
+      "payment_channel": "BCA Virtual Account",
+      "paid_at": null,
+      "created_at": "2026-11-06T05:57:03.142Z"
+    },
+    {
       "id": 3,
       "order_number": "ORD-1793767297040-7669",
       "user_id": 8,
@@ -214,6 +242,26 @@
       "quantity": 1,
       "subtotal": "898000.00",
       "created_at": "2026-11-04T04:41:37.040Z"
+    },
+    {
+      "id": 4,
+      "order_id": 4,
+      "plan_id": 2,
+      "item_name": "ContentHub Starter (Bulanan)",
+      "price": "98000.00",
+      "quantity": 1,
+      "subtotal": "98000.00",
+      "created_at": "2026-11-06T05:57:03.142Z"
+    },
+    {
+      "id": 5,
+      "order_id": 5,
+      "plan_id": 2,
+      "item_name": "ContentHub Starter (Bulanan)",
+      "price": "98000.00",
+      "quantity": 1,
+      "subtotal": "98000.00",
+      "created_at": "2026-11-06T06:10:39.423Z"
     }
   ],
   "content_posts": [
