@@ -267,10 +267,15 @@ export const api = {
   },
 
   // ==========================================
-  // 8. ADMIN STATS
+  // 8. ADMIN STATS & AUDIT LOGS
   // ==========================================
   getAdminStats: async () => {
     const res = await apiClient.get('/admin/stats');
+    return res.data;
+  },
+
+  getArticleLogs: async () => {
+    const res = await apiClient.get('/article-logs');
     return res.data;
   },
 };

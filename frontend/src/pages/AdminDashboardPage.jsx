@@ -76,6 +76,7 @@ export default function AdminDashboardPage() {
     author: 'Editorial ContentHub',
     category: 'Strategi Konten',
   });
+  const [articleLogs, setArticleLogs] = useState([]);
   // 8. About State
   const [aboutData, setAboutData] = useState(null);
 
@@ -154,6 +155,7 @@ export default function AdminDashboardPage() {
       if (privacyRes.success && privacyRes.data?.length > 0) setPrivacyData(privacyRes.data[0]);
       if (partnershipsRes.success && partnershipsRes.data?.length > 0) setPartnershipData(partnershipsRes.data[0]);
       if (articlesRes.success) setArticles(articlesRes.data);
+      api.getArticleLogs().then(r => { if (r?.success && r.data) setArticleLogs(r.data); }).catch(() => {});
       if (aboutRes.success && aboutRes.data?.length > 0) setAboutData(aboutRes.data[0]);
 
       if (settingsRes.success && settingsRes.data) {
@@ -404,16 +406,20 @@ export default function AdminDashboardPage() {
   const handleSaveArticle = async (e) => {
     e.preventDefault();
     try {
+      const activeAdminName = currentUser?.name || articleForm.author || 'Jerry Hernis';
+      const payload = { ...articleForm, author: activeAdminName };
+
       if (editingArticle) {
-        const res = await api.updateContent('articles', editingArticle.id, articleForm);
-        if (res.success) showToast('Artikel blog berhasil diperbarui.');
+        const res = await api.updateContent('articles', editingArticle.id, payload);
+        if (res.success) showToast(`Artikel blog berhasil diperbarui oleh ${activeAdminName}.`);
       } else {
-        const res = await api.createContent('articles', articleForm);
-        if (res.success) showToast('Artikel blog baru berhasil diterbitkan.');
+        const res = await api.createContent('articles', payload);
+        if (res.success) showToast(`Artikel blog baru berhasil diterbitkan oleh ${activeAdminName}.`);
       }
       setArticleModalOpen(false);
       const resArticles = await api.getContent('articles');
       if (resArticles.success) setArticles(resArticles.data);
+      api.getArticleLogs().then(r => { if (r?.success && r.data) setArticleLogs(r.data); });
     } catch (err) {
       alert(err.message);
     }
@@ -427,6 +433,7 @@ export default function AdminDashboardPage() {
         showToast('Artikel berhasil dihapus.');
         const resArticles = await api.getContent('articles');
         if (resArticles.success) setArticles(resArticles.data);
+        api.getArticleLogs().then(r => { if (r?.success && r.data) setArticleLogs(r.data); });
       }
     } catch (err) {
       alert(err.message);
@@ -1605,6 +1612,72 @@ export default function AdminDashboardPage() {
                     </div>
                   </div>
                 ))}
+              </div>
+
+              {/* AUDIT TRAIL / LOG RIWAYAT PERUBAHAN ARTIKEL OLEH ADMIN */}
+              <div className="mt-8 pt-6 border-t border-slate-200 space-y-4">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                  <div>
+                    <h3 className="text-base font-extrabold text-slate-900 flex items-center gap-2">
+                      <span className="material-symbols-outlined text-primary text-xl">history_edu</span>
+                      Riwayat Aktivitas & Audit Log Artikel (Catatan Semua Admin)
+                    </h3>
+                    <p className="text-xs text-slate-500">
+                      Seluruh pembaruan, penambahan, dan penghapusan artikel oleh Admin (Jerry Hernis, Fauzul Rozaq, Firman syah, Zico) otomatis tercatat permanen di database Neon.
+                    </p>
+                  </div>
+                  <span className="px-3 py-1 bg-primary/10 text-primary text-xs font-bold rounded-full w-fit">
+                    {articleLogs.length} Aktivitas Terekam
+                  </span>
+                </div>
+
+                <div className="overflow-x-auto rounded-2xl border border-slate-200">
+                  <table className="w-full text-left text-xs">
+                    <thead className="bg-slate-50 border-b border-slate-200 text-slate-500 font-bold uppercase text-[10px] tracking-wider">
+                      <tr>
+                        <th className="py-3 px-4">Waktu (WIB)</th>
+                        <th className="py-3 px-4">Nama Admin</th>
+                        <th className="py-3 px-4">Aksi</th>
+                        <th className="py-3 px-4">Judul Artikel</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-100 bg-white">
+                      {articleLogs.length === 0 ? (
+                        <tr>
+                          <td colSpan="4" className="py-6 text-center text-slate-400">Belum ada riwayat aktivitas artikel.</td>
+                        </tr>
+                      ) : (
+                        articleLogs.map((log) => (
+                          <tr key={log.id} className="hover:bg-slate-50/80 transition-colors">
+                            <td className="py-3 px-4 text-slate-500 font-mono text-[11px] whitespace-nowrap">
+                              {log.created_at ? new Date(log.created_at).toLocaleString('id-ID', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : '-'} WIB
+                            </td>
+                            <td className="py-3 px-4 whitespace-nowrap">
+                              <span className="inline-flex items-center gap-1.5 font-bold text-slate-800">
+                                <span className="w-6 h-6 rounded-full bg-primary/15 text-primary flex items-center justify-center text-[10px] font-extrabold">
+                                  {log.admin_name ? log.admin_name.charAt(0).toUpperCase() : 'A'}
+                                </span>
+                                {log.admin_name || 'Admin'}
+                              </span>
+                            </td>
+                            <td className="py-3 px-4 whitespace-nowrap">
+                              <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-extrabold ${
+                                log.action === 'CREATE' ? 'bg-emerald-100 text-emerald-800' :
+                                log.action === 'UPDATE' ? 'bg-blue-100 text-blue-800' :
+                                'bg-red-100 text-red-800'
+                              }`}>
+                                {log.action === 'CREATE' ? 'Tambah Baru' : log.action === 'UPDATE' ? 'Perbarui' : 'Hapus'}
+                              </span>
+                            </td>
+                            <td className="py-3 px-4 text-slate-700 font-medium max-w-xs truncate">
+                              {log.article_title || `Artikel #${log.article_id}`}
+                            </td>
+                          </tr>
+                        ))
+                      )}
+                    </tbody>
+                  </table>
+                </div>
               </div>
             </div>
           )}

@@ -1811,6 +1811,17 @@ function registerUniversalContentRoutes(endpointPath, tableName, entityName) {
           updated_at: new Date().toISOString(),
         };
         store[tableName].push(newObj);
+        if (tableName === 'articles') {
+          store.article_logs = store.article_logs || [];
+          store.article_logs.unshift({
+            id: store.article_logs.length + 1,
+            article_id: newObj.id,
+            article_title: newObj.title,
+            admin_name: author || 'Admin ContentHub',
+            action: 'CREATE',
+            created_at: new Date().toISOString()
+          });
+        }
         db.saveStore();
         return res.status(201).json({ success: true, message: `${entityName} berhasil ditambahkan.`, data: newObj });
       }
@@ -1821,6 +1832,12 @@ function registerUniversalContentRoutes(endpointPath, tableName, entityName) {
         RETURNING *;
       `;
       const result = await db.query(query, [title.trim(), generatedSlug, description, image_url, author, category]);
+      if (tableName === 'articles' && result.rows[0]) {
+        db.query(
+          'INSERT INTO article_logs (article_id, article_title, admin_name, action) VALUES ($1, $2, $3, $4)',
+          [result.rows[0].id, result.rows[0].title, author || 'Admin ContentHub', 'CREATE']
+        ).catch((e) => console.warn('Gagal mencatat log create artikel:', e.message));
+      }
       res.status(201).json({ success: true, message: `${entityName} berhasil ditambahkan.`, data: result.rows[0] });
     } catch (error) {
       res.status(500).json({ success: false, message: `Gagal menambahkan ${entityName}`, error: error.message });
@@ -1845,6 +1862,17 @@ function registerUniversalContentRoutes(endpointPath, tableName, entityName) {
         if (author) store[tableName][index].author = author;
         if (category) store[tableName][index].category = category;
         store[tableName][index].updated_at = new Date().toISOString();
+        if (tableName === 'articles') {
+          store.article_logs = store.article_logs || [];
+          store.article_logs.unshift({
+            id: store.article_logs.length + 1,
+            article_id: parseInt(id, 10),
+            article_title: store[tableName][index].title,
+            admin_name: author || 'Admin ContentHub',
+            action: 'UPDATE',
+            created_at: new Date().toISOString()
+          });
+        }
         db.saveStore();
 
         return res.json({ success: true, message: `${entityName} berhasil diperbarui.`, data: store[tableName][index] });
@@ -1864,6 +1892,14 @@ function registerUniversalContentRoutes(endpointPath, tableName, entityName) {
       `;
       const result = await db.query(query, [title, slug, description, image_url, author, category, id]);
       if (result.rows.length === 0) return res.status(404).json({ success: false, message: `${entityName} tidak ditemukan` });
+
+      if (tableName === 'articles') {
+        db.query(
+          'INSERT INTO article_logs (article_id, article_title, admin_name, action) VALUES ($1, $2, $3, $4)',
+          [id, result.rows[0].title, author || 'Admin ContentHub', 'UPDATE']
+        ).catch((e) => console.warn('Gagal mencatat log update artikel:', e.message));
+      }
+
       res.json({ success: true, message: `${entityName} berhasil diperbarui.`, data: result.rows[0] });
     } catch (error) {
       res.status(500).json({ success: false, message: `Gagal memperbarui ${entityName}`, error: error.message });
@@ -1874,18 +1910,38 @@ function registerUniversalContentRoutes(endpointPath, tableName, entityName) {
   app.delete(`/api/content/${endpointPath}/:id`, async (req, res) => {
     try {
       const { id } = req.params;
+      const adminName = req.headers['x-admin-name'] || 'Admin ContentHub';
       const store = db.getStore ? db.getStore() : null;
 
       if (store && store[tableName]) {
         const index = store[tableName].findIndex((x) => x.id === parseInt(id, 10));
         if (index === -1) return res.status(404).json({ success: false, message: `${entityName} tidak ditemukan` });
         const deleted = store[tableName].splice(index, 1)[0];
+        if (tableName === 'articles') {
+          store.article_logs = store.article_logs || [];
+          store.article_logs.unshift({
+            id: store.article_logs.length + 1,
+            article_id: parseInt(id, 10),
+            article_title: deleted.title,
+            admin_name: adminName,
+            action: 'DELETE',
+            created_at: new Date().toISOString()
+          });
+        }
         db.saveStore();
         return res.json({ success: true, message: `${entityName} '${deleted.title}' berhasil dihapus.` });
       }
 
       const result = await db.query(`DELETE FROM ${tableName} WHERE id = $1 RETURNING id, title`, [id]);
       if (result.rows.length === 0) return res.status(404).json({ success: false, message: `${entityName} tidak ditemukan` });
+
+      if (tableName === 'articles') {
+        db.query(
+          'INSERT INTO article_logs (article_id, article_title, admin_name, action) VALUES ($1, $2, $3, $4)',
+          [id, result.rows[0].title, adminName, 'DELETE']
+        ).catch((e) => console.warn('Gagal mencatat log delete artikel:', e.message));
+      }
+
       res.json({ success: true, message: `${entityName} '${result.rows[0].title}' berhasil dihapus.` });
     } catch (error) {
       res.status(500).json({ success: false, message: `Gagal menghapus ${entityName}`, error: error.message });
@@ -1899,6 +1955,20 @@ registerUniversalContentRoutes('privacy', 'privacy_policies', 'Kebijakan & Priva
 registerUniversalContentRoutes('partnerships', 'partnerships', 'Kerja Sama & Integrasi Canva');
 registerUniversalContentRoutes('articles', 'articles', 'Artikel Blog');
 registerUniversalContentRoutes('about', 'about_content', 'Konten Halaman About');
+
+// Endpoint Audit Log Artikel (Mencatat semua aksi Admin)
+app.get('/api/article-logs', async (req, res) => {
+  try {
+    const store = db.getStore ? db.getStore() : null;
+    if (store && store.article_logs) {
+      return res.json({ success: true, count: store.article_logs.length, data: store.article_logs });
+    }
+    const r = await db.query('SELECT * FROM article_logs ORDER BY created_at DESC LIMIT 50');
+    res.json({ success: true, count: r.rows.length, data: r.rows });
+  } catch (err) {
+    res.status(500).json({ success: false, message: 'Gagal memuat log artikel', error: err.message });
+  }
+});
 
 // ==========================================
 // 7. PENGATURAN WEB (WEB SETTINGS)
