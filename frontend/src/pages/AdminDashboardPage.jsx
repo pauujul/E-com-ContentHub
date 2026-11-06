@@ -384,7 +384,7 @@ export default function AdminDashboardPage() {
         slug: article.slug,
         description: article.description,
         image_url: article.image_url || '',
-        author: article.author || 'Editorial ContentHub',
+        author: article.author || currentUser?.name || 'Jerry Hernis',
         category: article.category || 'Strategi Konten',
       });
     } else {
@@ -394,7 +394,7 @@ export default function AdminDashboardPage() {
         slug: '',
         description: '',
         image_url: '',
-        author: 'Editorial ContentHub',
+        author: currentUser?.name || 'Jerry Hernis',
         category: 'Strategi Konten',
       });
     }
@@ -1582,7 +1582,12 @@ export default function AdminDashboardPage() {
                     </div>
 
                     <div className="p-4 pt-0 border-t border-slate-100 flex items-center justify-between text-xs mt-3">
-                      <span className="text-[11px] text-slate-400">{art.author}</span>
+                      <div className="flex flex-col">
+                        <span className="text-[11px] font-bold text-slate-700">✍️ {art.author || 'Jerry Hernis'}</span>
+                        <span className="text-[10px] text-slate-400">
+                          {art.updated_at ? new Date(art.updated_at).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : '-'} WIB
+                        </span>
+                      </div>
                       <div className="flex items-center gap-2">
                         <button
                           onClick={() => handleOpenArticleModal(art)}
