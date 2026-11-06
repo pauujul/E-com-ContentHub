@@ -1337,8 +1337,8 @@ app.get('/api/orders', async (req, res) => {
     let query = `
       SELECT o.*, u.name AS customer_name, u.email AS customer_email, sp.name AS plan_name, sp.billing_cycle
       FROM orders o
-      JOIN users u ON o.user_id = u.id
-      JOIN subscription_plans sp ON o.plan_id = sp.id
+      LEFT JOIN users u ON o.user_id = u.id
+      LEFT JOIN subscription_plans sp ON o.plan_id = sp.id
     `;
     const params = [];
     const parsedUserId = user_id && user_id !== 'undefined' && user_id !== 'null' && !isNaN(parseInt(user_id, 10)) ? parseInt(user_id, 10) : null;

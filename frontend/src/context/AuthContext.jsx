@@ -36,6 +36,121 @@ export function AuthProvider({ children }) {
   });
 
   const [allUsers, setAllUsers] = useState([]);
+  const [activeSubscription, setActiveSubscription] = useState(() => {
+    try {
+      const savedUser = localStorage.getItem('contenthub_user');
+      const uid = savedUser ? JSON.parse(savedUser)?.id : 8;
+      const cached = localStorage.getItem(`contenthub_sub_${uid}`);
+      if (cached) return JSON.parse(cached);
+    } catch (e) {}
+    return {
+      plan_id: 2,
+      plan_name: 'ContentHub Starter',
+      billing_cycle: 'Bulanan',
+      status: 'Paid',
+      status_label: 'Aktif',
+      is_active: true,
+    };
+  });
+  const [loadingSubscription, setLoadingSubscription] = useState(false);
+
+  // Fungsi sinkronisasi status paket keanggotaan subscription secara realtime
+  const refreshSubscription = async (userId = currentUser?.id) => {
+    if (!userId) {
+      setActiveSubscription(null);
+      return null;
+    }
+    setLoadingSubscription(true);
+    try {
+      const res = await api.getOrders(userId);
+      if (res.success && Array.isArray(res.data) && res.data.length > 0) {
+        // Cari order Paid paling baru
+        const paidOrder = res.data.find((o) => o.status === 'Paid');
+        if (paidOrder) {
+          const sub = {
+            id: paidOrder.id,
+            order_number: paidOrder.order_number,
+            plan_id: paidOrder.plan_id,
+            plan_name: paidOrder.plan_name || 'ContentHub Starter',
+            billing_cycle: paidOrder.billing_cycle || 'Bulanan',
+            status: 'Paid',
+            status_label: 'Aktif',
+            total_amount: paidOrder.total_amount,
+            paid_at: paidOrder.paid_at || paidOrder.created_at,
+            created_at: paidOrder.created_at,
+            payment_channel: paidOrder.payment_channel || 'Virtual Account',
+            is_active: true,
+            is_free: false,
+          };
+          setActiveSubscription(sub);
+          localStorage.setItem(`contenthub_sub_${userId}`, JSON.stringify(sub));
+          return sub;
+        }
+
+        // Jika belum ada Paid, cek order Pending
+        const pendingOrder = res.data.find((o) => o.status === 'Pending');
+        if (pendingOrder) {
+          const sub = {
+            id: pendingOrder.id,
+            order_number: pendingOrder.order_number,
+            plan_id: pendingOrder.plan_id,
+            plan_name: pendingOrder.plan_name || 'ContentHub Starter',
+            billing_cycle: pendingOrder.billing_cycle || 'Bulanan',
+            status: 'Pending',
+            status_label: 'Menunggu Pembayaran',
+            total_amount: pendingOrder.total_amount,
+            created_at: pendingOrder.created_at,
+            payment_channel: pendingOrder.payment_channel || 'Virtual Account',
+            is_active: false,
+            is_free: false,
+          };
+          setActiveSubscription(sub);
+          localStorage.setItem(`contenthub_sub_${userId}`, JSON.stringify(sub));
+          return sub;
+        }
+      }
+
+      // Default jika belum pernah bertransaksi
+      const freeSub = {
+        plan_id: 1,
+        plan_name: 'ContentHub Starter Trial',
+        billing_cycle: 'Free',
+        status: 'Free',
+        status_label: 'Gratis',
+        is_active: false,
+        is_free: true,
+      };
+      setActiveSubscription(freeSub);
+      localStorage.setItem(`contenthub_sub_${userId}`, JSON.stringify(freeSub));
+      return freeSub;
+    } catch (err) {
+      console.warn('Gagal memuat status langganan dari API:', err.message);
+      try {
+        const cached = localStorage.getItem(`contenthub_sub_${userId}`);
+        if (cached) {
+          const parsed = JSON.parse(cached);
+          setActiveSubscription(parsed);
+          return parsed;
+        }
+      } catch (e) {}
+      return null;
+    } finally {
+      setLoadingSubscription(false);
+    }
+  };
+
+  // Muat status langganan saat currentUser berubah
+  useEffect(() => {
+    if (currentUser?.id) {
+      try {
+        const cached = localStorage.getItem(`contenthub_sub_${currentUser.id}`);
+        if (cached) setActiveSubscription(JSON.parse(cached));
+      } catch (e) {}
+      refreshSubscription(currentUser.id);
+    } else {
+      setActiveSubscription(null);
+    }
+  }, [currentUser?.id]);
 
   // Muat daftar pengguna untuk switcher
   useEffect(() => {
@@ -110,6 +225,9 @@ export function AuthProvider({ children }) {
         token,
         allUsers,
         isAdmin,
+        activeSubscription,
+        loadingSubscription,
+        refreshSubscription,
         login,
         register,
         switchUser,

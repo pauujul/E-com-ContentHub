@@ -6,7 +6,7 @@ import { useAuth } from '../context/AuthContext';
 import api from '../services/api';
 
 export default function UserProfilePage() {
-  const { currentUser, updateCurrentUser, logout } = useAuth();
+  const { currentUser, updateCurrentUser, logout, activeSubscription, refreshSubscription } = useAuth();
   const navigate = useNavigate();
 
   const handleLogout = () => {
@@ -14,7 +14,7 @@ export default function UserProfilePage() {
     navigate('/');
   };
 
-  const [activeTab, setActiveTab] = useState('profile'); // 'profile' | 'password'
+  const [activeTab, setActiveTab] = useState('profile'); // 'profile' | 'password' | 'subscription'
 
   // Tab 1: Form Profil
   const [profileForm, setProfileForm] = useState({
@@ -37,6 +37,11 @@ export default function UserProfilePage() {
   const [successMsg, setSuccessMsg] = useState('');
   const [errorMsg, setErrorMsg] = useState('');
 
+  // Riwayat Transaksi & Keanggotaan User
+  const [userOrders, setUserOrders] = useState([]);
+  const [loadingOrders, setLoadingOrders] = useState(false);
+  const [simulatingPaymentId, setSimulatingPaymentId] = useState(null);
+
   // ==========================================
   // STATE MODAL UPGRADE SUBSCRIPTION (WORKSPACE POP-UP)
   // ==========================================
@@ -51,6 +56,46 @@ export default function UserProfilePage() {
   const [paymentError, setPaymentError] = useState('');
   const [orderResult, setOrderResult] = useState(null);
   const [copiedVA, setCopiedVA] = useState(false);
+
+  const fetchUserOrders = async () => {
+    if (!currentUser?.id) return;
+    setLoadingOrders(true);
+    try {
+      const res = await api.getOrders(currentUser.id);
+      if (res.success && res.data) {
+        setUserOrders(res.data);
+      }
+    } catch (err) {
+      console.warn('Gagal memuat riwayat order user:', err);
+    } finally {
+      setLoadingOrders(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchUserOrders();
+  }, [currentUser?.id]);
+
+  const handleSimulatePayOrder = async (orderId) => {
+    if (!orderId) return;
+    setSimulatingPaymentId(orderId);
+    try {
+      const res = await api.updateOrderStatus(orderId, 'Paid');
+      if (res.success) {
+        setSuccessMsg('Pembayaran Berhasil! Paket langganan Anda kini aktif (Status: Paid).');
+        setTimeout(() => setSuccessMsg(''), 5000);
+        await refreshSubscription();
+        await fetchUserOrders();
+      } else {
+        throw new Error(res.message || 'Gagal mengubah status');
+      }
+    } catch (err) {
+      setErrorMsg(err.response?.data?.message || err.message || 'Gagal memverifikasi simulasi pembayaran.');
+      setTimeout(() => setErrorMsg(''), 5000);
+    } finally {
+      setSimulatingPaymentId(null);
+    }
+  };
 
   const fetchPlans = async () => {
     setLoadingPlans(true);
@@ -103,6 +148,8 @@ export default function UserProfilePage() {
       if (res.success && res.data) {
         setOrderResult(res.data);
         setUpgradeStep('invoice');
+        refreshSubscription();
+        fetchUserOrders();
       } else {
         throw new Error(res.message || 'Gagal memproses transaksi upgrade.');
       }
@@ -118,6 +165,8 @@ export default function UserProfilePage() {
     setUpgradeStep('plans');
     setSelectedUpgradePlan(null);
     setOrderResult(null);
+    refreshSubscription();
+    fetchUserOrders();
   };
 
   const formatRupiah = (val) => {
@@ -297,11 +346,32 @@ export default function UserProfilePage() {
               </div>
 
               <div>
-                <div className="flex items-center gap-2">
+                <div className="flex flex-wrap items-center gap-2">
                   <h2 className="text-xl font-extrabold text-on-surface">{currentUser?.name || 'Pengguna ContentHub'}</h2>
                   <span className="text-[10px] font-extrabold uppercase px-2 py-0.5 rounded bg-primary/10 text-primary">
                     {currentUser?.role || 'Customer'}
                   </span>
+
+                  {/* Tanda Keanggotaan Subscription */}
+                  {activeSubscription?.status === 'Paid' ? (
+                    <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-50 border border-emerald-300 text-emerald-800 text-xs font-black shadow-xs">
+                      <span className="material-symbols-outlined text-sm text-emerald-600">verified</span>
+                      <span>⭐ {activeSubscription.plan_name}</span>
+                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                      <span className="text-[9px] uppercase tracking-wider font-extrabold bg-emerald-200/80 text-emerald-900 px-1.5 py-0.2 rounded-full">Aktif</span>
+                    </div>
+                  ) : activeSubscription?.status === 'Pending' ? (
+                    <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-50 border border-amber-300 text-amber-800 text-xs font-bold shadow-xs">
+                      <span className="material-symbols-outlined text-sm text-amber-600">hourglass_top</span>
+                      <span>{activeSubscription.plan_name}</span>
+                      <span className="text-[9px] uppercase tracking-wider font-extrabold bg-amber-200 text-amber-900 px-1.5 py-0.2 rounded-full">Menunggu Pembayaran</span>
+                    </div>
+                  ) : (
+                    <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-slate-100 border border-slate-200 text-slate-700 text-xs font-bold">
+                      <span className="material-symbols-outlined text-sm text-slate-500">lock_open</span>
+                      <span>Starter Trial (Free)</span>
+                    </div>
+                  )}
                 </div>
                 <p className="text-xs text-on-surface-variant mt-0.5">{currentUser?.email}</p>
                 <div className="flex items-center gap-3 mt-2 text-xs font-semibold text-outline">
@@ -325,13 +395,13 @@ export default function UserProfilePage() {
                 className="w-full sm:w-auto px-6 py-3 bg-gradient-to-r from-amber-500 via-orange-500 to-amber-600 hover:from-amber-600 hover:to-orange-700 text-white rounded-2xl text-xs font-extrabold shadow-lg shadow-orange-500/25 flex items-center justify-center gap-2 transition-all hover:scale-[1.02] active:scale-95 cursor-pointer whitespace-nowrap"
               >
                 <span className="material-symbols-outlined text-lg">workspace_premium</span>
-                Upgrade Subscription
+                {activeSubscription?.status === 'Paid' ? 'Kelola / Ganti Paket' : 'Upgrade Subscription'}
               </button>
             </div>
           </div>
 
           {/* Tabs Navigation */}
-          <div className="flex gap-2 p-1.5 bg-surface-container-high rounded-2xl w-fit">
+          <div className="flex flex-wrap gap-2 p-1.5 bg-surface-container-high rounded-2xl w-fit">
             <button
               onClick={() => {
                 setActiveTab('profile');
@@ -356,6 +426,19 @@ export default function UserProfilePage() {
             >
               <span className="material-symbols-outlined text-base">key</span>
               2. Keamanan & Kata Sandi
+            </button>
+
+            <button
+              onClick={() => {
+                setActiveTab('subscription');
+                clearAlerts();
+              }}
+              className={`px-5 py-2.5 rounded-xl text-xs font-extrabold transition-all flex items-center gap-2 cursor-pointer ${
+                activeTab === 'subscription' ? 'bg-white shadow-sm text-primary' : 'text-slate-500 hover:text-slate-800'
+              }`}
+            >
+              <span className="material-symbols-outlined text-base">workspace_premium</span>
+              3. Paket & Status Keanggotaan
             </button>
           </div>
 
@@ -537,6 +620,236 @@ export default function UserProfilePage() {
                   </button>
                 </div>
               </form>
+            </div>
+          )}
+
+          {/* TAB 3: STATUS KEANGGOTAAN & PAKET SUBSCRIPTION */}
+          {activeTab === 'subscription' && (
+            <div className="space-y-6 animate-in fade-in duration-200">
+              {/* Card Ringkasan Paket Aktif */}
+              <div className="bg-gradient-to-br from-white via-slate-50/50 to-primary/5 rounded-3xl p-8 border border-outline-variant/15 shadow-sm space-y-6">
+                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-6 border-b border-slate-100">
+                  <div className="flex items-center gap-4">
+                    <div className="w-14 h-14 rounded-2xl bg-gradient-to-tr from-amber-500 to-orange-400 text-white flex items-center justify-center font-bold shadow-md shadow-amber-500/20">
+                      <span className="material-symbols-outlined text-2xl">workspace_premium</span>
+                    </div>
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs font-extrabold uppercase tracking-widest text-primary">Status Keanggotaan</span>
+                        <span className="text-slate-300">•</span>
+                        <span className="text-xs text-slate-500">Tier Langganan UMKM</span>
+                      </div>
+                      <h3 className="text-2xl font-black text-slate-900 mt-0.5">
+                        {activeSubscription?.status === 'Paid'
+                          ? `⭐ ${activeSubscription.plan_name}`
+                          : activeSubscription?.status === 'Pending'
+                          ? `⏳ ${activeSubscription.plan_name} (Pending)`
+                          : '🌱 Starter Trial (Free Tier)'}
+                      </h3>
+                    </div>
+                  </div>
+
+                  <div className="flex flex-wrap items-center gap-3">
+                    {activeSubscription?.status === 'Paid' ? (
+                      <span className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-emerald-100 text-emerald-800 text-xs font-black shadow-xs">
+                        <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                        Langganan Aktif ({activeSubscription.billing_cycle || 'Bulanan'})
+                      </span>
+                    ) : activeSubscription?.status === 'Pending' ? (
+                      <span className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-amber-100 text-amber-800 text-xs font-black shadow-xs">
+                        <span className="material-symbols-outlined text-sm">hourglass_top</span>
+                        Menunggu Pembayaran
+                      </span>
+                    ) : (
+                      <span className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-slate-200 text-slate-700 text-xs font-bold">
+                        Akses Percobaan Gratis
+                      </span>
+                    )}
+
+                    <button
+                      onClick={handleOpenUpgradeModal}
+                      className="px-5 py-2.5 bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 text-white font-extrabold text-xs rounded-xl shadow-md shadow-orange-500/20 transition-all hover:scale-105 active:scale-95 cursor-pointer flex items-center gap-1.5"
+                    >
+                      <span className="material-symbols-outlined text-base">upgrade</span>
+                      {activeSubscription?.status === 'Paid' ? 'Ubah / Upgrade Paket' : 'Upgrade ke Starter / Pro'}
+                    </button>
+                  </div>
+                </div>
+
+                {/* Grid Informasi Detail Langganan */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                  <div className="p-4 bg-white rounded-2xl border border-slate-200/80 shadow-xs space-y-1">
+                    <span className="text-[10px] font-extrabold uppercase text-slate-400">Siklus Penagihan</span>
+                    <p className="text-sm font-extrabold text-slate-800">{activeSubscription?.billing_cycle || 'Bulanan'}</p>
+                    <p className="text-[11px] text-slate-500">Perpanjangan berkala aktif</p>
+                  </div>
+
+                  <div className="p-4 bg-white rounded-2xl border border-slate-200/80 shadow-xs space-y-1">
+                    <span className="text-[10px] font-extrabold uppercase text-slate-400">Total Biaya Paket</span>
+                    <p className="text-sm font-extrabold text-primary">
+                      {activeSubscription?.total_amount
+                        ? formatRupiah(activeSubscription.total_amount)
+                        : (activeSubscription?.plan_name?.toLowerCase().includes('starter') ? 'Rp 98.000 / bln' : 'Rp 0')}
+                    </p>
+                    <p className="text-[11px] text-slate-500">Termasuk pajak & biaya admin</p>
+                  </div>
+
+                  <div className="p-4 bg-white rounded-2xl border border-slate-200/80 shadow-xs space-y-1">
+                    <span className="text-[10px] font-extrabold uppercase text-slate-400">No. Invoice Terakhir</span>
+                    <p className="text-sm font-mono font-extrabold text-slate-800 truncate">
+                      {activeSubscription?.order_number ? `#${activeSubscription.order_number}` : 'Belum Ada Transaksi'}
+                    </p>
+                    <p className="text-[11px] text-slate-500">ID Faktur Resmi</p>
+                  </div>
+
+                  <div className="p-4 bg-white rounded-2xl border border-slate-200/80 shadow-xs space-y-1">
+                    <span className="text-[10px] font-extrabold uppercase text-slate-400">Integrasi Desain</span>
+                    <p className="text-sm font-extrabold text-emerald-700 flex items-center gap-1">
+                      <span className="material-symbols-outlined text-base">palette</span>
+                      Canva Pro Siap Pakai
+                    </p>
+                    <p className="text-[11px] text-slate-500">One-click Sync Kalender</p>
+                  </div>
+                </div>
+
+                {/* Included Features List */}
+                <div className="p-5 bg-white rounded-2xl border border-slate-200/80 space-y-3">
+                  <h4 className="text-xs font-black uppercase tracking-wider text-slate-700 flex items-center gap-2">
+                    <span className="material-symbols-outlined text-sm text-primary">verified_user</span>
+                    Fasilitas Unggulan yang Termasuk dalam Paket Anda:
+                  </h4>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2.5 text-xs text-slate-700 font-medium">
+                    <div className="flex items-center gap-2">
+                      <span className="material-symbols-outlined text-base text-emerald-600">check_circle</span>
+                      <span>Kalender Drag & Drop Interaktif Penuh</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className="material-symbols-outlined text-base text-emerald-600">check_circle</span>
+                      <span>50+ Template Konten Siap Pakai</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className="material-symbols-outlined text-base text-emerald-600">check_circle</span>
+                      <span>Editor Terhubung Langsung Canva</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className="material-symbols-outlined text-base text-emerald-600">check_circle</span>
+                      <span>Pengingat Jadwal via Email (Alert)</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className="material-symbols-outlined text-base text-emerald-600">check_circle</span>
+                      <span>Hingga 5 Saluran Media Sosial</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className="material-symbols-outlined text-base text-emerald-600">check_circle</span>
+                      <span>Dukungan WhatsApp Prioritas UMKM</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Riwayat Faktur & Transaksi Pemesanan */}
+              <div className="bg-white rounded-3xl p-8 border border-outline-variant/15 shadow-sm space-y-4">
+                <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+                  <div>
+                    <h3 className="text-lg font-extrabold text-on-surface">Riwayat Transaksi & Faktur Langganan</h3>
+                    <p className="text-xs text-on-surface-variant">Daftar semua invoice pemesanan subscription paket Anda di ContentHub</p>
+                  </div>
+                  <button
+                    onClick={fetchUserOrders}
+                    className="p-2 text-slate-500 hover:text-primary hover:bg-slate-50 rounded-xl text-xs font-bold transition-colors flex items-center gap-1 cursor-pointer"
+                    title="Segarkan Riwayat Pesanan"
+                  >
+                    <span className="material-symbols-outlined text-base">refresh</span>
+                    Refresh
+                  </button>
+                </div>
+
+                {loadingOrders ? (
+                  <div className="p-8 text-center text-slate-400 text-xs">Memuat data transaksi...</div>
+                ) : userOrders.length === 0 ? (
+                  <div className="p-8 text-center bg-slate-50 rounded-2xl border border-dashed border-slate-200">
+                    <span className="material-symbols-outlined text-3xl text-slate-400 mb-1">receipt_long</span>
+                    <p className="text-xs font-bold text-slate-600">Belum ada riwayat pesanan.</p>
+                    <p className="text-[11px] text-slate-400 mt-0.5">Tingkatkan paket Anda melalui tombol Upgrade di atas.</p>
+                  </div>
+                ) : (
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-left text-xs">
+                      <thead>
+                        <tr className="border-b border-slate-100 text-slate-400 uppercase text-[10px] font-black tracking-wider">
+                          <th className="py-3 px-3">No. Invoice</th>
+                          <th className="py-3 px-3">Paket Langganan</th>
+                          <th className="py-3 px-3">Total Tagihan</th>
+                          <th className="py-3 px-3">Metode Bayar</th>
+                          <th className="py-3 px-3">Tanggal Transaksi</th>
+                          <th className="py-3 px-3">Status</th>
+                          <th className="py-3 px-3 text-right">Aksi</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-slate-100">
+                        {userOrders.map((ord) => (
+                          <tr key={ord.id} className="hover:bg-slate-50/80 transition-colors">
+                            <td className="py-3 px-3 font-mono font-bold text-slate-800">
+                              #{ord.order_number}
+                            </td>
+                            <td className="py-3 px-3 font-bold text-slate-800">
+                              {ord.plan_name} ({ord.billing_cycle || 'Bulanan'})
+                            </td>
+                            <td className="py-3 px-3 font-extrabold text-primary">
+                              {formatRupiah(ord.total_amount)}
+                            </td>
+                            <td className="py-3 px-3 text-slate-600">
+                              {ord.payment_channel || ord.payment_method || 'Virtual Account'}
+                            </td>
+                            <td className="py-3 px-3 text-slate-500">
+                              {new Date(ord.created_at).toLocaleDateString('id-ID', {
+                                day: 'numeric',
+                                month: 'short',
+                                year: 'numeric',
+                              })}
+                            </td>
+                            <td className="py-3 px-3">
+                              {ord.status === 'Paid' ? (
+                                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 font-extrabold text-[10px]">
+                                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-600"></span>
+                                  Lunas (Aktif)
+                                </span>
+                              ) : ord.status === 'Pending' ? (
+                                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-amber-100 text-amber-800 font-extrabold text-[10px]">
+                                  <span className="w-1.5 h-1.5 rounded-full bg-amber-600"></span>
+                                  Menunggu Bayar
+                                </span>
+                              ) : (
+                                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-slate-100 text-slate-600 font-bold text-[10px]">
+                                  {ord.status}
+                                </span>
+                              )}
+                            </td>
+                            <td className="py-3 px-3 text-right">
+                              {ord.status === 'Pending' ? (
+                                <button
+                                  type="button"
+                                  disabled={simulatingPaymentId === ord.id}
+                                  onClick={() => handleSimulatePayOrder(ord.id)}
+                                  className="px-3 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg font-bold text-[10px] shadow-xs transition-all cursor-pointer inline-flex items-center gap-1"
+                                >
+                                  <span className="material-symbols-outlined text-xs">check</span>
+                                  {simulatingPaymentId === ord.id ? 'Memproses...' : 'Simulasi Lunas'}
+                                </button>
+                              ) : (
+                                <span className="text-[11px] text-emerald-600 font-bold inline-flex items-center gap-1">
+                                  <span className="material-symbols-outlined text-xs">verified</span>
+                                  Terverifikasi
+                                </span>
+                              )}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+              </div>
             </div>
           )}
         </div>
@@ -877,6 +1190,27 @@ export default function UserProfilePage() {
                         </div>
                       )}
                     </div>
+
+                    {/* Tombol Simulasi Pembayaran Lunas Instan (Testing) */}
+                    {orderResult.order?.status !== 'Paid' && (
+                      <button
+                        type="button"
+                        disabled={simulatingPaymentId === orderResult.order?.id}
+                        onClick={async () => {
+                          await handleSimulatePayOrder(orderResult.order?.id);
+                          setOrderResult((prev) => ({
+                            ...prev,
+                            order: { ...prev.order, status: 'Paid' },
+                          }));
+                        }}
+                        className="w-full py-3.5 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white rounded-2xl font-extrabold text-xs shadow-lg shadow-emerald-600/25 transition-all cursor-pointer flex items-center justify-center gap-2"
+                      >
+                        <span className="material-symbols-outlined text-base">verified</span>
+                        {simulatingPaymentId === orderResult.order?.id
+                          ? 'Memverifikasi Pembayaran...'
+                          : '⚡ Simulasikan Bayar Lunas Sekarang (Instant Test)'}
+                      </button>
+                    )}
 
                     {/* Tombol Selesai */}
                     <button

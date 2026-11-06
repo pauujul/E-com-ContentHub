@@ -5,7 +5,7 @@ import { useAuth } from '../context/AuthContext';
 export default function Sidebar() {
   const location = useLocation();
   const navigate = useNavigate();
-  const { currentUser, isAdmin } = useAuth();
+  const { currentUser, isAdmin, activeSubscription } = useAuth();
 
   const isActive = (path) => {
     const current = location.pathname;
@@ -134,9 +134,24 @@ export default function Sidebar() {
             <p className="text-xs font-bold text-slate-800 truncate group-hover:text-primary transition-colors">
               {currentUser?.name || 'Pengguna'}
             </p>
-            <p className="text-[10px] text-slate-500 truncate">
-              {currentUser?.role === 'admin' ? 'Administrator' : 'Premium Plan (UMKM)'}
-            </p>
+            <div className="flex items-center gap-1.5 mt-0.5">
+              <span
+                className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${
+                  activeSubscription?.status === 'Paid'
+                    ? 'bg-emerald-500 animate-pulse'
+                    : activeSubscription?.status === 'Pending'
+                    ? 'bg-amber-500'
+                    : 'bg-slate-400'
+                }`}
+              ></span>
+              <p className="text-[10px] text-slate-500 font-semibold truncate">
+                {activeSubscription?.status === 'Paid'
+                  ? `${activeSubscription.plan_name} (Aktif)`
+                  : activeSubscription?.status === 'Pending'
+                  ? `${activeSubscription.plan_name} (Pending)`
+                  : (currentUser?.role === 'admin' ? 'Administrator' : 'Starter Trial (Free)')}
+              </p>
+            </div>
           </div>
           <span className="material-symbols-outlined text-slate-400 group-hover:text-primary text-base transition-colors">
             chevron_right

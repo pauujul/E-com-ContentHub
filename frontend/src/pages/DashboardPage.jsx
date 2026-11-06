@@ -6,7 +6,7 @@ import { useAuth } from '../context/AuthContext';
 import api from '../services/api';
 
 export default function DashboardPage() {
-  const { currentUser, isAdmin } = useAuth();
+  const { currentUser, isAdmin, activeSubscription } = useAuth();
   const navigate = useNavigate();
   const [userOrders, setUserOrders] = useState([]);
   const [loadingOrders, setLoadingOrders] = useState(true);
@@ -38,11 +38,13 @@ export default function DashboardPage() {
     }
   }, [currentUser]);
 
-  const activePlan = userOrders.find((o) => o.status === 'Paid') || {
-    plan_name: 'ContentHub Starter (Hero)',
-    billing_cycle: 'Bulanan',
-    status: 'Paid',
-  };
+  const activePlan = activeSubscription?.status === 'Paid'
+    ? activeSubscription
+    : (userOrders.find((o) => o.status === 'Paid') || activeSubscription || {
+        plan_name: 'ContentHub Starter',
+        billing_cycle: 'Bulanan',
+        status: 'Paid',
+      });
 
   // Perhitungan Kalender Minggu Ini Dinamis (Bukan statis 24 Oktober)
   const today = new Date();
@@ -134,13 +136,18 @@ export default function DashboardPage() {
               <div className="bg-surface-container-lowest p-6 rounded-2xl flex flex-col justify-between h-44 shadow-sm border border-outline-variant/10">
                 <div className="flex justify-between items-start">
                   <span className="text-on-surface-variant text-xs font-bold uppercase tracking-wider">Status Langganan</span>
-                  <span className="w-9 h-9 rounded-xl bg-green-100 flex items-center justify-center text-green-700">
+                  <span className={`w-9 h-9 rounded-xl flex items-center justify-center ${activePlan?.status === 'Paid' ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'}`}>
                     <span className="material-symbols-outlined text-base">star</span>
                   </span>
                 </div>
                 <div>
-                  <div className="text-xl font-extrabold text-on-surface truncate">{activePlan.plan_name || 'Starter Hero'}</div>
-                  <div className="text-[11px] text-green-700 font-bold mt-1">Status: {activePlan.status || 'Paid'} (Aktif)</div>
+                  <div className="text-xl font-extrabold text-on-surface truncate">{activePlan?.plan_name || 'Starter Plan'}</div>
+                  <div className="text-[11px] font-bold mt-1 flex items-center gap-1.5">
+                    <span className={`w-2 h-2 rounded-full ${activePlan?.status === 'Paid' ? 'bg-emerald-500 animate-pulse' : 'bg-amber-500'}`}></span>
+                    <span className={activePlan?.status === 'Paid' ? 'text-emerald-700' : 'text-amber-700'}>
+                      {activePlan?.status === 'Paid' ? `Aktif (${activePlan.billing_cycle || 'Bulanan'})` : 'Menunggu Pembayaran'}
+                    </span>
+                  </div>
                 </div>
               </div>
             </div>
