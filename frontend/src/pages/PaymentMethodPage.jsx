@@ -72,9 +72,42 @@ export default function PaymentMethodPage() {
 
   return (
     <div className="min-h-screen bg-surface text-on-surface">
-      <Navbar />
+      {/* Header Pembayaran Eksklusif & Fokus (Tanpa Navbar Landing Page) */}
+      <header className="sticky top-0 left-0 right-0 h-16 bg-white/95 backdrop-blur-xl border-b border-slate-200 z-30 shadow-xs">
+        <div className="max-w-7xl mx-auto h-full px-6 md:px-16 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <Link to="/" className="flex items-center gap-2.5">
+              <div className="w-8 h-8 rounded-xl bg-gradient-primary flex items-center justify-center text-white shadow-sm">
+                <span className="material-symbols-outlined text-lg">layers</span>
+              </div>
+              <span className="text-base font-black tracking-tight text-primary">ContentHub</span>
+            </Link>
+            <span className="text-slate-300 font-light">|</span>
+            <span className="text-xs font-bold text-slate-500 uppercase tracking-wider flex items-center gap-1.5">
+              <span className="material-symbols-outlined text-sm text-emerald-600">verified_user</span>
+              Checkout Pembayaran Resmi
+            </span>
+          </div>
 
-      <main className="pt-24 pb-20 px-6 md:px-16 max-w-7xl mx-auto">
+          <div className="flex items-center gap-4">
+            <div className="hidden sm:flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-800 text-[11px] font-bold">
+              <span className="material-symbols-outlined text-xs text-emerald-600">lock</span>
+              Enkripsi 256-Bit SSL
+            </div>
+
+            <Link
+              to="/dashboard"
+              className="text-xs font-bold text-slate-500 hover:text-red-600 transition-colors flex items-center gap-1"
+              title="Batalkan & Kembali ke Workspace"
+            >
+              <span className="material-symbols-outlined text-sm">close</span>
+              <span className="hidden sm:inline">Batalkan</span>
+            </Link>
+          </div>
+        </div>
+      </header>
+
+      <main className="py-8 pb-20 px-6 md:px-16 max-w-7xl mx-auto">
         {/* Progress Step Header */}
         <header className="mb-10 flex flex-col md:flex-row md:items-center justify-between gap-4 pb-6 border-b border-outline-variant/15">
           <div className="flex items-center gap-4">

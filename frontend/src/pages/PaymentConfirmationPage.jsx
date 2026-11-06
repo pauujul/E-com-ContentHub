@@ -1,12 +1,19 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
-import Navbar from '../components/Navbar';
 import api from '../services/api';
+import { useAuth } from '../context/AuthContext';
 
 export default function PaymentConfirmationPage() {
   const { orderNumber } = useParams();
   const navigate = useNavigate();
+  const { refreshSubscription } = useAuth();
   const [order, setOrder] = useState(null);
+
+  useEffect(() => {
+    try {
+      refreshSubscription();
+    } catch (e) {}
+  }, []);
 
   useEffect(() => {
     if (orderNumber) {
@@ -14,6 +21,9 @@ export default function PaymentConfirmationPage() {
         .then(res => {
           if (res.success && res.data) {
             setOrder(res.data);
+            try {
+              refreshSubscription();
+            } catch (e) {}
           }
         })
         .catch(err => {
@@ -24,9 +34,24 @@ export default function PaymentConfirmationPage() {
 
   return (
     <div className="min-h-screen bg-surface text-on-surface flex flex-col justify-between">
-      <Navbar />
+      {/* Header Pembayaran Eksklusif & Fokus (Tanpa Navbar Landing Page) */}
+      <header className="sticky top-0 left-0 right-0 h-16 bg-white/95 backdrop-blur-xl border-b border-slate-200 z-30 shadow-xs">
+        <div className="max-w-2xl mx-auto h-full px-6 flex items-center justify-between">
+          <div className="flex items-center gap-2.5">
+            <div className="w-8 h-8 rounded-xl bg-gradient-primary flex items-center justify-center text-white shadow-sm">
+              <span className="material-symbols-outlined text-lg">layers</span>
+            </div>
+            <span className="text-base font-black tracking-tight text-primary">ContentHub</span>
+          </div>
 
-      <main className="pt-28 pb-16 px-6 flex items-center justify-center flex-1">
+          <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-800 text-[11px] font-bold">
+            <span className="material-symbols-outlined text-xs text-emerald-600">verified</span>
+            Transaksi Berhasil
+          </div>
+        </div>
+      </header>
+
+      <main className="py-10 pb-16 px-6 flex items-center justify-center flex-1">
         <div className="w-full max-w-xl animate-in fade-in zoom-in duration-500 space-y-8 text-center">
           {/* Success Ring Indicator */}
           <div>

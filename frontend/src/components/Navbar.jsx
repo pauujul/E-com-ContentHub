@@ -9,11 +9,24 @@ export default function Navbar() {
   const location = useLocation();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
-  // Rute workspace internal yang menggunakan Sidebar (Navbar disembunyikan di rute ini)
-  const workspaceRoutes = ['/dashboard', '/calendar', '/templates', '/admin', '/profile', '/switch-account', '/help', '/search', '/label'];
-  const isWorkspace = workspaceRoutes.some((path) => location.pathname.startsWith(path));
+  // Rute internal workspace dan flow checkout/pembayaran (Navbar landing page disembunyikan)
+  const hiddenNavbarRoutes = [
+    '/dashboard',
+    '/calendar',
+    '/templates',
+    '/admin',
+    '/profile',
+    '/switch-account',
+    '/help',
+    '/search',
+    '/label',
+    '/checkout',
+    '/payment-confirmation',
+    '/transactions',
+  ];
+  const isNavbarHidden = hiddenNavbarRoutes.some((path) => location.pathname.startsWith(path));
 
-  if (isWorkspace) {
+  if (isNavbarHidden) {
     return null;
   }
 

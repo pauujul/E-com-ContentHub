@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
-import Navbar from '../components/Navbar';
 import api from '../services/api';
+import { useAuth } from '../context/AuthContext';
 
 export default function TransactionDetailPage() {
   const { orderNumber } = useParams();
   const navigate = useNavigate();
+  const { refreshSubscription } = useAuth();
 
   const [order, setOrder] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -53,6 +54,9 @@ export default function TransactionDetailPage() {
       if (order?.id) {
         await api.updateOrderStatus(order.id, 'Paid');
       }
+      try {
+        await refreshSubscription();
+      } catch (e) {}
       navigate(`/payment-confirmation/${order?.order_number || orderNumber}`);
     } catch (err) {
       console.warn('Status update fallback:', err);
@@ -67,9 +71,42 @@ export default function TransactionDetailPage() {
 
   return (
     <div className="min-h-screen bg-surface text-on-surface">
-      <Navbar />
+      {/* Header Pembayaran Eksklusif & Fokus (Tanpa Navbar Landing Page) */}
+      <header className="sticky top-0 left-0 right-0 h-16 bg-white/95 backdrop-blur-xl border-b border-slate-200 z-30 shadow-xs">
+        <div className="max-w-5xl mx-auto h-full px-6 md:px-12 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <Link to="/" className="flex items-center gap-2.5">
+              <div className="w-8 h-8 rounded-xl bg-gradient-primary flex items-center justify-center text-white shadow-sm">
+                <span className="material-symbols-outlined text-lg">layers</span>
+              </div>
+              <span className="text-base font-black tracking-tight text-primary">ContentHub</span>
+            </Link>
+            <span className="text-slate-300 font-light">|</span>
+            <span className="text-xs font-bold text-slate-500 uppercase tracking-wider flex items-center gap-1.5">
+              <span className="material-symbols-outlined text-sm text-emerald-600">receipt_long</span>
+              Instruksi Tagihan Resmi
+            </span>
+          </div>
 
-      <main className="pt-24 pb-16 px-6 md:px-12 max-w-5xl mx-auto">
+          <div className="flex items-center gap-4">
+            <div className="hidden sm:flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-800 text-[11px] font-bold">
+              <span className="material-symbols-outlined text-xs text-emerald-600">lock</span>
+              Enkripsi 256-Bit SSL
+            </div>
+
+            <Link
+              to="/dashboard"
+              className="text-xs font-bold text-slate-500 hover:text-red-600 transition-colors flex items-center gap-1"
+              title="Batalkan & Kembali ke Workspace"
+            >
+              <span className="material-symbols-outlined text-sm">close</span>
+              <span className="hidden sm:inline">Batalkan</span>
+            </Link>
+          </div>
+        </div>
+      </header>
+
+      <main className="py-8 pb-16 px-6 md:px-12 max-w-5xl mx-auto">
         <header className="mb-8 flex items-center justify-between pb-4 border-b border-outline-variant/15">
           <div className="flex items-center gap-3">
             <Link
