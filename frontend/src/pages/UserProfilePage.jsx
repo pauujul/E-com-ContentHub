@@ -6,7 +6,7 @@ import { useAuth } from '../context/AuthContext';
 import api from '../services/api';
 
 export default function UserProfilePage() {
-  const { currentUser, updateCurrentUser, logout, activeSubscription, refreshSubscription } = useAuth();
+  const { currentUser, isAdmin, updateCurrentUser, logout, activeSubscription, refreshSubscription } = useAuth();
   const navigate = useNavigate();
 
   const handleLogout = () => {
@@ -352,7 +352,14 @@ export default function UserProfilePage() {
                   </span>
 
                   {/* Tanda Keanggotaan Subscription */}
-                  {activeSubscription?.status === 'Paid' ? (
+                  {isAdmin ? (
+                    <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-purple-50 border border-purple-300 text-purple-900 text-xs font-black shadow-xs">
+                      <span className="material-symbols-outlined text-sm text-purple-600">admin_panel_settings</span>
+                      <span>👑 Administrator HQ (Akses Penuh)</span>
+                      <span className="w-1.5 h-1.5 rounded-full bg-purple-500 animate-pulse"></span>
+                      <span className="text-[9px] uppercase tracking-wider font-extrabold bg-purple-200 text-purple-900 px-1.5 py-0.2 rounded-full">Unlimited</span>
+                    </div>
+                  ) : activeSubscription?.status === 'Paid' ? (
                     <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-50 border border-emerald-300 text-emerald-800 text-xs font-black shadow-xs">
                       <span className="material-symbols-outlined text-sm text-emerald-600">verified</span>
                       <span>⭐ {activeSubscription.plan_name}</span>
@@ -387,15 +394,25 @@ export default function UserProfilePage() {
               </div>
             </div>
 
-            {/* CTA Upgrade Subscription */}
+            {/* CTA Aksi Kanan (Admin: Tombol Admin Panel, Customer: Upgrade Subscription) */}
             <div className="flex items-center gap-3 w-full sm:w-auto justify-end">
-              <button
-                onClick={handleOpenUpgradeModal}
-                className="w-full sm:w-auto px-6 py-3 bg-gradient-to-r from-amber-500 via-orange-500 to-amber-600 hover:from-amber-600 hover:to-orange-700 text-white rounded-2xl text-xs font-extrabold shadow-lg shadow-orange-500/25 flex items-center justify-center gap-2 transition-all hover:scale-[1.02] active:scale-95 cursor-pointer whitespace-nowrap"
-              >
-                <span className="material-symbols-outlined text-lg">workspace_premium</span>
-                {activeSubscription?.status === 'Paid' ? 'Kelola / Ganti Paket' : 'Upgrade Subscription'}
-              </button>
+              {isAdmin ? (
+                <button
+                  onClick={() => navigate('/admin')}
+                  className="w-full sm:w-auto px-6 py-3 bg-slate-900 hover:bg-slate-800 text-white rounded-2xl text-xs font-extrabold shadow-lg shadow-slate-900/25 flex items-center justify-center gap-2 transition-all hover:scale-[1.02] active:scale-95 cursor-pointer whitespace-nowrap"
+                >
+                  <span className="material-symbols-outlined text-lg text-amber-400">admin_panel_settings</span>
+                  Buka Admin Panel
+                </button>
+              ) : (
+                <button
+                  onClick={handleOpenUpgradeModal}
+                  className="w-full sm:w-auto px-6 py-3 bg-gradient-to-r from-amber-500 via-orange-500 to-amber-600 hover:from-amber-600 hover:to-orange-700 text-white rounded-2xl text-xs font-extrabold shadow-lg shadow-orange-500/25 flex items-center justify-center gap-2 transition-all hover:scale-[1.02] active:scale-95 cursor-pointer whitespace-nowrap"
+                >
+                  <span className="material-symbols-outlined text-lg">workspace_premium</span>
+                  {activeSubscription?.status === 'Paid' ? 'Kelola / Ganti Paket' : 'Upgrade Subscription'}
+                </button>
+              )}
             </div>
           </div>
 
@@ -625,126 +642,215 @@ export default function UserProfilePage() {
           {/* TAB 3: STATUS KEANGGOTAAN & PAKET SUBSCRIPTION */}
           {activeTab === 'subscription' && (
             <div className="space-y-6 animate-in fade-in duration-200">
-              {/* Card Ringkasan Paket Aktif */}
-              <div className="bg-gradient-to-br from-white via-slate-50/50 to-primary/5 rounded-3xl p-8 border border-outline-variant/15 shadow-sm space-y-6">
-                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-6 border-b border-slate-100">
-                  <div className="flex items-center gap-4">
-                    <div className="w-14 h-14 rounded-2xl bg-gradient-to-tr from-amber-500 to-orange-400 text-white flex items-center justify-center font-bold shadow-md shadow-amber-500/20">
-                      <span className="material-symbols-outlined text-2xl">workspace_premium</span>
-                    </div>
-                    <div>
-                      <div className="flex items-center gap-2">
-                        <span className="text-xs font-extrabold uppercase tracking-widest text-primary">Status Keanggotaan</span>
-                        <span className="text-slate-300">•</span>
-                        <span className="text-xs text-slate-500">Tier Langganan UMKM</span>
+              {/* Card Ringkasan Paket Aktif (Mode Admin vs Mode Pelanggan) */}
+              {isAdmin ? (
+                <div className="bg-gradient-to-br from-white via-purple-50/40 to-indigo-50/50 rounded-3xl p-8 border border-purple-200/80 shadow-sm space-y-6">
+                  <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-6 border-b border-purple-100">
+                    <div className="flex items-center gap-4">
+                      <div className="w-14 h-14 rounded-2xl bg-gradient-to-tr from-purple-600 to-indigo-600 text-white flex items-center justify-center font-bold shadow-md shadow-purple-600/25">
+                        <span className="material-symbols-outlined text-2xl">shield_person</span>
                       </div>
-                      <h3 className="text-2xl font-black text-slate-900 mt-0.5">
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <span className="text-xs font-extrabold uppercase tracking-widest text-purple-700">Tingkat Hak Akses</span>
+                          <span className="text-slate-300">•</span>
+                          <span className="text-xs text-slate-500">Master Administrator HQ</span>
+                        </div>
+                        <h3 className="text-2xl font-black text-slate-900 mt-0.5">
+                          👑 Lisensi Administrator ContentHub (Akses Penuh)
+                        </h3>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-3">
+                      <span className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-purple-100 text-purple-900 text-xs font-black shadow-xs">
+                        <span className="w-2 h-2 rounded-full bg-purple-600 animate-pulse"></span>
+                        Hak Akses Master Aktif (Unlimited)
+                      </span>
+                      <button
+                        onClick={() => navigate('/admin')}
+                        className="px-5 py-2.5 bg-slate-900 hover:bg-slate-800 text-white font-extrabold text-xs rounded-xl shadow-md transition-all hover:scale-105 active:scale-95 cursor-pointer flex items-center gap-1.5"
+                      >
+                        <span className="material-symbols-outlined text-base text-amber-400">admin_panel_settings</span>
+                        Buka Admin Control Panel
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Grid Detail Lisensi Admin */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                    <div className="p-4 bg-white rounded-2xl border border-slate-200/80 shadow-xs space-y-1">
+                      <span className="text-[10px] font-extrabold uppercase text-slate-400">Siklus Lisensi</span>
+                      <p className="text-sm font-extrabold text-slate-800">Permanen (Lifetime)</p>
+                      <p className="text-[11px] text-slate-500">Tanpa batas waktu aktif</p>
+                    </div>
+                    <div className="p-4 bg-white rounded-2xl border border-slate-200/80 shadow-xs space-y-1">
+                      <span className="text-[10px] font-extrabold uppercase text-slate-400">Biaya Langganan</span>
+                      <p className="text-sm font-extrabold text-purple-700">Rp 0 (Internal Master)</p>
+                      <p className="text-[11px] text-slate-500">Bebas biaya pemakaian</p>
+                    </div>
+                    <div className="p-4 bg-white rounded-2xl border border-slate-200/80 shadow-xs space-y-1">
+                      <span className="text-[10px] font-extrabold uppercase text-slate-400">Hak Akses</span>
+                      <p className="text-sm font-extrabold text-slate-800">Super Administrator</p>
+                      <p className="text-[11px] text-slate-500">Kelola artikel, order & user</p>
+                    </div>
+                    <div className="p-4 bg-white rounded-2xl border border-slate-200/80 shadow-xs space-y-1">
+                      <span className="text-[10px] font-extrabold uppercase text-slate-400">Integrasi Desain</span>
+                      <p className="text-sm font-extrabold text-emerald-700 flex items-center gap-1">
+                        <span className="material-symbols-outlined text-base">palette</span>
+                        Canva Enterprise Master
+                      </p>
+                      <p className="text-[11px] text-slate-500">Akses seluruh template</p>
+                    </div>
+                  </div>
+
+                  {/* Fasilitas Admin */}
+                  <div className="p-5 bg-white rounded-2xl border border-slate-200/80 space-y-3">
+                    <h4 className="text-xs font-black uppercase tracking-wider text-purple-900 flex items-center gap-2">
+                      <span className="material-symbols-outlined text-sm text-purple-600">verified_user</span>
+                      Kewenangan Penuh Akun Administrator:
+                    </h4>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2.5 text-xs text-slate-700 font-medium">
+                      <div className="flex items-center gap-2">
+                        <span className="material-symbols-outlined text-base text-purple-600">check_circle</span>
+                        <span>Akses Tanpa Batas Kalender & Postingan</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className="material-symbols-outlined text-base text-purple-600">check_circle</span>
+                        <span>Audit Log & Catatan Aktivitas Semua Admin</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className="material-symbols-outlined text-base text-purple-600">check_circle</span>
+                        <span>Manajemen Pengguna & Switcher Akun</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className="material-symbols-outlined text-base text-purple-600">check_circle</span>
+                        <span>Kelola Katalog & Harga Paket Langganan</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className="material-symbols-outlined text-base text-purple-600">check_circle</span>
+                        <span>Monitoring Riwayat Transaksi & Invoice</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className="material-symbols-outlined text-base text-purple-600">check_circle</span>
+                        <span>Editor Canva & Akses Jam Emas Posting</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <div className="bg-gradient-to-br from-white via-slate-50/50 to-primary/5 rounded-3xl p-8 border border-outline-variant/15 shadow-sm space-y-6">
+                  <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-6 border-b border-slate-100">
+                    <div className="flex items-center gap-4">
+                      <div className="w-14 h-14 rounded-2xl bg-gradient-to-tr from-amber-500 to-orange-400 text-white flex items-center justify-center font-bold shadow-md shadow-amber-500/20">
+                        <span className="material-symbols-outlined text-2xl">workspace_premium</span>
+                      </div>
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <span className="text-xs font-extrabold uppercase tracking-widest text-primary">Status Keanggotaan</span>
+                          <span className="text-slate-300">•</span>
+                          <span className="text-xs text-slate-500">Tier Langganan UMKM</span>
+                        </div>
+                        <h3 className="text-2xl font-black text-slate-900 mt-0.5">
+                          {activeSubscription?.status === 'Paid'
+                            ? `⭐ ${activeSubscription.plan_name}`
+                            : activeSubscription?.status === 'Pending'
+                            ? `⏳ ${activeSubscription.plan_name} (Pending)`
+                            : '🌱 Starter Trial (Free Tier)'}
+                        </h3>
+                      </div>
+                    </div>
+
+                    <div className="flex flex-wrap items-center gap-3">
+                      {activeSubscription?.status === 'Paid' ? (
+                        <span className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-emerald-100 text-emerald-800 text-xs font-black shadow-xs">
+                          <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                          Langganan Aktif ({activeSubscription.billing_cycle || 'Bulanan'})
+                        </span>
+                      ) : activeSubscription?.status === 'Pending' ? (
+                        <span className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-amber-100 text-amber-800 text-xs font-black shadow-xs">
+                          <span className="material-symbols-outlined text-sm">hourglass_top</span>
+                          Menunggu Pembayaran
+                        </span>
+                      ) : (
+                        <span className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-slate-200 text-slate-700 text-xs font-bold">
+                          Akses Percobaan Gratis
+                        </span>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Grid Informasi Detail Langganan */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                    <div className="p-4 bg-white rounded-2xl border border-slate-200/80 shadow-xs space-y-1">
+                      <span className="text-[10px] font-extrabold uppercase text-slate-400">Siklus Penagihan</span>
+                      <p className="text-sm font-extrabold text-slate-800">{activeSubscription?.billing_cycle || 'Free'}</p>
+                      <p className="text-[11px] text-slate-500">Perpanjangan berkala aktif</p>
+                    </div>
+
+                    <div className="p-4 bg-white rounded-2xl border border-slate-200/80 shadow-xs space-y-1">
+                      <span className="text-[10px] font-extrabold uppercase text-slate-400">Total Biaya Paket</span>
+                      <p className="text-sm font-extrabold text-primary">
                         {activeSubscription?.status === 'Paid'
-                          ? `⭐ ${activeSubscription.plan_name}`
-                          : activeSubscription?.status === 'Pending'
-                          ? `⏳ ${activeSubscription.plan_name} (Pending)`
-                          : '🌱 Starter Trial (Free Tier)'}
-                      </h3>
+                          ? formatRupiah(activeSubscription.total_amount || 98000)
+                          : 'Rp 0 (Gratis)'}
+                      </p>
+                      <p className="text-[11px] text-slate-500">Termasuk pajak & biaya admin</p>
+                    </div>
+
+                    <div className="p-4 bg-white rounded-2xl border border-slate-200/80 shadow-xs space-y-1">
+                      <span className="text-[10px] font-extrabold uppercase text-slate-400">No. Invoice Terakhir</span>
+                      <p className="text-sm font-mono font-extrabold text-slate-800 truncate">
+                        {activeSubscription?.order_number ? `#${activeSubscription.order_number}` : 'Belum Ada Transaksi'}
+                      </p>
+                      <p className="text-[11px] text-slate-500">ID Faktur Resmi</p>
+                    </div>
+
+                    <div className="p-4 bg-white rounded-2xl border border-slate-200/80 shadow-xs space-y-1">
+                      <span className="text-[10px] font-extrabold uppercase text-slate-400">Integrasi Desain</span>
+                      <p className="text-sm font-extrabold text-emerald-700 flex items-center gap-1">
+                        <span className="material-symbols-outlined text-base">palette</span>
+                        Canva Pro Siap Pakai
+                      </p>
+                      <p className="text-[11px] text-slate-500">One-click Sync Kalender</p>
                     </div>
                   </div>
 
-                  <div className="flex flex-wrap items-center gap-3">
-                    {activeSubscription?.status === 'Paid' ? (
-                      <span className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-emerald-100 text-emerald-800 text-xs font-black shadow-xs">
-                        <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-                        Langganan Aktif ({activeSubscription.billing_cycle || 'Bulanan'})
-                      </span>
-                    ) : activeSubscription?.status === 'Pending' ? (
-                      <span className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-amber-100 text-amber-800 text-xs font-black shadow-xs">
-                        <span className="material-symbols-outlined text-sm">hourglass_top</span>
-                        Menunggu Pembayaran
-                      </span>
-                    ) : (
-                      <span className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-slate-200 text-slate-700 text-xs font-bold">
-                        Akses Percobaan Gratis
-                      </span>
-                    )}
-
-                    <button
-                      onClick={handleOpenUpgradeModal}
-                      className="px-5 py-2.5 bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 text-white font-extrabold text-xs rounded-xl shadow-md shadow-orange-500/20 transition-all hover:scale-105 active:scale-95 cursor-pointer flex items-center gap-1.5"
-                    >
-                      <span className="material-symbols-outlined text-base">upgrade</span>
-                      {activeSubscription?.status === 'Paid' ? 'Ubah / Upgrade Paket' : 'Upgrade ke Starter / Pro'}
-                    </button>
-                  </div>
-                </div>
-
-                {/* Grid Informasi Detail Langganan */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                  <div className="p-4 bg-white rounded-2xl border border-slate-200/80 shadow-xs space-y-1">
-                    <span className="text-[10px] font-extrabold uppercase text-slate-400">Siklus Penagihan</span>
-                    <p className="text-sm font-extrabold text-slate-800">{activeSubscription?.billing_cycle || 'Bulanan'}</p>
-                    <p className="text-[11px] text-slate-500">Perpanjangan berkala aktif</p>
-                  </div>
-
-                  <div className="p-4 bg-white rounded-2xl border border-slate-200/80 shadow-xs space-y-1">
-                    <span className="text-[10px] font-extrabold uppercase text-slate-400">Total Biaya Paket</span>
-                    <p className="text-sm font-extrabold text-primary">
-                      {activeSubscription?.total_amount
-                        ? formatRupiah(activeSubscription.total_amount)
-                        : (activeSubscription?.plan_name?.toLowerCase().includes('starter') ? 'Rp 98.000 / bln' : 'Rp 0')}
-                    </p>
-                    <p className="text-[11px] text-slate-500">Termasuk pajak & biaya admin</p>
-                  </div>
-
-                  <div className="p-4 bg-white rounded-2xl border border-slate-200/80 shadow-xs space-y-1">
-                    <span className="text-[10px] font-extrabold uppercase text-slate-400">No. Invoice Terakhir</span>
-                    <p className="text-sm font-mono font-extrabold text-slate-800 truncate">
-                      {activeSubscription?.order_number ? `#${activeSubscription.order_number}` : 'Belum Ada Transaksi'}
-                    </p>
-                    <p className="text-[11px] text-slate-500">ID Faktur Resmi</p>
-                  </div>
-
-                  <div className="p-4 bg-white rounded-2xl border border-slate-200/80 shadow-xs space-y-1">
-                    <span className="text-[10px] font-extrabold uppercase text-slate-400">Integrasi Desain</span>
-                    <p className="text-sm font-extrabold text-emerald-700 flex items-center gap-1">
-                      <span className="material-symbols-outlined text-base">palette</span>
-                      Canva Pro Siap Pakai
-                    </p>
-                    <p className="text-[11px] text-slate-500">One-click Sync Kalender</p>
-                  </div>
-                </div>
-
-                {/* Included Features List */}
-                <div className="p-5 bg-white rounded-2xl border border-slate-200/80 space-y-3">
-                  <h4 className="text-xs font-black uppercase tracking-wider text-slate-700 flex items-center gap-2">
-                    <span className="material-symbols-outlined text-sm text-primary">verified_user</span>
-                    Fasilitas Unggulan yang Termasuk dalam Paket Anda:
-                  </h4>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2.5 text-xs text-slate-700 font-medium">
-                    <div className="flex items-center gap-2">
-                      <span className="material-symbols-outlined text-base text-emerald-600">check_circle</span>
-                      <span>Kalender Drag & Drop Interaktif Penuh</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <span className="material-symbols-outlined text-base text-emerald-600">check_circle</span>
-                      <span>50+ Template Konten Siap Pakai</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <span className="material-symbols-outlined text-base text-emerald-600">check_circle</span>
-                      <span>Editor Terhubung Langsung Canva</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <span className="material-symbols-outlined text-base text-emerald-600">check_circle</span>
-                      <span>Pengingat Jadwal via Email (Alert)</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <span className="material-symbols-outlined text-base text-emerald-600">check_circle</span>
-                      <span>Hingga 5 Saluran Media Sosial</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <span className="material-symbols-outlined text-base text-emerald-600">check_circle</span>
-                      <span>Dukungan WhatsApp Prioritas UMKM</span>
+                  {/* Included Features List */}
+                  <div className="p-5 bg-white rounded-2xl border border-slate-200/80 space-y-3">
+                    <h4 className="text-xs font-black uppercase tracking-wider text-slate-700 flex items-center gap-2">
+                      <span className="material-symbols-outlined text-sm text-primary">verified_user</span>
+                      Fasilitas Unggulan yang Termasuk dalam Paket Anda:
+                    </h4>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2.5 text-xs text-slate-700 font-medium">
+                      <div className="flex items-center gap-2">
+                        <span className="material-symbols-outlined text-base text-emerald-600">check_circle</span>
+                        <span>Kalender Drag & Drop Interaktif Penuh</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className="material-symbols-outlined text-base text-emerald-600">check_circle</span>
+                        <span>50+ Template Konten Siap Pakai</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className="material-symbols-outlined text-base text-emerald-600">check_circle</span>
+                        <span>Editor Terhubung Langsung Canva</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className="material-symbols-outlined text-base text-emerald-600">check_circle</span>
+                        <span>Pengingat Jadwal via Email (Alert)</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className="material-symbols-outlined text-base text-emerald-600">check_circle</span>
+                        <span>Hingga 5 Saluran Media Sosial</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className="material-symbols-outlined text-base text-emerald-600">check_circle</span>
+                        <span>Dukungan WhatsApp Prioritas UMKM</span>
+                      </div>
                     </div>
                   </div>
                 </div>
-              </div>
+              )}
 
               {/* Riwayat Faktur & Transaksi Pemesanan */}
               <div className="bg-white rounded-3xl p-8 border border-outline-variant/15 shadow-sm space-y-4">

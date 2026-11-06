@@ -135,17 +135,23 @@ export default function DashboardPage() {
               {/* Stat 3 */}
               <div className="bg-surface-container-lowest p-6 rounded-2xl flex flex-col justify-between h-44 shadow-sm border border-outline-variant/10">
                 <div className="flex justify-between items-start">
-                  <span className="text-on-surface-variant text-xs font-bold uppercase tracking-wider">Status Langganan</span>
-                  <span className={`w-9 h-9 rounded-xl flex items-center justify-center ${activePlan?.status === 'Paid' ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'}`}>
-                    <span className="material-symbols-outlined text-base">star</span>
+                  <span className="text-on-surface-variant text-xs font-bold uppercase tracking-wider">
+                    {isAdmin ? 'Hak Akses Sistem' : 'Status Langganan'}
+                  </span>
+                  <span className={`w-9 h-9 rounded-xl flex items-center justify-center ${isAdmin ? 'bg-purple-100 text-purple-700' : (activePlan?.status === 'Paid' ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700')}`}>
+                    <span className="material-symbols-outlined text-base">
+                      {isAdmin ? 'shield_person' : 'star'}
+                    </span>
                   </span>
                 </div>
                 <div>
-                  <div className="text-xl font-extrabold text-on-surface truncate">{activePlan?.plan_name || 'Starter Plan'}</div>
+                  <div className="text-xl font-extrabold text-on-surface truncate">
+                    {isAdmin ? 'Administrator HQ' : (activePlan?.plan_name || 'Starter Plan')}
+                  </div>
                   <div className="text-[11px] font-bold mt-1 flex items-center gap-1.5">
-                    <span className={`w-2 h-2 rounded-full ${activePlan?.status === 'Paid' ? 'bg-emerald-500 animate-pulse' : 'bg-amber-500'}`}></span>
-                    <span className={activePlan?.status === 'Paid' ? 'text-emerald-700' : 'text-amber-700'}>
-                      {activePlan?.status === 'Paid' ? `Aktif (${activePlan.billing_cycle || 'Bulanan'})` : 'Menunggu Pembayaran'}
+                    <span className={`w-2 h-2 rounded-full ${isAdmin ? 'bg-purple-500 animate-pulse' : (activePlan?.status === 'Paid' ? 'bg-emerald-500 animate-pulse' : 'bg-amber-500')}`}></span>
+                    <span className={isAdmin ? 'text-purple-700' : (activePlan?.status === 'Paid' ? 'text-emerald-700' : 'text-amber-700')}>
+                      {isAdmin ? 'Akses Penuh Tanpa Batas' : (activePlan?.status === 'Paid' ? `Aktif (${activePlan.billing_cycle || 'Bulanan'})` : 'Menunggu Pembayaran')}
                     </span>
                   </div>
                 </div>

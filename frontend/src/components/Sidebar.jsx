@@ -137,7 +137,9 @@ export default function Sidebar() {
             <div className="flex items-center gap-1.5 mt-0.5">
               <span
                 className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${
-                  activeSubscription?.status === 'Paid'
+                  isAdmin
+                    ? 'bg-purple-500 animate-pulse'
+                    : activeSubscription?.status === 'Paid'
                     ? 'bg-emerald-500 animate-pulse'
                     : activeSubscription?.status === 'Pending'
                     ? 'bg-amber-500'
@@ -145,11 +147,13 @@ export default function Sidebar() {
                 }`}
               ></span>
               <p className="text-[10px] text-slate-500 font-semibold truncate">
-                {activeSubscription?.status === 'Paid'
+                {isAdmin
+                  ? '👑 Administrator (Full Access)'
+                  : activeSubscription?.status === 'Paid'
                   ? `${activeSubscription.plan_name} (Aktif)`
                   : activeSubscription?.status === 'Pending'
                   ? `${activeSubscription.plan_name} (Pending)`
-                  : (currentUser?.role === 'admin' ? 'Administrator' : 'Starter Trial (Free)')}
+                  : 'Starter Trial (Free)'}
               </p>
             </div>
           </div>
