@@ -156,7 +156,7 @@ export default function DragDropContentPage() {
     try {
       const scheduledIso = new Date(`${newCard.scheduled_date}T${newCard.scheduled_time}:00`).toISOString();
       const payload = {
-        user_id: currentUser?.id || 2,
+        user_id: currentUser?.id || 1,
         judul: newCard.judul,
         caption: newCard.caption,
         platform: newCard.platform,

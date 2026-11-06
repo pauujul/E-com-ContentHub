@@ -39,7 +39,7 @@ export default function AddTemplatePage() {
       const scheduledIsoString = validTargetDate.toISOString();
 
       await api.createPost({
-        user_id: currentUser?.id || 2,
+        user_id: currentUser?.id || 1,
         judul: postTitle,
         caption: caption,
         platform: platform,

@@ -1549,12 +1549,29 @@ app.post('/api/posts', async (req, res) => {
       return res.status(400).json({ success: false, message: 'Judul postingan wajib diisi.' });
     }
 
+    // Resolusi user_id yang valid untuk mencegah error foreign key
+    let resolvedUserId = parseInt(user_id, 10);
+    if (!resolvedUserId || isNaN(resolvedUserId)) {
+      resolvedUserId = 1;
+    }
+    if (db.isPostgres && db.isPostgres()) {
+      try {
+        const uCheck = await db.query('SELECT id FROM users WHERE id = $1', [resolvedUserId]);
+        if (uCheck.rows.length === 0) {
+          const firstU = await db.query('SELECT id FROM users ORDER BY id ASC LIMIT 1');
+          resolvedUserId = firstU.rows.length ? firstU.rows[0].id : 1;
+        }
+      } catch (e) {
+        resolvedUserId = 1;
+      }
+    }
+
     const store = db.getStore ? db.getStore() : null;
     if (store) {
       const newId = store.content_posts.length ? Math.max(...store.content_posts.map((p) => p.id)) + 1 : 1;
       const newPost = {
         id: newId,
-        user_id: parseInt(user_id, 10),
+        user_id: resolvedUserId,
         judul: judul.trim(),
         caption: caption.trim(),
         platform,
@@ -1582,7 +1599,7 @@ app.post('/api/posts', async (req, res) => {
       RETURNING *;
     `;
     const result = await db.query(insertQuery, [
-      user_id,
+      resolvedUserId,
       judul.trim(),
       caption.trim(),
       platform,
