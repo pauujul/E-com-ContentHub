@@ -198,6 +198,46 @@ export const api = {
   },
 
   // ==========================================
+  // 4B. SCHEDULES & USER TIER (SYNC DENGAN NEON)
+  // ==========================================
+  getSchedules: async (userId) => {
+    const validId = userId && userId !== 'undefined' && userId !== 'null' ? `?user_id=${userId}` : '';
+    const res = await apiClient.get(`/schedules${validId}`);
+    return res.data;
+  },
+
+  getScheduleById: async (id) => {
+    const res = await apiClient.get(`/schedules/${id}`);
+    return res.data;
+  },
+
+  createSchedule: async (scheduleData) => {
+    const res = await apiClient.post('/schedules', scheduleData);
+    return res.data;
+  },
+
+  updateSchedule: async (id, scheduleData) => {
+    const res = await apiClient.put(`/schedules/${id}`, scheduleData);
+    return res.data;
+  },
+
+  updateScheduleItem: async (id, patchData) => {
+    const res = await apiClient.patch(`/schedules/${id}`, patchData);
+    return res.data;
+  },
+
+  deleteSchedule: async (id) => {
+    const res = await apiClient.delete(`/schedules/${id}`);
+    return res.data;
+  },
+
+  getUserTier: async (userId) => {
+    const validId = userId ? `?user_id=${userId}` : '';
+    const res = await apiClient.get(`/auth/user-tier${validId}`);
+    return res.data;
+  },
+
+  // ==========================================
   // 5. UNIVERSAL CONTENT & STATIC PAGES (CRUD)
   // Terms, Privacy, Partnerships (Canva), Articles, About
   // ==========================================

@@ -3,9 +3,11 @@ import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import Sidebar from '../components/Sidebar';
 import api from '../services/api';
 import { useAuth } from '../context/AuthContext';
+import { useUpgradeModal } from '../context/UpgradeModalContext';
 
 export default function CalendarPage() {
-  const { currentUser } = useAuth();
+  const { currentUser, isFreeTier, canAccessDragDrop } = useAuth();
+  const { openUpgradeModal } = useUpgradeModal();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
 
@@ -123,6 +125,41 @@ export default function CalendarPage() {
     return pDate.getFullYear() === year && pDate.getMonth() === month;
   }).length;
 
+  // Helper kuota mingguan untuk validasi Paket Free (maks. 3 agenda / minggu)
+  const getWeeklyCount = (targetDate = new Date()) => {
+    const d = new Date(targetDate);
+    const day = d.getDay();
+    const diffToMonday = d.getDate() - day + (day === 0 ? -6 : 1);
+    const monday = new Date(d);
+    monday.setDate(diffToMonday);
+    monday.setHours(0, 0, 0, 0);
+    const sunday = new Date(monday);
+    sunday.setDate(monday.getDate() + 7);
+
+    return posts.filter((p) => {
+      if (!p.scheduled_at) return false;
+      const pDate = new Date(p.scheduled_at);
+      return !isNaN(pDate.getTime()) && pDate >= monday && pDate < sunday;
+    }).length;
+  };
+
+  const handleScheduleClick = (e, targetDate) => {
+    if (isFreeTier) {
+      const count = getWeeklyCount(targetDate);
+      if (count >= 3) {
+        e.preventDefault();
+        openUpgradeModal({
+          reason: 'agenda_limit',
+          currentCount: count,
+          maxLimit: 3,
+        });
+        return;
+      }
+    }
+  };
+
+  const currentWeekCount = getWeeklyCount(realToday);
+
   return (
     <div className="min-h-screen bg-slate-50/70 text-slate-800">
       <Sidebar />
@@ -144,6 +181,23 @@ export default function CalendarPage() {
                 <span className="text-xs font-bold text-slate-500 bg-slate-200 px-2.5 py-1 rounded-full">
                   {monthPostsCount} Konten Terjadwal
                 </span>
+                {isFreeTier && (
+                  <button
+                    onClick={() => openUpgradeModal({ reason: 'agenda_limit', currentCount: currentWeekCount, maxLimit: 3 })}
+                    className={`text-[11px] font-black px-3 py-1 rounded-full border transition-all flex items-center gap-1.5 cursor-pointer ${
+                      currentWeekCount >= 3
+                        ? 'bg-rose-50 text-rose-700 border-rose-300 animate-pulse'
+                        : 'bg-amber-50 text-amber-700 border-amber-300'
+                    }`}
+                    title="Klik untuk upgrade ke Paket Pro atau Plus"
+                  >
+                    <span className="material-symbols-outlined text-xs">
+                      {currentWeekCount >= 3 ? 'warning' : 'schedule'}
+                    </span>
+                    <span>Kuota Free: {currentWeekCount}/3 Minggu Ini</span>
+                    <span className="text-[9px] underline uppercase tracking-wider font-extrabold ml-1">Upgrade</span>
+                  </button>
+                )}
               </h1>
               <p className="text-xs sm:text-sm text-slate-500 mt-1">
                 Visualisasikan seluruh jadwal posting sosial media UMKM dengan label kategori warna tersinkronisasi.
@@ -162,14 +216,22 @@ export default function CalendarPage() {
 
               <Link
                 to="/calendar/drag-drop"
+                onClick={(e) => {
+                  if (isFreeTier) {
+                    e.preventDefault();
+                    openUpgradeModal({ reason: 'drag_drop' });
+                  }
+                }}
                 className="px-3.5 py-2 bg-white hover:bg-slate-100 rounded-xl text-xs font-bold text-slate-700 flex items-center gap-1.5 border border-slate-200 shadow-xs transition-colors"
               >
                 <span className="material-symbols-outlined text-base">drag_indicator</span>
-                Drag & Drop
+                <span>Drag & Drop</span>
+                {isFreeTier && <span className="material-symbols-outlined text-xs text-amber-500">lock</span>}
               </Link>
 
               <Link
                 to={`/calendar/pick-date?year=${year}&month=${month + 1}&day=${realToday.getDate()}`}
+                onClick={(e) => handleScheduleClick(e, realToday)}
                 className="px-4 py-2 bg-gradient-primary text-white rounded-xl text-xs font-extrabold shadow-md shadow-primary/20 flex items-center gap-1.5 hover:scale-[1.02] active:scale-95 transition-all"
               >
                 <span className="material-symbols-outlined text-base">add</span>
@@ -274,7 +336,8 @@ export default function CalendarPage() {
                     {cell.isCurrentMonth && (
                       <Link
                         to={`/calendar/pick-date?year=${year}&month=${month + 1}&day=${cell.day}`}
-                        className="text-[10px] text-slate-300 hover:text-primary font-extrabold text-center block pt-1 hover:underline transition-colors"
+                        onClick={(e) => handleScheduleClick(e, cell.dateObj)}
+                        className="text-[10px] text-slate-400 hover:text-primary font-extrabold text-center block pt-1 hover:underline transition-colors"
                       >
                         + Jadwal
                       </Link>

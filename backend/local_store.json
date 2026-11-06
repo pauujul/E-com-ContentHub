@@ -12,7 +12,8 @@
       "avatar_url": "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=200&h=200&fit=crop",
       "email_verified": true,
       "created_at": "2026-10-01T08:00:00.000Z",
-      "updated_at": "2026-11-06T06:10:31.323Z"
+      "updated_at": "2026-11-06T06:10:31.323Z",
+      "email_notifications_enabled": true
     },
     {
       "id": 3,
@@ -26,7 +27,8 @@
       "avatar_url": "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=200&h=200&fit=crop",
       "email_verified": true,
       "created_at": "2026-10-10T10:15:00.000Z",
-      "updated_at": "2026-11-04T04:01:11.936Z"
+      "updated_at": "2026-11-04T04:01:11.936Z",
+      "email_notifications_enabled": true
     },
     {
       "id": 4,
@@ -40,7 +42,8 @@
       "avatar_url": "https://images.unsplash.com/photo-1570295999919-56ceb5ecca61?w=200&h=200&fit=crop",
       "email_verified": true,
       "created_at": "2026-11-05T07:58:22.162Z",
-      "updated_at": "2026-11-05T07:58:22.162Z"
+      "updated_at": "2026-11-05T07:58:22.162Z",
+      "email_notifications_enabled": true
     },
     {
       "id": 8,
@@ -54,23 +57,24 @@
       "avatar_url": "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=200&h=200&fit=crop",
       "email_verified": true,
       "created_at": "2026-11-05T08:07:59.889Z",
-      "updated_at": "2026-11-05T08:07:59.900Z"
+      "updated_at": "2026-11-05T08:07:59.900Z",
+      "email_notifications_enabled": true
     }
   ],
   "subscription_plans": [
     {
       "id": 1,
       "sku": "CH-FREE",
-      "name": "Starter Trial (Free)",
+      "name": "ContentHub Free",
       "description": "Paket awal tanpa biaya untuk UMKM yang baru mulai merencanakan dan menjadwalkan konten media sosial.",
       "price": "0.00",
       "billing_cycle": "Free",
       "features": [
-        "1 Kalender Konten Interaktif",
-        "3 Template Konten Siap Pakai",
+        "Maksimal 3 Agenda Konten / Minggu",
+        "Template Library Basic (Free)",
         "1 Akun Media Sosial",
-        "Export Jadwal ke Format Gambar",
-        "Akses Komunitas Komersial UMKM"
+        "Export Kalender ke Gambar",
+        "Komunitas UMKM"
       ],
       "badge": "Akses Gratis",
       "is_hero": false,
@@ -79,11 +83,11 @@
     },
     {
       "id": 2,
-      "sku": "CH-START-M",
-      "name": "ContentHub Starter",
+      "sku": "CH-PRO-3M",
+      "name": "ContentHub Pro",
       "description": "Solusi paling praktis dan terlaris bagi pelaku UMKM yang membutuhkan kalender interaktif drag-and-drop dan puluhan template Canva siap pakai.",
-      "price": "98000.00",
-      "billing_cycle": "Bulanan",
+      "price": "199000.00",
+      "billing_cycle": "3 Bulan",
       "features": [
         "Semua Fitur Paket Trial Free",
         "Kalender Drag & Drop Interaktif Penuh",
@@ -100,11 +104,11 @@
     },
     {
       "id": 3,
-      "sku": "CH-PRO-Y",
-      "name": "ContentHub Pro",
+      "sku": "CH-PLUS-1Y",
+      "name": "ContentHub Plus",
       "description": "Paket komprehensif tahunan untuk UMKM berkembang dengan frekuensi konten tinggi, multi-admin, dan analitik jadwal posting.",
-      "price": "898000.00",
-      "billing_cycle": "Tahunan",
+      "price": "699000.00",
+      "billing_cycle": "1 Tahun",
       "features": [
         "Semua Fitur Starter Bulanan",
         "Akses 200+ Template Premium Canva",
@@ -522,5 +526,6 @@
       ]
     }
   },
-  "password_resets": []
+  "password_resets": [],
+  "schedules": []
 }

@@ -1,11 +1,13 @@
 import React from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { useUpgradeModal } from '../context/UpgradeModalContext';
 
 export default function Sidebar() {
   const location = useLocation();
   const navigate = useNavigate();
-  const { currentUser, isAdmin, activeSubscription } = useAuth();
+  const { currentUser, isAdmin, isFreeTier, canAccessDragDrop, activeSubscription } = useAuth();
+  const { openUpgradeModal } = useUpgradeModal();
 
   const isActive = (path) => {
     const current = location.pathname;
@@ -86,9 +88,23 @@ export default function Sidebar() {
             <span>Detail Agenda</span>
           </Link>
 
-          <Link to="/calendar/drag-drop" className={navItemClass('/calendar/drag-drop')}>
+          <Link
+            to="/calendar/drag-drop"
+            onClick={(e) => {
+              if (isFreeTier) {
+                e.preventDefault();
+                openUpgradeModal({ reason: 'drag_drop' });
+              }
+            }}
+            className={navItemClass('/calendar/drag-drop')}
+          >
             <span className="material-symbols-outlined text-xl">drag_indicator</span>
-            <span>Drag & Drop Planner</span>
+            <span className="flex-1">Drag & Drop Planner</span>
+            {isFreeTier && (
+              <span className="material-symbols-outlined text-sm text-amber-500" title="Terkunci (Paket Free)">
+                lock
+              </span>
+            )}
           </Link>
 
           <Link to="/templates" className={navItemClass('/templates')}>

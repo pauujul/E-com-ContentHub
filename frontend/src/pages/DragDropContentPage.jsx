@@ -3,9 +3,11 @@ import { Link } from 'react-router-dom';
 import Sidebar from '../components/Sidebar';
 import api from '../services/api';
 import { useAuth } from '../context/AuthContext';
+import { useUpgradeModal } from '../context/UpgradeModalContext';
 
 export default function DragDropContentPage() {
-  const { currentUser } = useAuth();
+  const { currentUser, isFreeTier } = useAuth();
+  const { openUpgradeModal } = useUpgradeModal();
   const [columns, setColumns] = useState({
     backlog: [],
     design: [],
@@ -392,11 +394,19 @@ export default function DragDropContentPage() {
               </button>
 
               <button
-                onClick={() => setIsModalOpen(true)}
-                className="px-4 py-2.5 bg-gradient-primary text-white font-extrabold text-xs rounded-xl shadow-md shadow-primary/20 flex items-center gap-1.5 hover:scale-[1.02] active:scale-95 transition-all"
+                onClick={() => {
+                  if (isFreeTier) {
+                    openUpgradeModal({ reason: 'drag_drop' });
+                    return;
+                  }
+                  setIsModalOpen(true);
+                }}
+                className="px-4 py-2.5 bg-gradient-primary text-white font-extrabold text-xs rounded-xl shadow-md shadow-primary/20 flex items-center gap-1.5 hover:scale-[1.02] active:scale-95 transition-all cursor-pointer"
               >
-                <span className="material-symbols-outlined text-base">add_photo_alternate</span>
-                <span>+ Buat Kartu Baru (Ada Gambar)</span>
+                <span className="material-symbols-outlined text-base">
+                  {isFreeTier ? 'lock' : 'add_photo_alternate'}
+                </span>
+                <span>+ Buat Kartu Baru {isFreeTier ? '(Terkunci)' : '(Ada Gambar)'}</span>
               </button>
             </div>
           </div>
@@ -416,7 +426,38 @@ export default function DragDropContentPage() {
               <p className="mt-3 text-xs font-bold text-slate-400">Sinkronisasi kartu planner dengan database PostgreSQL Neon...</p>
             </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-5 items-start">
+            <div className="relative">
+              {/* Overlay Kunci Khusus Paket Free */}
+              {isFreeTier && (
+                <div className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm rounded-3xl z-30 flex items-center justify-center p-6 text-center animate-in fade-in duration-300">
+                  <div className="bg-white rounded-3xl p-8 max-w-md w-full shadow-2xl border border-slate-200 space-y-4">
+                    <div className="w-16 h-16 mx-auto rounded-2xl bg-indigo-100 text-indigo-700 flex items-center justify-center shadow-xs">
+                      <span className="material-symbols-outlined text-3xl">lock</span>
+                    </div>
+                    <div>
+                      <span className="text-[10px] font-extrabold uppercase tracking-widest px-3 py-1 rounded-full bg-amber-50 text-amber-700 border border-amber-200">
+                        Fitur Terkunci (Paket Free)
+                      </span>
+                      <h3 className="text-xl font-black text-slate-900 mt-2">
+                        Drag & Drop Planner Khusus Pro & Plus
+                      </h3>
+                    </div>
+                    <p className="text-xs text-slate-500 leading-relaxed">
+                      Kelola alur kerja konten secara visual dengan kanban board interaktif. Fitur ini dapat langsung diakses dengan meng-upgrade akun Anda ke Paket Pro atau Plus.
+                    </p>
+                    <button
+                      type="button"
+                      onClick={() => openUpgradeModal({ reason: 'drag_drop' })}
+                      className="w-full py-3.5 bg-gradient-primary text-white font-extrabold text-xs rounded-xl shadow-md shadow-primary/25 hover:scale-[1.02] active:scale-95 transition-all flex items-center justify-center gap-2 cursor-pointer"
+                    >
+                      <span className="material-symbols-outlined text-base">workspace_premium</span>
+                      <span>Upgrade ke Pro atau Plus Sekarang</span>
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-5 items-start">
               
               {/* Kolom 1: Ide Konten (Backlog) */}
               <div
@@ -527,7 +568,8 @@ export default function DragDropContentPage() {
               </div>
 
             </div>
-          )}
+          </div>
+        )}
 
           {/* ======================================================== */}
           {/* MODAL 1: BUAT KARTU BARU (DENGAN DUKUNGAN GAMBAR VISUAL) */}

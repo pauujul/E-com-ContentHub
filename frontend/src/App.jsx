@@ -2,6 +2,8 @@ import React from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { CartProvider } from './context/CartContext';
+import { UpgradeModalProvider } from './context/UpgradeModalContext';
+import { ScheduleProvider } from './context/ScheduleContext';
 import CartDrawer from './components/CartDrawer';
 
 // Pages
@@ -66,10 +68,12 @@ function AdminRoute({ children }) {
 export default function App() {
   return (
     <AuthProvider>
-      <CartProvider>
-        <BrowserRouter>
-          <CartDrawer />
-          <Routes>
+      <UpgradeModalProvider>
+        <ScheduleProvider>
+          <CartProvider>
+            <BrowserRouter>
+              <CartDrawer />
+              <Routes>
             {/* 1. Public Marketing Pages */}
             <Route path="/" element={<HomePage />} />
             <Route path="/home" element={<HomePage />} />
@@ -258,7 +262,9 @@ export default function App() {
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
         </BrowserRouter>
-      </CartProvider>
+          </CartProvider>
+        </ScheduleProvider>
+      </UpgradeModalProvider>
     </AuthProvider>
   );
 }

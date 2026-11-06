@@ -220,6 +220,30 @@ export function AuthProvider({ children }) {
 
   const isAdmin = currentUser?.role === 'admin';
 
+  // Kalkulasi Hak Akses Tier Pengguna (Free, Pro, Plus, Admin)
+  const userTier = React.useMemo(() => {
+    if (currentUser?.role === 'admin') return 'admin';
+    if (activeSubscription?.status === 'Paid') {
+      const pId = parseInt(activeSubscription.plan_id, 10);
+      const pName = (activeSubscription.plan_name || '').toLowerCase();
+      const pCycle = (activeSubscription.billing_cycle || '').toLowerCase();
+      if (pId === 3 || pName.includes('plus') || pCycle.includes('tahun')) {
+        return 'plus';
+      }
+      if (pId === 2 || pName.includes('pro') || pName.includes('starter') || pCycle.includes('bulan')) {
+        return 'pro';
+      }
+    }
+    return 'free';
+  }, [currentUser?.role, activeSubscription]);
+
+  const isFreeTier = userTier === 'free';
+  const isProTier = userTier === 'pro';
+  const isPlusTier = userTier === 'plus' || isAdmin;
+  const canAccessDragDrop = isAdmin || isProTier || isPlusTier;
+  const canAccessPremiumTemplates = isAdmin || isProTier || isPlusTier;
+  const canAccessNotifications = isAdmin || isPlusTier;
+
   return (
     <AuthContext.Provider
       value={{
@@ -227,6 +251,13 @@ export function AuthProvider({ children }) {
         token,
         allUsers,
         isAdmin,
+        userTier,
+        isFreeTier,
+        isProTier,
+        isPlusTier,
+        canAccessDragDrop,
+        canAccessPremiumTemplates,
+        canAccessNotifications,
         activeSubscription,
         loadingSubscription,
         refreshSubscription,

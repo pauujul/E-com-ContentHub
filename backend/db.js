@@ -555,6 +555,9 @@ function initPostgres() {
   }
 
   if (pool) {
+    // Default to true when pool is configured with DATABASE_URL
+    isPostgresConnected = !!process.env.DATABASE_URL;
+
     pool.connect((err, client, release) => {
       if (err) {
         console.warn('⚠️  PostgreSQL belum dapat dijangkau (' + err.message + '). Mengaktifkan Local Resilient Store.');
@@ -585,11 +588,17 @@ const db = {
 
   query: async (text, params = []) => {
     // 1. Jika terhubung ke Neon PostgreSQL, gunakan driver PG murni
-    if (isPostgresConnected && pool) {
+    if (pool && isPostgresConnected) {
       try {
         return await pool.query(text, params);
       } catch (err) {
-        console.warn('⚠️  Postgres query error, beralih ke local storage:', err.message);
+        const isConnError = ['ECONNREFUSED', 'ENOTFOUND', 'ETIMEDOUT', '57P01'].includes(err.code) || err.message?.includes('Connection terminated');
+        if (isConnError) {
+          console.warn('⚠️  Postgres connection drop, beralih ke local storage:', err.message);
+          isPostgresConnected = false;
+        } else {
+          throw err;
+        }
       }
     }
 

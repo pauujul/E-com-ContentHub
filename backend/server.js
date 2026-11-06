@@ -5,6 +5,7 @@ const fs = require('fs');
 const crypto = require('crypto');
 const multer = require('multer');
 const nodemailer = require('nodemailer');
+const cron = require('node-cron');
 require('dotenv').config({ path: path.join(__dirname, '.env') });
 
 const db = require('./db');
@@ -299,7 +300,7 @@ app.post('/api/auth/login', async (req, res) => {
     }
 
     const query = `
-      SELECT id, name, email, password, role, phone, business_name, industry, avatar_url, email_verified 
+      SELECT id, name, email, password, role, phone, business_name, industry, avatar_url, email_verified, COALESCE(email_notifications_enabled, TRUE) AS email_notifications_enabled 
       FROM users 
       WHERE LOWER(email) = LOWER($1)
     `;
@@ -347,6 +348,7 @@ app.post('/api/auth/login', async (req, res) => {
           industry: user.industry,
           avatar_url: user.avatar_url,
           email_verified: user.email_verified,
+          email_notifications_enabled: user.email_notifications_enabled !== false,
         },
         token,
       },
@@ -360,7 +362,7 @@ app.post('/api/auth/login', async (req, res) => {
 // POST /api/auth/register
 app.post('/api/auth/register', async (req, res) => {
   try {
-    const { name, email, password, phone = '', role = 'customer', business_name = 'UMKM Mitra ContentHub', industry = 'Kuliner & F&B', avatar_url = null } = req.body;
+    const { name, email, password, phone = '', role = 'customer', business_name = 'UMKM Mitra ContentHub', industry = 'Kuliner & F&B', avatar_url = null, email_notifications_enabled = true } = req.body;
 
     if (!name || !email || !password) {
       return res.status(400).json({ success: false, message: 'Nama lengkap, email, dan kata sandi wajib diisi.' });
@@ -373,12 +375,13 @@ app.post('/api/auth/register', async (req, res) => {
 
     const hashedPassword = hashPassword(password);
     const defaultAvatar = avatar_url || 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=200&h=200&fit=crop';
+    const notificationsAllowed = email_notifications_enabled !== false;
 
     const insertResult = await db.query(
-      `INSERT INTO users (name, email, password, role, phone, business_name, industry, avatar_url, email_verified, created_at, updated_at)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, TRUE, NOW(), NOW())
-       RETURNING id, name, email, role, phone, business_name, industry, avatar_url, created_at`,
-      [name.trim(), email.trim().toLowerCase(), hashedPassword, role, phone.trim(), business_name.trim(), industry.trim(), defaultAvatar]
+      `INSERT INTO users (name, email, password, role, phone, business_name, industry, avatar_url, email_verified, email_notifications_enabled, created_at, updated_at)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, TRUE, $9, NOW(), NOW())
+       RETURNING id, name, email, role, phone, business_name, industry, avatar_url, email_notifications_enabled, created_at`,
+      [name.trim(), email.trim().toLowerCase(), hashedPassword, role, phone.trim(), business_name.trim(), industry.trim(), defaultAvatar, notificationsAllowed]
     );
 
     const newUser = insertResult.rows[0];
@@ -419,7 +422,7 @@ app.get('/api/auth/me', async (req, res) => {
       return res.status(400).json({ success: false, message: 'Parameter id atau token authorization diperlukan.' });
     }
 
-    const result = await db.query('SELECT id, name, email, role, phone, business_name, industry, avatar_url, email_verified, created_at FROM users WHERE id = $1', [targetId]);
+    const result = await db.query('SELECT id, name, email, role, phone, business_name, industry, avatar_url, email_verified, COALESCE(email_notifications_enabled, TRUE) AS email_notifications_enabled, created_at FROM users WHERE id = $1', [targetId]);
 
     if (result.rows.length === 0) {
       return res.status(404).json({ success: false, message: 'Pengguna tidak ditemukan.' });
@@ -431,10 +434,10 @@ app.get('/api/auth/me', async (req, res) => {
   }
 });
 
-// PUT /api/auth/profile (Update Profile Pengguna: Nama, Telepon, Nama Usaha, Industri, Foto Profil)
+// PUT /api/auth/profile (Update Profile Pengguna: Nama, Telepon, Nama Usaha, Industri, Foto Profil, Izin Notifikasi)
 app.put('/api/auth/profile', async (req, res) => {
   try {
-    const { id, name, phone, business_name, industry, avatar_url } = req.body;
+    const { id, name, phone, business_name, industry, avatar_url, email_notifications_enabled } = req.body;
 
     if (!id) {
       return res.status(400).json({ success: false, message: 'ID pengguna diperlukan.' });
@@ -449,6 +452,7 @@ app.put('/api/auth/profile', async (req, res) => {
         if (business_name) store.users[uIndex].business_name = business_name.trim();
         if (industry) store.users[uIndex].industry = industry.trim();
         if (avatar_url) store.users[uIndex].avatar_url = avatar_url;
+        if (email_notifications_enabled !== undefined) store.users[uIndex].email_notifications_enabled = email_notifications_enabled !== false;
         store.users[uIndex].updated_at = new Date().toISOString();
         db.saveStore();
 
@@ -467,11 +471,20 @@ app.put('/api/auth/profile', async (req, res) => {
           business_name = COALESCE($3, business_name),
           industry = COALESCE($4, industry),
           avatar_url = COALESCE($5, avatar_url),
+          email_notifications_enabled = COALESCE($6, email_notifications_enabled),
           updated_at = NOW()
-      WHERE id = $6
-      RETURNING id, name, email, role, phone, business_name, industry, avatar_url, updated_at;
+      WHERE id = $7
+      RETURNING id, name, email, role, phone, business_name, industry, avatar_url, email_notifications_enabled, updated_at;
     `;
-    const result = await db.query(updateQuery, [name, phone, business_name, industry, avatar_url, id]);
+    const result = await db.query(updateQuery, [
+      name || null,
+      phone !== undefined ? phone : null,
+      business_name || null,
+      industry || null,
+      avatar_url || null,
+      email_notifications_enabled !== undefined ? (email_notifications_enabled !== false) : null,
+      id
+    ]);
 
     if (result.rows.length === 0) {
       return res.status(404).json({ success: false, message: 'Pengguna tidak ditemukan.' });
@@ -1461,6 +1474,468 @@ app.patch('/api/orders/:id/status', async (req, res) => {
 });
 
 // ==========================================
+// TIER MANAGEMENT & ACCESS VALIDATION HELPERS
+// (Free, Pro, Plus, Admin)
+// ==========================================
+
+async function getUserSubscriptionTier(userId) {
+  const resolvedId = parseInt(userId, 10);
+  if (!resolvedId) return 'free';
+
+  try {
+    // 1. Cek role admin
+    let user = null;
+    if (db.isPostgres && db.isPostgres()) {
+      const uRes = await db.query('SELECT role, email_notifications_enabled FROM users WHERE id = $1', [resolvedId]);
+      if (uRes.rows.length > 0) user = uRes.rows[0];
+    } else {
+      const store = db.getStore ? db.getStore() : null;
+      user = store?.users?.find((u) => u.id === resolvedId);
+    }
+
+    if (user && user.role === 'admin') {
+      return 'admin';
+    }
+
+    // 2. Cek transaksi Paid paling baru
+    let paidOrder = null;
+    if (db.isPostgres && db.isPostgres()) {
+      const oRes = await db.query(
+        `SELECT o.plan_id, sp.name, sp.sku, sp.billing_cycle
+         FROM orders o
+         JOIN subscription_plans sp ON o.plan_id = sp.id
+         WHERE o.user_id = $1 AND o.status = 'Paid'
+         ORDER BY o.id DESC
+         LIMIT 1`,
+        [resolvedId]
+      );
+      if (oRes.rows.length > 0) paidOrder = oRes.rows[0];
+    } else {
+      const store = db.getStore ? db.getStore() : null;
+      if (store && store.orders) {
+        const o = store.orders.find((ord) => ord.user_id === resolvedId && ord.status === 'Paid');
+        if (o) {
+          const p = store.subscription_plans?.find((pl) => pl.id === o.plan_id);
+          paidOrder = { plan_id: o.plan_id, name: p?.name, sku: p?.sku, billing_cycle: p?.billing_cycle };
+        }
+      }
+    }
+
+    if (!paidOrder) return 'free';
+
+    const pName = (paidOrder.name || '').toLowerCase();
+    const pSku = (paidOrder.sku || '').toLowerCase();
+    const pCycle = (paidOrder.billing_cycle || '').toLowerCase();
+
+    // Plus tier (Masa aktif 1 tahun, notifikasi otomatis aktif)
+    if (paidOrder.plan_id === 3 || pName.includes('plus') || pSku.includes('plus') || pCycle.includes('tahun')) {
+      return 'plus';
+    }
+
+    // Pro tier (Masa aktif 3 bulan / bulanan, kalender unlimited + drag-drop + all templates)
+    if (paidOrder.plan_id === 2 || pName.includes('pro') || pSku.includes('pro') || pName.includes('starter') || pCycle.includes('bulan')) {
+      return 'pro';
+    }
+
+    return 'free';
+  } catch (err) {
+    console.error('Error determining user tier:', err.message);
+    return 'free';
+  }
+}
+
+// Menghitung jumlah agenda pengguna pada minggu yang bersangkutan (Senin s/d Minggu)
+async function getWeeklyAgendaCountForUser(userId, targetDate = new Date()) {
+  const resolvedId = parseInt(userId, 10);
+  if (!resolvedId) return 0;
+
+  try {
+    const d = new Date(targetDate);
+    const day = d.getDay(); // 0 = Minggu
+    const diffToMonday = d.getDate() - day + (day === 0 ? -6 : 1);
+    const monday = new Date(d);
+    monday.setDate(diffToMonday);
+    monday.setHours(0, 0, 0, 0);
+    const sunday = new Date(monday);
+    sunday.setDate(monday.getDate() + 7);
+
+    const startIso = monday.toISOString();
+    const endIso = sunday.toISOString();
+
+    let count = 0;
+    if (db.isPostgres && db.isPostgres()) {
+      const qPosts = await db.query(
+        'SELECT COUNT(*)::int AS count FROM content_posts WHERE user_id = $1 AND scheduled_at >= $2 AND scheduled_at < $3',
+        [resolvedId, startIso, endIso]
+      );
+      const qSched = await db.query(
+        'SELECT COUNT(*)::int AS count FROM schedules WHERE user_id = $1 AND start_time >= $2 AND start_time < $3',
+        [resolvedId, startIso, endIso]
+      );
+      count = Math.max(qPosts.rows[0]?.count || 0, qSched.rows[0]?.count || 0);
+    } else {
+      const store = db.getStore ? db.getStore() : null;
+      const postsCount = (store?.content_posts || []).filter((p) => p.user_id === resolvedId && p.scheduled_at >= startIso && p.scheduled_at < endIso).length;
+      const schedCount = (store?.schedules || []).filter((s) => s.user_id === resolvedId && s.start_time >= startIso && s.start_time < endIso).length;
+      count = Math.max(postsCount, schedCount);
+    }
+    return count;
+  } catch (err) {
+    console.error('Error counting weekly agendas:', err.message);
+    return 0;
+  }
+}
+
+// GET /api/auth/user-tier (Mendapatkan Status Tier & Hak Akses Fitur)
+app.get('/api/auth/user-tier', async (req, res) => {
+  try {
+    const userId = req.query.user_id || req.query.id;
+    if (!userId) {
+      return res.status(400).json({ success: false, message: 'Parameter user_id diperlukan' });
+    }
+    const resolvedId = parseInt(userId, 10);
+    const tier = await getUserSubscriptionTier(resolvedId);
+    const weeklyCount = await getWeeklyAgendaCountForUser(resolvedId);
+
+    const isFree = tier === 'free';
+    const isPro = tier === 'pro';
+    const isPlus = tier === 'plus' || tier === 'admin';
+    const isAdmin = tier === 'admin';
+
+    res.json({
+      success: true,
+      data: {
+        tier,
+        is_free: isFree,
+        is_pro: isPro,
+        is_plus: isPlus,
+        is_admin: isAdmin,
+        weekly_agenda_count: weeklyCount,
+        weekly_agenda_limit: isFree ? 3 : null,
+        limit_reached: isFree && weeklyCount >= 3,
+        permissions: {
+          calendar_unlimited: !isFree,
+          drag_drop_planner: isPro || isPlus || isAdmin,
+          all_templates: isPro || isPlus || isAdmin,
+          automatic_notifications: isPlus || isAdmin,
+        },
+      },
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, message: 'Gagal mengambil informasi tier', error: error.message });
+  }
+});
+
+// GET /api/notifications/unsubscribe (Pencabutan Izin Notifikasi Email Pengguna)
+app.get('/api/notifications/unsubscribe', async (req, res) => {
+  try {
+    const { email, userId } = req.query;
+    if (!email && !userId) {
+      return res.status(400).send('Parameter email atau userId diperlukan.');
+    }
+
+    if (db.isPostgres && db.isPostgres()) {
+      if (email) {
+        await db.query('UPDATE users SET email_notifications_enabled = FALSE, updated_at = NOW() WHERE LOWER(email) = LOWER($1)', [email.trim()]);
+      } else if (userId) {
+        await db.query('UPDATE users SET email_notifications_enabled = FALSE, updated_at = NOW() WHERE id = $1', [parseInt(userId, 10)]);
+      }
+    }
+
+    const store = db.getStore ? db.getStore() : null;
+    if (store && store.users) {
+      const u = store.users.find(
+        (usr) => (email && usr.email.toLowerCase() === email.trim().toLowerCase()) || (userId && usr.id === parseInt(userId, 10))
+      );
+      if (u) {
+        u.email_notifications_enabled = false;
+        db.saveStore();
+      }
+    }
+
+    res.send(`
+      <!DOCTYPE html>
+      <html lang="id">
+      <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Berhasil Berhenti Berlangganan - ContentHub</title>
+        <style>
+          body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: #f8fafc; color: #1e293b; display: flex; align-items: center; justify-content: center; min-height: 100vh; margin: 0; padding: 20px; box-sizing: border-box; }
+          .card { background: white; max-width: 480px; width: 100%; padding: 40px; border-radius: 24px; box-shadow: 0 10px 25px -5px rgba(0,0,0,0.05); text-align: center; border: 1px solid #e2e8f0; }
+          .icon { width: 64px; height: 64px; border-radius: 50%; background: #ecfdf5; color: #059669; display: inline-flex; align-items: center; justify-content: center; font-size: 32px; margin-bottom: 20px; font-weight: bold; }
+          h1 { font-size: 22px; font-weight: 800; margin: 0 0 12px; color: #0f172a; }
+          p { font-size: 14px; line-height: 1.6; color: #64748b; margin: 0 0 24px; }
+          .btn { display: inline-block; background: #005da7; color: white; padding: 12px 28px; border-radius: 12px; text-decoration: none; font-weight: 700; font-size: 14px; }
+        </style>
+      </head>
+      <body>
+        <div class="card">
+          <div class="icon">✓</div>
+          <h1>Izin Notifikasi Berhasil Dicabut</h1>
+          <p>Anda telah berhasil berhenti berlangganan pengingat jadwal otomatis dari ContentHub. Anda dapat mengaktifkannya kembali kapan saja melalui menu <strong>Pengaturan Profil</strong> di dalam Workspace.</p>
+          <a href="/" class="btn">Kembali ke ContentHub</a>
+        </div>
+      </body>
+      </html>
+    `);
+  } catch (err) {
+    res.status(500).send('Gagal memproses permohonan berhenti berlangganan: ' + err.message);
+  }
+});
+
+// ==========================================
+// BACKGROUND NOTIFICATION SCHEDULER (GMAIL)
+// Presisi Menit: * * * * *
+// ==========================================
+
+async function sendScheduledReminders() {
+  try {
+    const now = new Date();
+    let dueSchedules = [];
+
+    if (db.isPostgres && db.isPostgres()) {
+      // 1. Scan tabel schedules
+      const querySched = `
+        SELECT 
+          s.id,
+          s.user_id,
+          s.title,
+          s.description,
+          s.platform,
+          s.start_time,
+          'schedules' AS source_table,
+          u.name AS user_name,
+          u.email AS user_email,
+          u.role AS user_role,
+          COALESCE(u.email_notifications_enabled, TRUE) AS email_notifications_enabled
+        FROM schedules s
+        JOIN users u ON s.user_id = u.id
+        WHERE (s.notification_sent IS FALSE OR s.notification_sent IS NULL)
+          AND s.start_time <= NOW()
+          AND s.start_time >= NOW() - INTERVAL '5 minutes'
+        ORDER BY s.start_time ASC;
+      `;
+      const resSched = await db.query(querySched);
+      if (resSched.rows && resSched.rows.length > 0) {
+        dueSchedules = [...dueSchedules, ...resSched.rows];
+      }
+
+      // 2. Scan tabel content_posts
+      const queryPosts = `
+        SELECT 
+          cp.id,
+          cp.user_id,
+          cp.judul AS title,
+          cp.caption AS description,
+          cp.platform,
+          cp.scheduled_at AS start_time,
+          'content_posts' AS source_table,
+          u.name AS user_name,
+          u.email AS user_email,
+          u.role AS user_role,
+          COALESCE(u.email_notifications_enabled, TRUE) AS email_notifications_enabled
+        FROM content_posts cp
+        JOIN users u ON cp.user_id = u.id
+        WHERE (cp.notification_sent IS FALSE OR cp.notification_sent IS NULL)
+          AND cp.scheduled_at <= NOW()
+          AND cp.scheduled_at >= NOW() - INTERVAL '5 minutes'
+        ORDER BY cp.scheduled_at ASC;
+      `;
+      const resPosts = await db.query(queryPosts);
+      if (resPosts.rows && resPosts.rows.length > 0) {
+        dueSchedules = [...dueSchedules, ...resPosts.rows];
+      }
+    } else {
+      const store = db.getStore ? db.getStore() : null;
+      if (store) {
+        const fiveMinAgo = new Date(now.getTime() - 5 * 60 * 1000).toISOString();
+        const nowIso = now.toISOString();
+
+        (store.schedules || []).forEach((s) => {
+          if (!s.notification_sent && s.start_time <= nowIso && s.start_time >= fiveMinAgo) {
+            const u = store.users.find((usr) => usr.id === s.user_id);
+            if (u) {
+              dueSchedules.push({
+                ...s,
+                source_table: 'schedules',
+                user_name: u.name,
+                user_email: u.email,
+                user_role: u.role,
+                email_notifications_enabled: u.email_notifications_enabled !== false,
+              });
+            }
+          }
+        });
+
+        (store.content_posts || []).forEach((p) => {
+          if (!p.notification_sent && p.scheduled_at <= nowIso && p.scheduled_at >= fiveMinAgo) {
+            const u = store.users.find((usr) => usr.id === p.user_id);
+            if (u) {
+              dueSchedules.push({
+                id: p.id,
+                user_id: p.user_id,
+                title: p.judul,
+                description: p.caption,
+                platform: p.platform,
+                start_time: p.scheduled_at,
+                source_table: 'content_posts',
+                user_name: u.name,
+                user_email: u.email,
+                user_role: u.role,
+                email_notifications_enabled: u.email_notifications_enabled !== false,
+              });
+            }
+          }
+        });
+      }
+    }
+
+    if (dueSchedules.length === 0) return;
+
+    console.log(`\n🔔 [SCHEDULER] Terdeteksi ${dueSchedules.length} agenda jatuh tempo untuk diproses...`);
+
+    for (const item of dueSchedules) {
+      // Validasi 1: Izin User Consent
+      if (item.email_notifications_enabled === false) {
+        console.log(`   ⏭️  Lewati agenda '${item.title}': User (${item.user_email}) menonaktifkan notifikasi email.`);
+        continue;
+      }
+
+      // Validasi 2: Paket Plus atau Admin
+      const tier = await getUserSubscriptionTier(item.user_id);
+      if (tier !== 'plus' && tier !== 'admin') {
+        console.log(`   ⏭️  Lewati agenda '${item.title}': User (${item.user_email}) berada pada paket '${tier}'. Fitur notifikasi eksklusif Paket Plus.`);
+        continue;
+      }
+
+      const scheduleTitle = item.title || 'Agenda Konten';
+      const scheduleDesc = item.description || 'Tidak ada catatan tambahan.';
+      const schedulePlatform = item.platform || 'Instagram';
+      const formattedDate = new Date(item.start_time).toLocaleString('id-ID', {
+        weekday: 'long',
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+        timeZoneName: 'short',
+      });
+
+      const serverBase = process.env.BASE_URL || `http://localhost:${PORT}`;
+      const unsubscribeUrl = `${serverBase}/api/notifications/unsubscribe?email=${encodeURIComponent(item.user_email)}&userId=${item.user_id}`;
+
+      const subject = `🔔 [Pengingat Posting] ${scheduleTitle} (${schedulePlatform})`;
+      const textBody = `Halo ${item.user_name},\n\nWaktunya posting! Agenda konten Anda "${scheduleTitle}" dijadwalkan sekarang (${formattedDate}) untuk platform ${schedulePlatform}.\n\nCatatan:\n${scheduleDesc}\n\nBerhenti Berlangganan (Unsubscribe): ${unsubscribeUrl}\n\nSalam,\nContentHub Automated Notifier`;
+
+      const htmlBody = `
+        <!DOCTYPE html>
+        <html lang="id">
+        <head>
+          <meta charset="UTF-8">
+          <style>
+            body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background: #f1f5f9; margin: 0; padding: 24px; color: #1e293b; }
+            .container { max-width: 600px; margin: 0 auto; background: #ffffff; border-radius: 20px; overflow: hidden; border: 1px solid #e2e8f0; box-shadow: 0 10px 25px -5px rgba(0,0,0,0.05); }
+            .header { background: linear-gradient(135deg, #005da7 0%, #0284c7 100%); padding: 36px 28px; text-align: center; color: #ffffff; }
+            .badge-plus { display: inline-block; background: rgba(255,255,255,0.2); padding: 4px 14px; border-radius: 999px; font-size: 11px; font-weight: 800; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 12px; }
+            .content { padding: 32px 28px; }
+            .card-agenda { background: #f8fafc; border: 1px solid #e2e8f0; border-left: 5px solid #005da7; border-radius: 12px; padding: 20px; margin: 20px 0; }
+            .title { font-size: 18px; font-weight: 800; color: #0f172a; margin: 0 0 12px; }
+            .btn { display: inline-block; background: #005da7; color: #ffffff !important; padding: 14px 32px; border-radius: 12px; font-weight: 800; font-size: 14px; text-decoration: none; margin: 20px 0; box-shadow: 0 4px 12px rgba(0,93,167,0.25); }
+            .footer { padding: 24px 28px; background: #f8fafc; border-top: 1px solid #e2e8f0; text-align: center; font-size: 12px; color: #64748b; line-height: 1.6; }
+            .unsub-link { color: #ef4444; text-decoration: underline; font-weight: 600; }
+          </style>
+        </head>
+        <body>
+          <div class="container">
+            <div class="header">
+              <span class="badge-plus">⭐ Eksklusif Paket Plus</span>
+              <h1 style="margin: 0; font-size: 24px; font-weight: 900; letter-spacing: -0.5px;">Waktunya Posting Konten!</h1>
+              <p style="margin: 8px 0 0; opacity: 0.9; font-size: 14px;">Pengingat jadwal otomatis real-time ContentHub</p>
+            </div>
+            <div class="content">
+              <p style="margin-top: 0; font-size: 15px;">Halo <strong>${item.user_name}</strong>,</p>
+              <p style="font-size: 14px; color: #475569; line-height: 1.6;">
+                Agenda konten Anda telah mencapai waktu tayang yang ditentukan. Segera buka aplikasi dan publikasikan konten Anda untuk menjangkau audiens secara konsisten!
+              </p>
+              <div class="card-agenda">
+                <div class="title">${scheduleTitle}</div>
+                <div style="font-size: 13px; color: #334155; margin-bottom: 6px;"><strong>⏰ Waktu Tayang:</strong> ${formattedDate}</div>
+                <div style="font-size: 13px; color: #334155; margin-bottom: 12px;"><strong>📱 Platform:</strong> ${schedulePlatform}</div>
+                <div style="font-size: 12px; font-weight: 700; color: #64748b; text-transform: uppercase; margin-bottom: 4px;">Naskah / Catatan:</div>
+                <div style="font-size: 13px; color: #1e293b; background: #ffffff; padding: 12px; border-radius: 8px; border: 1px solid #e2e8f0; white-space: pre-wrap;">${scheduleDesc}</div>
+              </div>
+              <div style="text-align: center;">
+                <a href="http://localhost:5173/calendar" class="btn">Buka Kalender ContentHub</a>
+              </div>
+            </div>
+            <div class="footer">
+              <p style="margin: 0 0 8px;">
+                Anda menerima email ini karena akun Anda terdaftar pada <strong>Paket Plus</strong> dan memberikan persetujuan (consent) untuk pengingat jadwal otomatis.
+              </p>
+              <p style="margin: 0;">
+                Ingin berhenti menerima pengingat jadwal via email? <a href="${unsubscribeUrl}" class="unsub-link">Klik di sini untuk Unsubscribe</a>.
+              </p>
+            </div>
+          </div>
+        </body>
+        </html>
+      `;
+
+      try {
+        await sendEmailNotification(item.user_email, subject, textBody, 'reminder', htmlBody);
+
+        // Update notification_sent = TRUE
+        if (db.isPostgres && db.isPostgres()) {
+          if (item.source_table === 'schedules') {
+            await db.query('UPDATE schedules SET notification_sent = TRUE, updated_at = NOW() WHERE id = $1', [item.id]);
+          } else {
+            await db.query('UPDATE content_posts SET notification_sent = TRUE, updated_at = NOW() WHERE id = $1', [item.id]);
+          }
+        } else {
+          const store = db.getStore ? db.getStore() : null;
+          if (store) {
+            if (item.source_table === 'schedules') {
+              const sc = (store.schedules || []).find((s) => s.id === item.id);
+              if (sc) sc.notification_sent = true;
+            } else {
+              const cp = (store.content_posts || []).find((p) => p.id === item.id);
+              if (cp) cp.notification_sent = true;
+            }
+            db.saveStore();
+          }
+        }
+        console.log(`   ✅ Notifikasi pengingat agenda '${scheduleTitle}' berhasil dikirim ke ${item.user_email}`);
+      } catch (errSend) {
+        console.error(`   ❌ Gagal mengirim email notifikasi ke ${item.user_email}:`, errSend.message);
+      }
+    }
+  } catch (err) {
+    console.error('Error in sendScheduledReminders:', err.message);
+  }
+}
+
+let cronJobInstance = null;
+function initNotificationScheduler() {
+  if (cronJobInstance) return;
+  console.log('⏰ Mengaktifkan Background Notification Scheduler (node-cron presisi 1 menit)...');
+
+  // Jalankan setiap 1 menit (* * * * *)
+  cronJobInstance = cron.schedule('* * * * *', async () => {
+    try {
+      await sendScheduledReminders();
+    } catch (err) {
+      console.error('❌ Scheduler interval error:', err.message);
+    }
+  });
+
+  // Eksekusi pemeriksaan perdana saat server baru menyala
+  setTimeout(() => {
+    sendScheduledReminders().catch((e) => console.warn('Pemeriksaan notifikasi awal:', e.message));
+  }, 3000);
+}
+
+// ==========================================
 // 5. CONTENT POSTS (CALENDAR & KANBAN PLANNER)
 // SINKRONISASI API PENUH KE DATABASE POSTGRESQL/NEON
 // ==========================================
@@ -1583,6 +2058,21 @@ app.post('/api/posts', async (req, res) => {
       }
     }
 
+    // VALIDASI TIER: Batasan kuota kalender Paket Free (Maksimal 3 agenda per minggu)
+    const userTier = await getUserSubscriptionTier(resolvedUserId);
+    if (userTier === 'free') {
+      const weeklyCount = await getWeeklyAgendaCountForUser(resolvedUserId, scheduled_at);
+      if (weeklyCount >= 3) {
+        return res.status(403).json({
+          success: false,
+          code: 'FREE_WEEKLY_LIMIT_REACHED',
+          message: 'Batas kuota tercapai! Paket Free hanya dapat menjadwalkan maksimal 3 agenda per minggu. Silakan upgrade ke Paket Pro atau Plus untuk menjadwalkan konten tanpa batas.',
+          limit: 3,
+          current_count: weeklyCount,
+        });
+      }
+    }
+
     const store = db.getStore ? db.getStore() : null;
     if (store) {
       const newId = store.content_posts.length ? Math.max(...store.content_posts.map((p) => p.id)) + 1 : 1;
@@ -1700,6 +2190,25 @@ app.patch('/api/posts/:id/stage', async (req, res) => {
       return res.status(400).json({ success: false, message: `Tahap tidak valid. Pilih dari: ${validStages.join(', ')}` });
     }
 
+    // VALIDASI TIER: Drag & Drop Planner dikunci total untuk Paket Free
+    let postUserId = 1;
+    if (db.isPostgres && db.isPostgres()) {
+      const pCheck = await db.query('SELECT user_id FROM content_posts WHERE id = $1', [id]);
+      if (pCheck.rows.length > 0) postUserId = pCheck.rows[0].user_id;
+    } else {
+      const store = db.getStore ? db.getStore() : null;
+      const p = store?.content_posts?.find((x) => x.id === parseInt(id, 10));
+      if (p) postUserId = p.user_id;
+    }
+    const tier = await getUserSubscriptionTier(postUserId);
+    if (tier === 'free') {
+      return res.status(403).json({
+        success: false,
+        code: 'FEATURE_LOCKED_DRAG_DROP',
+        message: 'Fitur Drag & Drop Planner terkunci pada Paket Free. Silakan upgrade ke Paket Pro atau Plus untuk membuka akses penuh.',
+      });
+    }
+
     const store = db.getStore ? db.getStore() : null;
     if (store) {
       const pIndex = store.content_posts.findIndex((p) => p.id === parseInt(id, 10));
@@ -1755,6 +2264,287 @@ app.delete('/api/posts/:id', async (req, res) => {
     const result = await db.query('DELETE FROM content_posts WHERE id = $1 RETURNING id, judul', [id]);
     if (result.rows.length === 0) return res.status(404).json({ success: false, message: 'Jadwal tidak ditemukan' });
     res.json({ success: true, message: `Jadwal '${result.rows[0].judul}' berhasil dihapus.` });
+  } catch (error) {
+    res.status(500).json({ success: false, message: 'Gagal menghapus jadwal', error: error.message });
+  }
+});
+
+// ==========================================
+// 5B. SCHEDULES API (TABEL SCHEDULES NEON)
+// Sinkronisasi jadwal, validasi tier, dan notification tracking
+// ==========================================
+
+// GET /api/schedules
+app.get('/api/schedules', async (req, res) => {
+  try {
+    const { user_id } = req.query;
+    let query = 'SELECT * FROM schedules';
+    const params = [];
+    if (user_id) {
+      query += ' WHERE user_id = $1';
+      params.push(parseInt(user_id, 10));
+    }
+    query += ' ORDER BY start_time ASC';
+
+    if (db.isPostgres && db.isPostgres()) {
+      const result = await db.query(query, params);
+      return res.json({ success: true, count: result.rows.length, data: result.rows });
+    }
+
+    const store = db.getStore ? db.getStore() : null;
+    let scheds = store?.schedules || [];
+    if (user_id) {
+      scheds = scheds.filter((s) => s.user_id === parseInt(user_id, 10));
+    }
+    res.json({ success: true, count: scheds.length, data: scheds });
+  } catch (error) {
+    res.status(500).json({ success: false, message: 'Gagal memuat jadwal', error: error.message });
+  }
+});
+
+// GET /api/schedules/:id
+app.get('/api/schedules/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    if (db.isPostgres && db.isPostgres()) {
+      const result = await db.query('SELECT * FROM schedules WHERE id = $1', [id]);
+      if (result.rows.length === 0) return res.status(404).json({ success: false, message: 'Jadwal tidak ditemukan' });
+      return res.json({ success: true, data: result.rows[0] });
+    }
+    const store = db.getStore ? db.getStore() : null;
+    const item = (store?.schedules || []).find((s) => s.id === parseInt(id, 10));
+    if (!item) return res.status(404).json({ success: false, message: 'Jadwal tidak ditemukan' });
+    res.json({ success: true, data: item });
+  } catch (error) {
+    res.status(500).json({ success: false, message: 'Gagal mengambil detail jadwal', error: error.message });
+  }
+});
+
+// POST /api/schedules
+app.post('/api/schedules', async (req, res) => {
+  try {
+    const {
+      user_id = 1,
+      title,
+      description = '',
+      platform = 'Instagram',
+      category = 'Promosi',
+      start_time = new Date().toISOString(),
+      end_time = null,
+      kanban_column = 'backlog',
+      color_label = 'bg-blue-50 text-blue-700 border-blue-200',
+    } = req.body;
+
+    if (!title) {
+      return res.status(400).json({ success: false, message: 'Judul agenda wajib diisi.' });
+    }
+
+    const resolvedUserId = parseInt(user_id, 10) || 1;
+
+    // VALIDASI TIER: Jika Paket Free, batasi maksimal 3 agenda per minggu
+    const tier = await getUserSubscriptionTier(resolvedUserId);
+    if (tier === 'free') {
+      const weeklyCount = await getWeeklyAgendaCountForUser(resolvedUserId, start_time);
+      if (weeklyCount >= 3) {
+        return res.status(403).json({
+          success: false,
+          code: 'FREE_WEEKLY_LIMIT_REACHED',
+          message: 'Batas kuota tercapai! Paket Free hanya dapat menjadwalkan maksimal 3 agenda per minggu. Silakan upgrade ke Paket Pro atau Plus untuk menjadwalkan konten tanpa batas.',
+          limit: 3,
+          current_count: weeklyCount,
+        });
+      }
+    }
+
+    const startIso = new Date(start_time).toISOString();
+    const endIso = end_time ? new Date(end_time).toISOString() : null;
+
+    if (db.isPostgres && db.isPostgres()) {
+      const insertQuery = `
+        INSERT INTO schedules (user_id, title, description, platform, category, start_time, end_time, kanban_column, color_label, notification_sent, created_at, updated_at)
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, FALSE, NOW(), NOW())
+        RETURNING *;
+      `;
+      const result = await db.query(insertQuery, [
+        resolvedUserId,
+        title.trim(),
+        description.trim(),
+        platform,
+        category,
+        startIso,
+        endIso,
+        kanban_column,
+        color_label,
+      ]);
+
+      // Mirror ke content_posts agar kalender dan drag-drop kanban tetap konsisten
+      try {
+        await db.query(`
+          INSERT INTO content_posts (user_id, judul, caption, platform, category, color_label, scheduled_at, status, stage, order_position, notification_sent, created_at, updated_at)
+          VALUES ($1, $2, $3, $4, $5, $6, $7, 'Scheduled', $8, 0, FALSE, NOW(), NOW())
+        `, [resolvedUserId, title.trim(), description.trim(), platform, category, color_label, startIso, kanban_column]);
+      } catch (e) {
+        console.warn('Sync to content_posts warning:', e.message);
+      }
+
+      return res.status(201).json({ success: true, message: 'Agenda baru berhasil dijadwalkan.', data: result.rows[0] });
+    }
+
+    // Local fallback store
+    const store = db.getStore ? db.getStore() : null;
+    if (store) {
+      if (!store.schedules) store.schedules = [];
+      const newId = store.schedules.length ? Math.max(...store.schedules.map((s) => s.id)) + 1 : 1;
+      const newSched = {
+        id: newId,
+        user_id: resolvedUserId,
+        title: title.trim(),
+        description: description.trim(),
+        platform,
+        category,
+        start_time: startIso,
+        end_time: endIso,
+        kanban_column,
+        color_label,
+        notification_sent: false,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      };
+      store.schedules.push(newSched);
+      db.saveStore();
+      return res.status(201).json({ success: true, message: 'Agenda baru berhasil dijadwalkan.', data: newSched });
+    }
+  } catch (error) {
+    res.status(500).json({ success: false, message: 'Gagal membuat agenda jadwal', error: error.message });
+  }
+});
+
+// PUT /api/schedules/:id
+app.put('/api/schedules/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { title, description, platform, category, start_time, end_time, kanban_column, color_label } = req.body;
+
+    if (db.isPostgres && db.isPostgres()) {
+      const updateQuery = `
+        UPDATE schedules
+        SET title = COALESCE($1, title),
+            description = COALESCE($2, description),
+            platform = COALESCE($3, platform),
+            category = COALESCE($4, category),
+            start_time = COALESCE($5, start_time),
+            end_time = COALESCE($6, end_time),
+            kanban_column = COALESCE($7, kanban_column),
+            color_label = COALESCE($8, color_label),
+            updated_at = NOW()
+        WHERE id = $9
+        RETURNING *;
+      `;
+      const result = await db.query(updateQuery, [
+        title ? title.trim() : null,
+        description !== undefined ? description.trim() : null,
+        platform,
+        category,
+        start_time ? new Date(start_time).toISOString() : null,
+        end_time ? new Date(end_time).toISOString() : null,
+        kanban_column,
+        color_label,
+        id,
+      ]);
+      if (result.rows.length === 0) return res.status(404).json({ success: false, message: 'Jadwal tidak ditemukan' });
+      return res.json({ success: true, message: 'Jadwal berhasil diperbarui.', data: result.rows[0] });
+    }
+
+    const store = db.getStore ? db.getStore() : null;
+    if (store && store.schedules) {
+      const idx = store.schedules.findIndex((s) => s.id === parseInt(id, 10));
+      if (idx === -1) return res.status(404).json({ success: false, message: 'Jadwal tidak ditemukan' });
+      if (title) store.schedules[idx].title = title.trim();
+      if (description !== undefined) store.schedules[idx].description = description.trim();
+      if (platform) store.schedules[idx].platform = platform;
+      if (category) store.schedules[idx].category = category;
+      if (start_time) store.schedules[idx].start_time = new Date(start_time).toISOString();
+      if (end_time !== undefined) store.schedules[idx].end_time = end_time ? new Date(end_time).toISOString() : null;
+      if (kanban_column) store.schedules[idx].kanban_column = kanban_column;
+      if (color_label) store.schedules[idx].color_label = color_label;
+      store.schedules[idx].updated_at = new Date().toISOString();
+      db.saveStore();
+      return res.json({ success: true, message: 'Jadwal berhasil diperbarui.', data: store.schedules[idx] });
+    }
+  } catch (error) {
+    res.status(500).json({ success: false, message: 'Gagal memperbarui jadwal', error: error.message });
+  }
+});
+
+// PATCH /api/schedules/:id
+app.patch('/api/schedules/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { kanban_column, start_time } = req.body;
+
+    // Cek tier user jika memindahkan kolom kanban
+    if (kanban_column) {
+      let schedUserId = 1;
+      if (db.isPostgres && db.isPostgres()) {
+        const sCheck = await db.query('SELECT user_id FROM schedules WHERE id = $1', [id]);
+        if (sCheck.rows.length > 0) schedUserId = sCheck.rows[0].user_id;
+      }
+      const tier = await getUserSubscriptionTier(schedUserId);
+      if (tier === 'free') {
+        return res.status(403).json({
+          success: false,
+          code: 'FEATURE_LOCKED_DRAG_DROP',
+          message: 'Fitur Drag & Drop Planner terkunci pada Paket Free. Silakan upgrade ke Paket Pro atau Plus untuk membuka akses penuh.',
+        });
+      }
+    }
+
+    if (db.isPostgres && db.isPostgres()) {
+      const result = await db.query(
+        `UPDATE schedules 
+         SET kanban_column = COALESCE($1, kanban_column),
+             start_time = COALESCE($2, start_time),
+             updated_at = NOW()
+         WHERE id = $3
+         RETURNING *;`,
+        [kanban_column || null, start_time ? new Date(start_time).toISOString() : null, id]
+      );
+      if (result.rows.length === 0) return res.status(404).json({ success: false, message: 'Jadwal tidak ditemukan' });
+      return res.json({ success: true, message: 'Jadwal berhasil diperbarui.', data: result.rows[0] });
+    }
+
+    const store = db.getStore ? db.getStore() : null;
+    if (store && store.schedules) {
+      const idx = store.schedules.findIndex((s) => s.id === parseInt(id, 10));
+      if (idx === -1) return res.status(404).json({ success: false, message: 'Jadwal tidak ditemukan' });
+      if (kanban_column) store.schedules[idx].kanban_column = kanban_column;
+      if (start_time) store.schedules[idx].start_time = new Date(start_time).toISOString();
+      store.schedules[idx].updated_at = new Date().toISOString();
+      db.saveStore();
+      return res.json({ success: true, message: 'Jadwal berhasil diperbarui.', data: store.schedules[idx] });
+    }
+  } catch (error) {
+    res.status(500).json({ success: false, message: 'Gagal memperbarui jadwal', error: error.message });
+  }
+});
+
+// DELETE /api/schedules/:id
+app.delete('/api/schedules/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    if (db.isPostgres && db.isPostgres()) {
+      const result = await db.query('DELETE FROM schedules WHERE id = $1 RETURNING id, title', [id]);
+      if (result.rows.length === 0) return res.status(404).json({ success: false, message: 'Jadwal tidak ditemukan' });
+      return res.json({ success: true, message: `Jadwal '${result.rows[0].title}' berhasil dihapus.` });
+    }
+    const store = db.getStore ? db.getStore() : null;
+    if (store && store.schedules) {
+      const idx = store.schedules.findIndex((s) => s.id === parseInt(id, 10));
+      if (idx === -1) return res.status(404).json({ success: false, message: 'Jadwal tidak ditemukan' });
+      const del = store.schedules.splice(idx, 1)[0];
+      db.saveStore();
+      return res.json({ success: true, message: `Jadwal '${del.title}' berhasil dihapus.` });
+    }
   } catch (error) {
     res.status(500).json({ success: false, message: 'Gagal menghapus jadwal', error: error.message });
   }
@@ -2151,6 +2941,9 @@ function startServer(portToUse) {
   const server = app.listen(currentPort, () => {
     console.log(`🚀 ContentHub Backend Server v2.0 aktif pada http://localhost:${currentPort}`);
     console.log(`📡 Status Database: ${db.isPostgres ? (db.isPostgres() ? 'Neon PostgreSQL Connected' : 'Local Fallback Storage Active') : 'Active'}`);
+    
+    // Inisialisasi background cron scheduler notifikasi otomatis presisi menit
+    initNotificationScheduler();
   });
 
   server.on('error', (err) => {

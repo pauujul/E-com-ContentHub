@@ -13,6 +13,7 @@ export default function RegisterPage() {
     businessName: '',
     businessCategory: 'Kuliner',
     role: 'customer',
+    email_notifications_enabled: true,
   });
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
@@ -58,6 +59,7 @@ export default function RegisterPage() {
         role: formData.role,
         business_name: formData.businessName, // Dikirim ke kolom business_name di PostgreSQL
         industry: formData.businessCategory, // Dikirim ke kolom industry di PostgreSQL
+        email_notifications_enabled: formData.email_notifications_enabled !== false,
       };
 
       const res = await register(payload);
@@ -275,6 +277,23 @@ export default function RegisterPage() {
                       <option value="Retail">Retail & Toko Kelontong</option>
                     </select>
                   </div>
+                </div>
+
+                {/* User Consent Izin Pengingat Notifikasi Email */}
+                <div className="pt-2">
+                  <label className="flex items-start gap-3 p-3.5 bg-slate-50 border border-slate-200 rounded-2xl cursor-pointer hover:bg-slate-100 transition-colors">
+                    <input
+                      type="checkbox"
+                      name="email_notifications_enabled"
+                      checked={formData.email_notifications_enabled}
+                      onChange={(e) => setFormData({ ...formData, email_notifications_enabled: e.target.checked })}
+                      className="mt-0.5 w-4 h-4 rounded text-primary focus:ring-primary border-slate-300 cursor-pointer"
+                    />
+                    <div className="text-xs text-slate-700 leading-relaxed select-none">
+                      <span className="font-bold block text-slate-900 mb-0.5">Izin Notifikasi Jadwal Otomatis</span>
+                      Saya bersedia menerima pengingat jadwal dan notifikasi otomatis melalui email saya.
+                    </div>
+                  </label>
                 </div>
 
                 <div className="pt-4">

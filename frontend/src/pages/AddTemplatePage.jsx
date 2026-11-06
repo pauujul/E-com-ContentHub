@@ -3,11 +3,13 @@ import { Link, useSearchParams, useNavigate } from 'react-router-dom';
 import Sidebar from '../components/Sidebar';
 import api from '../services/api';
 import { useAuth } from '../context/AuthContext';
+import { useUpgradeModal } from '../context/UpgradeModalContext';
 
 export default function AddTemplatePage() {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
-  const { currentUser } = useAuth();
+  const { currentUser, isFreeTier } = useAuth();
+  const { openUpgradeModal } = useUpgradeModal();
 
   const dateParam = searchParams.get('date'); // Format ISO: YYYY-MM-DD
   const timeParam = searchParams.get('time') || '19:00';
@@ -55,7 +57,16 @@ export default function AddTemplatePage() {
       navigate(`/calendar?month=${targetMonth}&year=${targetYear}`);
     } catch (err) {
       console.error('Error creating post draft:', err);
-      navigate('/calendar');
+      if (err.response?.data?.code === 'FREE_WEEKLY_LIMIT_REACHED' || err.message?.includes('kuota')) {
+        openUpgradeModal({
+          reason: 'agenda_limit',
+          currentCount: 3,
+          maxLimit: 3,
+        });
+      } else {
+        alert(err.response?.data?.message || 'Gagal menyimpan agenda.');
+        navigate('/calendar');
+      }
     } finally {
       setSaving(false);
     }

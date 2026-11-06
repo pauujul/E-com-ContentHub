@@ -34,6 +34,7 @@ CREATE TABLE users (
     industry VARCHAR(100) DEFAULT 'Kuliner & F&B',
     avatar_url VARCHAR(500),
     email_verified BOOLEAN DEFAULT TRUE,
+    email_notifications_enabled BOOLEAN DEFAULT TRUE,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
@@ -109,6 +110,7 @@ CREATE TABLE content_posts (
     media_url VARCHAR(500),
     thumbnail_url VARCHAR(500),
     reminder_sent BOOLEAN NOT NULL DEFAULT FALSE,
+    notification_sent BOOLEAN NOT NULL DEFAULT FALSE,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
@@ -116,6 +118,23 @@ CREATE TABLE content_posts (
 -- ============================================================
 -- 7. TABEL TEMPLATES & KATEGORI TEMPLATE
 -- ============================================================
+
+CREATE TABLE schedules (
+    id SERIAL PRIMARY KEY,
+    user_id INT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    title VARCHAR(255) NOT NULL,
+    description TEXT,
+    platform VARCHAR(50) DEFAULT 'Instagram',
+    category VARCHAR(100) DEFAULT 'Promosi',
+    start_time TIMESTAMP WITH TIME ZONE NOT NULL,
+    end_time TIMESTAMP WITH TIME ZONE,
+    kanban_column VARCHAR(50) DEFAULT 'backlog',
+    color_label VARCHAR(100) DEFAULT 'bg-blue-50 text-blue-700 border-blue-200',
+    notification_sent BOOLEAN DEFAULT FALSE,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
 CREATE TABLE template_categories (
     id SERIAL PRIMARY KEY,
     nama_kategori VARCHAR(100) NOT NULL,

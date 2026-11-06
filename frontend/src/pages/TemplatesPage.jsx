@@ -2,11 +2,15 @@ import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import Navbar from '../components/Navbar';
 import Sidebar from '../components/Sidebar';
+import { useAuth } from '../context/AuthContext';
+import { useUpgradeModal } from '../context/UpgradeModalContext';
 
 export default function TemplatesPage() {
   const [activeFilter, setActiveFilter] = useState('All');
   const [searchTerm, setSearchTerm] = useState('');
   const navigate = useNavigate();
+  const { isFreeTier } = useAuth();
+  const { openUpgradeModal } = useUpgradeModal();
 
   const templates = [
     {
@@ -15,6 +19,7 @@ export default function TemplatesPage() {
       category: 'Promosi',
       format: '9:16 Vertical',
       channel: 'Instagram Story / Reels',
+      tier: 'free',
       image:
         'https://lh3.googleusercontent.com/aida-public/AB6AXuBbIgOIY1vEqSgoHHMLzpfb_ErzCGmQ2WW9DAvI5yFxoDcZQNnob255a9mBzum9u5mTcazxGoFAlSqDmfxQ7K-LxgzRVtGbDAOMJUVW5buFf-2GdnFNWvBqRqmaknbYQrJpR7VGk5pTrJA_jAtArxcGoQGtkabBKNojLodvshv8Lntke92kuqwA1f42TnTU73jaARKcvtMnKm-7SN9TmHm2fDQ_dT-j8nh9hl3txOlydwZnMu0XV-0dFKi4twGjPtPGLm3Z2sDrOg',
     },
@@ -24,6 +29,7 @@ export default function TemplatesPage() {
       category: 'Edukasi',
       format: '1:1 Square',
       channel: 'Carousel Post',
+      tier: 'free',
       image:
         'https://lh3.googleusercontent.com/aida-public/AB6AXuCzaSCcgIdELtlVju__2yV1C5xRAAqT1_Ih0Af_8N2nr4vqM_nmgyFzqzATn-jSz2tms20F1mwCqKUzou_FEX7VO_DPlzlw6m6wrFTquLL-Xb3H4g-ix8AMCo66mxeKSicc8JbZe4jaAbugAT2Ew7yRiZzYV2fAb3aKaFPLKkvZ2VgnDSVyr8ad30VrVu01cgQ5u-h4ANcXsZVEQTq1Ymui1vrwmLxPmjFqQoOxP2zye7-Vs_CbBuL26HYG2MtT0zif5hMUk0401Q',
     },
@@ -33,6 +39,7 @@ export default function TemplatesPage() {
       category: 'Promosi',
       format: '4:5 Portrait',
       channel: 'Instagram Feed',
+      tier: 'premium',
       image:
         'https://lh3.googleusercontent.com/aida-public/AB6AXuC-4_5RKg-umRzvjp_x7_KGRHOe9pv-Xfqgk0C6rpcjUYblvr5cUsN4FlcPKeZMajfPdDRIWuY5Eo5BT9Hl2riJTxOMYcykhpmUESis1dBTFu7Ls3_2TpJAmhZyG1Rpm7YpB9A3Zv5XtcWuZnVOZUuVonJ_70aKYxMWQK35Gh3KA0DH3hKfxqV_74EmQ4iTenfuUBttqpx9K8pIUYJxrE-b9feY9b4uZY2dWgYhIDB1PPC5gxB7qOB12AwE0o6MnTIU_lW9yDcj-Q',
     },
@@ -42,6 +49,7 @@ export default function TemplatesPage() {
       category: 'Promosi',
       format: '1:1 Square',
       channel: 'Instagram / WhatsApp',
+      tier: 'premium',
       image:
         'https://lh3.googleusercontent.com/aida-public/AB6AXuANRHb_9iflOTj_ZWoImgNhEi4mcqVVt1UCiPwPLtgRMRzwCJo8IMItFx9LB1ypFoUubjRV9mSVUwF6343FhjS-cQUKhHRj_YWY8ZzuRrysVtIgUMep0IPh14VPTnNzt3GM__Ak36syv8XbAWzIT7hsWA8aWWggqQhv8VcYfghxL06IDi-_W5GIDAiZCmuKxU_KlkuwAdLmjFp3E1mZNuJ4FwCfBLpewG0yakz9PvYAA9bfweMAgw3waKSVMl44S3hKfGaXXNux4Q',
     },
@@ -51,6 +59,7 @@ export default function TemplatesPage() {
       category: 'Engagement',
       format: '1:1 Square',
       channel: 'Daily Story',
+      tier: 'free',
       image:
         'https://lh3.googleusercontent.com/aida-public/AB6AXuAfLJh7RN9TgJ2cILn3EtmgBWR6xOMzLX16G1Wu4AQlbdIDTeobeF5c4Tyqce90WUIDTIZAG7i3DLIKHbhNNIV5vGBLz7GT0gcIRAxzArxKRlFmTdlf_JfFbOEFuN_G9Uh46CcAUSGJyzhG5thwjQnlXTM6mAIPDDUlH8dcexqk_mdoI-682Z9gBoLKNUPUOfslYxuP_SWW8HgpOJGCbTOQ-emZ0QWJF4B9WfXfVDSZCD18Cmj2jSeaYmDoto5QnwG6NSgduFcEoA',
     },
@@ -60,10 +69,22 @@ export default function TemplatesPage() {
       category: 'Engagement',
       format: '9:16 Vertical',
       channel: 'TikTok / Story',
+      tier: 'premium',
       image:
         'https://lh3.googleusercontent.com/aida-public/AB6AXuBfoPAIgrso-NHEurkslE8-Op6KOwjQNK9T8qX-bFyGghhi2re3u8gsYyaqTZ7-Sq6ZPAJa2rOHSFHKDFiDj4ETYiaex6GPSVPJ9f1hibtDf_YGfrciy7D6DObnB5QdZHBf8VS_wZtv3fXb1Yp9ktjVuGWRYuRmQqwQ_gBnWNXB7NHIEmKCMtJqRvzovJHP-Ej7t9UQp8b1B4XIKODUJP2RVfgzJ-wcSDDaPpgMAkQI4N0Ulef1FxKgVOckBGIDwzPW5AyAX2yW8w',
     },
   ];
+
+  const handleTemplateClick = (tpl) => {
+    if (isFreeTier && tpl.tier === 'premium') {
+      openUpgradeModal({
+        reason: 'premium_template',
+        templateTitle: tpl.title,
+      });
+      return;
+    }
+    navigate(`/templates/preview/${tpl.id}`);
+  };
 
   const handleSearchSubmit = (e) => {
     e.preventDefault();
@@ -144,36 +165,73 @@ export default function TemplatesPage() {
 
           {/* Pinterest / Bento Grid */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 gap-8">
-            {filteredTemplates.map((tpl) => (
-              <div
-                key={tpl.id}
-                onClick={() => navigate(`/templates/preview/${tpl.id}`)}
-                className="group cursor-pointer bg-surface-container-lowest rounded-3xl overflow-hidden border border-outline-variant/15 shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col justify-between"
-              >
-                <div className="relative aspect-[4/5] overflow-hidden bg-surface-container-low">
-                  <img alt={tpl.title} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" src={tpl.image} />
+            {filteredTemplates.map((tpl) => {
+              const isLockedForUser = isFreeTier && tpl.tier === 'premium';
+              return (
+                <div
+                  key={tpl.id}
+                  onClick={() => handleTemplateClick(tpl)}
+                  className={`group cursor-pointer bg-surface-container-lowest rounded-3xl overflow-hidden border shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col justify-between ${
+                    isLockedForUser
+                      ? 'border-amber-300/60 ring-1 ring-amber-300/30'
+                      : 'border-outline-variant/15'
+                  }`}
+                >
+                  <div className="relative aspect-[4/5] overflow-hidden bg-surface-container-low">
+                    <img alt={tpl.title} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" src={tpl.image} />
 
-                  {/* Format Badge */}
-                  <div className="absolute top-4 right-4 bg-white/90 backdrop-blur-md text-[10px] font-bold px-2.5 py-1 rounded-full uppercase tracking-wider text-primary shadow-xs">{tpl.format}</div>
+                    {/* Premium / Lock Badge */}
+                    {tpl.tier === 'premium' && (
+                      <div
+                        className={`absolute top-4 left-4 text-[10px] font-black px-2.5 py-1 rounded-full uppercase tracking-wider shadow-sm flex items-center gap-1 z-10 ${
+                          isLockedForUser ? 'bg-amber-600 text-white' : 'bg-emerald-600 text-white'
+                        }`}
+                      >
+                        <span className="material-symbols-outlined text-xs">
+                          {isLockedForUser ? 'lock' : 'workspace_premium'}
+                        </span>
+                        <span>{isLockedForUser ? 'Terkunci (Free)' : 'Pro & Plus'}</span>
+                      </div>
+                    )}
 
-                  {/* Hover Overlay Button */}
-                  <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center p-6">
-                    <button className="px-6 py-3 bg-white text-primary font-bold text-xs rounded-xl shadow-lg hover:scale-105 transition-transform flex items-center gap-1.5">
-                      <span className="material-symbols-outlined text-base">visibility</span>
-                      Lihat Preview & Edit di Canva
-                    </button>
+                    {/* Format Badge */}
+                    <div className="absolute top-4 right-4 bg-white/90 backdrop-blur-md text-[10px] font-bold px-2.5 py-1 rounded-full uppercase tracking-wider text-primary shadow-xs z-10">
+                      {tpl.format}
+                    </div>
+
+                    {/* Hover Overlay Button */}
+                    <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center p-6 z-20">
+                      {isLockedForUser ? (
+                        <button className="px-6 py-3 bg-amber-500 text-white font-extrabold text-xs rounded-xl shadow-lg hover:scale-105 transition-transform flex items-center gap-1.5 cursor-pointer">
+                          <span className="material-symbols-outlined text-base">lock</span>
+                          Upgrade ke Pro / Plus
+                        </button>
+                      ) : (
+                        <button className="px-6 py-3 bg-white text-primary font-bold text-xs rounded-xl shadow-lg hover:scale-105 transition-transform flex items-center gap-1.5 cursor-pointer">
+                          <span className="material-symbols-outlined text-base">visibility</span>
+                          Lihat Preview & Edit di Canva
+                        </button>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="p-5">
+                    <div className="flex items-center justify-between text-[11px] font-bold text-outline uppercase tracking-wider mb-1">
+                      <span>{tpl.category}</span>
+                      <span className="text-secondary">{tpl.channel}</span>
+                    </div>
+                    <h3 className="font-bold text-base text-on-surface group-hover:text-primary transition-colors flex items-center justify-between">
+                      <span>{tpl.title}</span>
+                      {isLockedForUser && (
+                        <span className="material-symbols-outlined text-sm text-amber-500" title="Khusus Pro & Plus">
+                          lock
+                        </span>
+                      )}
+                    </h3>
                   </div>
                 </div>
-
-                <div className="p-5">
-                  <div className="flex items-center justify-between text-[11px] font-bold text-outline uppercase tracking-wider mb-1">
-                    <span>{tpl.category}</span>
-                    <span className="text-secondary">{tpl.channel}</span>
-                  </div>
-                  <h3 className="font-bold text-base text-on-surface group-hover:text-primary transition-colors">{tpl.title}</h3>
-                </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </div>
       </main>
