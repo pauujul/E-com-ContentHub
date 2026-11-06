@@ -569,7 +569,6 @@ export default function AdminDashboardPage() {
           <button
             onClick={() => {
               logout();
-              navigate('/');
             }}
             className="w-full py-1.5 text-red-500 hover:text-red-700 hover:bg-red-50 rounded-lg text-xs font-bold flex items-center justify-center gap-1 transition-colors cursor-pointer"
           >

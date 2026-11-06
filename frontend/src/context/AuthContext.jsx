@@ -206,6 +206,8 @@ export function AuthProvider({ children }) {
     localStorage.setItem('contenthub_logged_out', 'true');
     setCurrentUser(null);
     setToken(null);
+    setActiveSubscription(null);
+    window.location.href = '/';
   };
 
   const updateCurrentUser = (updatedFields) => {

@@ -40,6 +40,9 @@ import AdminDashboardPage from './pages/AdminDashboardPage';
 function ProtectedRoute({ children }) {
   const { currentUser } = useAuth();
   if (!currentUser) {
+    if (localStorage.getItem('contenthub_logged_out') === 'true') {
+      return <Navigate to="/" replace />;
+    }
     return <Navigate to="/login" replace />;
   }
   return children;
@@ -49,6 +52,9 @@ function ProtectedRoute({ children }) {
 function AdminRoute({ children }) {
   const { currentUser } = useAuth();
   if (!currentUser) {
+    if (localStorage.getItem('contenthub_logged_out') === 'true') {
+      return <Navigate to="/" replace />;
+    }
     return <Navigate to="/login" replace />;
   }
   if (currentUser?.role !== 'admin') {

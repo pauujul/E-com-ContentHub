@@ -11,7 +11,6 @@ export default function UserProfilePage() {
 
   const handleLogout = () => {
     logout();
-    navigate('/');
   };
 
   const [activeTab, setActiveTab] = useState('profile'); // 'profile' | 'password' | 'subscription'
