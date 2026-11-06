@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
+import { useAuth } from '../context/AuthContext';
 
-<<<<<<< HEAD
-export default function Pricing({ onOrderCreated, currentUser, onOpenLogin }) {
-=======
-export default function Pricing({ onOrderCreated }) {
->>>>>>> e2e81f391c4379bdef82cb04f6e1e391fed0e7bc
+export default function Pricing({ onOrderCreated, currentUser: propUser, onOpenLogin }) {
+  const { currentUser: authUser } = useAuth();
+  const currentUser = propUser || authUser;
+  const navigate = useNavigate();
   const [plans, setPlans] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -196,7 +197,13 @@ export default function Pricing({ onOrderCreated }) {
                   {/* Tombol Call To Action */}
                   <button
                     className={`btn-plan ${isHero ? 'btn-primary' : 'btn-secondary'}`}
-                    onClick={() => setSelectedPlan(plan)}
+                    onClick={() => {
+                      if (!currentUser) {
+                        navigate('/login?redirect=/pricing');
+                        return;
+                      }
+                      setSelectedPlan(plan);
+                    }}
                   >
                     {plan.price === 0 || plan.price === '0.00' 
                       ? '🚀 Mulai Gratis Sekarang' 

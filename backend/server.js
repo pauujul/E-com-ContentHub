@@ -1156,10 +1156,27 @@ app.delete('/api/products/:id', async (req, res) => {
 // POST /api/orders (Buat Pesanan Baru)
 app.post('/api/orders', async (req, res) => {
   try {
-    const { user_id = 2, plan_id, payment_method = 'Virtual Account', payment_channel = 'BCA Virtual Account', customer_name, customer_email } = req.body;
+    const { user_id = 1, plan_id, payment_method = 'Virtual Account', payment_channel = 'BCA Virtual Account', customer_name, customer_email } = req.body;
 
     if (!plan_id) {
       return res.status(400).json({ success: false, message: 'Parameter plan_id wajib disertakan.' });
+    }
+
+    // Resolusi user_id yang valid untuk foreign key orders
+    let resolvedUserId = parseInt(user_id, 10);
+    if (!resolvedUserId || isNaN(resolvedUserId)) {
+      resolvedUserId = 1;
+    }
+    if (db.isPostgres && db.isPostgres()) {
+      try {
+        const uCheck = await db.query('SELECT id FROM users WHERE id = $1', [resolvedUserId]);
+        if (uCheck.rows.length === 0) {
+          const firstU = await db.query('SELECT id FROM users ORDER BY id ASC LIMIT 1');
+          resolvedUserId = firstU.rows.length ? firstU.rows[0].id : 1;
+        }
+      } catch (e) {
+        resolvedUserId = 1;
+      }
     }
 
     const store = db.getStore ? db.getStore() : null;
@@ -1168,11 +1185,11 @@ app.post('/api/orders', async (req, res) => {
 
     if (store) {
       plan = store.subscription_plans.find((p) => p.id === parseInt(plan_id, 10));
-      user = store.users.find((u) => u.id === parseInt(user_id, 10));
+      user = store.users.find((u) => u.id === resolvedUserId);
     } else {
       const planRes = await db.query('SELECT * FROM subscription_plans WHERE id = $1', [plan_id]);
       if (planRes.rows.length > 0) plan = planRes.rows[0];
-      const userRes = await db.query('SELECT * FROM users WHERE id = $1', [user_id]);
+      const userRes = await db.query('SELECT * FROM users WHERE id = $1', [resolvedUserId]);
       if (userRes.rows.length > 0) user = userRes.rows[0];
     }
 
@@ -1192,7 +1209,7 @@ app.post('/api/orders', async (req, res) => {
       const orderObj = {
         id: newOrderId,
         order_number: orderNumber,
-        user_id: parseInt(user_id, 10),
+        user_id: resolvedUserId,
         customer_name: finalCustomerName,
         customer_email: finalCustomerEmail,
         plan_id: plan.id,
@@ -1250,7 +1267,7 @@ app.post('/api/orders', async (req, res) => {
     `;
     const orderRes = await db.query(insertOrderQuery, [
       orderNumber,
-      user_id,
+      resolvedUserId,
       finalCustomerName,
       finalCustomerEmail,
       plan.id,

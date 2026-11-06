@@ -41,9 +41,13 @@ export default function LoginPage() {
       const data = await login(email, password);
       setSuccessMsg(data.message || 'Login berhasil!');
 
-      // Role-Based Routing
+      // Role-Based or Redirect Routing
       setTimeout(() => {
-        if (data.user.role === 'admin') {
+        const urlParams = new URLSearchParams(window.location.search);
+        const redirectParam = urlParams.get('redirect');
+        if (redirectParam) {
+          navigate(redirectParam);
+        } else if (data.user.role === 'admin') {
           navigate('/admin');
         } else {
           navigate('/dashboard');

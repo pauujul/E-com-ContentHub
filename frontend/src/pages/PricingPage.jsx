@@ -30,6 +30,10 @@ export default function PricingPage() {
   }, []);
 
   const handleSelectPlan = (plan) => {
+    if (!currentUser) {
+      navigate(`/login?redirect=${encodeURIComponent(`/checkout/${plan.id}`)}`);
+      return;
+    }
     navigate(`/checkout/${plan.id}`);
   };
 
