@@ -7,9 +7,18 @@ export default defineConfig({
   server: {
     host: '0.0.0.0', // Memungkinkan akses dari luar container Docker
     port: 5173,
-    strictPort: true,
     watch: {
       usePolling: true, // Mendukung Hot Module Reload (HMR) di lingkungan Windows Docker
-    }
-  }
+    },
+    proxy: {
+      '/api': {
+        target: 'http://localhost:5000',
+        changeOrigin: true,
+      },
+      '/uploads': {
+        target: 'http://localhost:5000',
+        changeOrigin: true,
+      },
+    },
+  },
 })

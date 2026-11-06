@@ -19,9 +19,10 @@ export default function SwitchAccountPage() {
 
   // Seed fallback if allUsers still loading
   const accounts = allUsers.length > 0 ? allUsers : [
-    { id: 2, name: 'Muhammad Hasran', email: 'hasran.donat@gmail.com', role: 'customer', phone: '085299887766' },
     { id: 1, name: 'Jerry Hernis', email: 'jerry.hernis@amigos.id', role: 'admin', phone: '081234567890' },
-    { id: 3, name: 'Fauzul Rozaq', email: 'fauzul@amigos.id', role: 'admin', phone: '081298765432' }
+    { id: 8, name: 'Firman syah', email: 'firmansyah.mks2006@gmail.com', role: 'admin', phone: '081234567899' },
+    { id: 3, name: 'Fauzul Rozaq', email: 'fauzul@amigos.id', role: 'admin', phone: '081298765432' },
+    { id: 10, name: 'Zico Aryton', email: 'zicoaryton@gmail.com', role: 'customer', phone: '081299001122' }
   ];
 
   return (

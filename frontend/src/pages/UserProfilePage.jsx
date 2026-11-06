@@ -1,218 +1,437 @@
-import React, { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import Navbar from '../components/Navbar';
+import Sidebar from '../components/Sidebar';
 import { useAuth } from '../context/AuthContext';
+import api from '../services/api';
 
 export default function UserProfilePage() {
-  const { currentUser, logout, updateCurrentUser } = useAuth();
+  const { currentUser, updateCurrentUser, logout } = useAuth();
   const navigate = useNavigate();
 
-  const [formData, setFormData] = useState({
-    name: currentUser?.name || '',
-    email: currentUser?.email || '',
-    phone: currentUser?.phone || '085299887766',
-    businessName: currentUser?.businessName || 'Usaha Donat & Pastry',
-  });
-  const [isSaved, setIsSaved] = useState(false);
-
-  const handleChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
+  const handleLogout = () => {
+    logout();
+    navigate('/');
   };
 
-  const handleSave = (e) => {
-    e.preventDefault();
-    if (updateCurrentUser) {
-      updateCurrentUser(formData);
+  const [activeTab, setActiveTab] = useState('profile'); // 'profile' | 'password'
+
+  // Tab 1: Form Profil
+  const [profileForm, setProfileForm] = useState({
+    name: currentUser?.name || '',
+    phone: currentUser?.phone || '',
+    business_name: currentUser?.business_name || '',
+    industry: currentUser?.industry || 'Kuliner & F&B',
+    avatar_url: currentUser?.avatar_url || '',
+  });
+
+  // Tab 2: Form Ganti Password
+  const [passwordForm, setPasswordForm] = useState({
+    current_password: '',
+    new_password: '',
+    confirm_password: '',
+  });
+
+  // Feedback states
+  const [loading, setLoading] = useState(false);
+  const [successMsg, setSuccessMsg] = useState('');
+  const [errorMsg, setErrorMsg] = useState('');
+
+  useEffect(() => {
+    if (currentUser) {
+      setProfileForm({
+        name: currentUser.name || '',
+        phone: currentUser.phone || '',
+        business_name: currentUser.business_name || '',
+        industry: currentUser.industry || 'Kuliner & F&B',
+        avatar_url: currentUser.avatar_url || '',
+      });
     }
-    setIsSaved(true);
-    setTimeout(() => setIsSaved(false), 3000);
+  }, [currentUser]);
+
+  const clearAlerts = () => {
+    setSuccessMsg('');
+    setErrorMsg('');
+  };
+
+  // 1. Simpan Profil
+  const handleSaveProfile = async (e) => {
+    e.preventDefault();
+    clearAlerts();
+    setLoading(true);
+
+    try {
+      const res = await api.updateProfile({
+        id: currentUser?.id,
+        ...profileForm,
+      });
+
+      if (res.success) {
+        updateCurrentUser(res.data);
+        setSuccessMsg('Profil dan data usaha Anda berhasil diperbarui!');
+        setTimeout(() => setSuccessMsg(''), 4000);
+      } else {
+        throw new Error(res.message || 'Gagal memperbarui profil.');
+      }
+    } catch (err) {
+      setErrorMsg(err.response?.data?.message || err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // 2. Ganti Password
+  const handleChangePassword = async (e) => {
+    e.preventDefault();
+    clearAlerts();
+
+    if (passwordForm.new_password !== passwordForm.confirm_password) {
+      setErrorMsg('Konfirmasi kata sandi baru tidak cocok.');
+      return;
+    }
+
+    if (passwordForm.new_password.length < 6) {
+      setErrorMsg('Kata sandi baru minimal harus 6 karakter.');
+      return;
+    }
+
+    setLoading(true);
+
+    try {
+      const res = await api.changePassword({
+        id: currentUser?.id,
+        current_password: passwordForm.current_password,
+        new_password: passwordForm.new_password,
+        confirm_password: passwordForm.confirm_password,
+      });
+
+      if (res.success) {
+        setSuccessMsg(res.message || 'Kata sandi berhasil diperbarui dengan aman!');
+        setPasswordForm({ current_password: '', new_password: '', confirm_password: '' });
+        setTimeout(() => setSuccessMsg(''), 5000);
+      } else {
+        throw new Error(res.message || 'Gagal mengubah kata sandi.');
+      }
+    } catch (err) {
+      setErrorMsg(err.response?.data?.message || err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Handle upload avatar
+  const handleAvatarFile = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    try {
+      const res = await api.uploadImage(file);
+      if (res.success && res.data?.url) {
+        setProfileForm((prev) => ({ ...prev, avatar_url: res.data.url }));
+        setSuccessMsg('Foto profil berhasil diunggah.');
+        setTimeout(() => setSuccessMsg(''), 3000);
+      }
+    } catch (err) {
+      console.error('Upload avatar error:', err);
+      setErrorMsg('Gagal mengunggah foto profil.');
+    }
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 flex">
-      {/* Sidebar Menempel Penuh ke Atas */}
-      <aside className="w-64 bg-white border-r border-slate-200 flex flex-col fixed inset-y-0 left-0 z-30">
-        <div className="p-6 flex items-center gap-3 border-b border-slate-100">
-          <div className="w-10 h-10 rounded-xl bg-gradient-primary flex items-center justify-center text-white shadow-md shadow-primary/20">
-            <span className="material-symbols-outlined text-2xl">layers</span>
-          </div>
-          <div>
-            <h2 className="text-base font-extrabold text-primary leading-tight">Workspace</h2>
-            <span className="text-[10px] uppercase font-bold tracking-wider text-slate-400">ContentHub</span>
-          </div>
-        </div>
+    <div className="min-h-screen bg-surface text-on-surface">
+      <Navbar />
+      <Sidebar />
 
-        <nav className="p-4 space-y-1.5 flex-1 overflow-y-auto">
-          <Link to="/dashboard" className="flex items-center gap-3 px-3.5 py-2.5 rounded-xl font-medium text-sm text-slate-600 hover:bg-slate-100 hover:text-primary transition-all">
-            <span className="material-symbols-outlined text-xl">dashboard</span>
-            <span>Dashboard</span>
-          </Link>
-          <Link to="/calendar" className="flex items-center gap-3 px-3.5 py-2.5 rounded-xl font-medium text-sm text-slate-600 hover:bg-slate-100 hover:text-primary transition-all">
-            <span className="material-symbols-outlined text-xl">calendar_month</span>
-            <span>Calendar</span>
-          </Link>
-          <Link to="/calendar/agenda" className="flex items-center gap-3 px-3.5 py-2.5 rounded-xl font-medium text-sm text-slate-600 hover:bg-slate-100 hover:text-primary transition-all">
-            <span className="material-symbols-outlined text-xl">view_agenda</span>
-            <span>Detail Agenda</span>
-          </Link>
-          <Link to="/calendar/drag-drop" className="flex items-center gap-3 px-3.5 py-2.5 rounded-xl font-medium text-sm text-slate-600 hover:bg-slate-100 hover:text-primary transition-all">
-            <span className="material-symbols-outlined text-xl">drag_indicator</span>
-            <span>Drag & Drop Planner</span>
-          </Link>
-          <Link to="/templates" className="flex items-center gap-3 px-3.5 py-2.5 rounded-xl font-medium text-sm text-slate-600 hover:bg-slate-100 hover:text-primary transition-all">
-            <span className="material-symbols-outlined text-xl">auto_awesome_motion</span>
-            <span>Template Library</span>
-          </Link>
-          <Link to="/templates/search" className="flex items-center gap-3 px-3.5 py-2.5 rounded-xl font-medium text-sm text-slate-600 hover:bg-slate-100 hover:text-primary transition-all">
-            <span className="material-symbols-outlined text-xl">search</span>
-            <span>Cari Template</span>
-          </Link>
-          <Link to="/templates/add" className="flex items-center gap-3 px-3.5 py-2.5 rounded-xl font-medium text-sm text-slate-600 hover:bg-slate-100 hover:text-primary transition-all">
-            <span className="material-symbols-outlined text-xl">add_circle</span>
-            <span>Tambah Template</span>
-          </Link>
-          <Link to="/help" className="flex items-center gap-3 px-3.5 py-2.5 rounded-xl font-medium text-sm text-slate-600 hover:bg-slate-100 hover:text-primary transition-all">
-            <span className="material-symbols-outlined text-xl">help</span>
-            <span>Bantuan</span>
-          </Link>
-        </nav>
-
-        {/* Footer Sidebar */}
-        <div className="p-4 border-t border-slate-100">
-          <Link to="/profile" className="flex items-center gap-3 p-2 rounded-xl bg-slate-100 text-primary font-semibold text-sm">
-            <div className="w-8 h-8 rounded-full bg-primary text-white flex items-center justify-center text-xs uppercase font-bold">{currentUser?.name?.charAt(0) || 'U'}</div>
-            <div className="truncate flex-1">
-              <p className="truncate leading-tight text-xs">{currentUser?.name || 'User'}</p>
-              <span className="text-[10px] text-slate-400 font-normal">Profil Saya</span>
-            </div>
-          </Link>
-        </div>
-      </aside>
-
-      {/* Main Content Area Menempel Penuh ke Atas */}
-      <main className="flex-1 ml-64 p-8">
-        <div className="max-w-5xl mx-auto space-y-6">
-          {/* Header Profil */}
-          <div className="bg-white rounded-3xl p-6 border border-slate-200/80 shadow-sm flex flex-col md:flex-row items-center justify-between gap-6">
-            <div className="flex items-center gap-5 w-full md:w-auto">
-              <div className="relative">
-                <div className="w-24 h-24 rounded-2xl bg-primary text-white flex items-center justify-center text-4xl font-extrabold shadow-lg shadow-primary/25">{currentUser?.name ? currentUser.name.charAt(0).toUpperCase() : 'U'}</div>
+      <main className="ml-64 p-8 pt-6 min-h-screen">
+        <div className="max-w-4xl mx-auto space-y-8">
+          {/* Header */}
+          <div className="pb-6 border-b border-outline-variant/15 flex flex-col md:flex-row justify-between items-start md:items-end gap-4">
+            <div>
+              <div className="flex items-center gap-2 mb-2">
+                <span className="text-[10px] font-extrabold uppercase tracking-widest bg-primary-fixed text-primary px-3 py-1 rounded-full">
+                  User Account Center
+                </span>
+                <span className="text-xs text-outline">• Terhubung ke Database PostgreSQL / Neon</span>
               </div>
+              <h1 className="text-3xl font-extrabold text-on-surface">Pengaturan Profil & Keamanan Akun</h1>
+              <p className="text-sm text-on-surface-variant mt-1">
+                Kelola identitas usaha UMKM Anda, ubah alamat email resmi, dan perbarui kata sandi dengan verifikasi aman.
+              </p>
+            </div>
+
+            <button
+              onClick={handleLogout}
+              className="px-4 py-2 bg-red-50 text-red-700 hover:bg-red-100 rounded-xl text-xs font-bold transition-colors border border-red-200 flex items-center gap-1.5 cursor-pointer"
+            >
+              <span className="material-symbols-outlined text-base">logout</span>
+              Keluar Sesi
+            </button>
+          </div>
+
+          {/* Alerts */}
+          {successMsg && (
+            <div className="p-4 bg-green-50 text-green-800 rounded-2xl text-xs font-bold border border-green-200 flex items-center gap-2 animate-in fade-in duration-200">
+              <span className="material-symbols-outlined text-base text-green-600">check_circle</span>
+              <span>{successMsg}</span>
+            </div>
+          )}
+
+          {errorMsg && (
+            <div className="p-4 bg-red-50 text-red-800 rounded-2xl text-xs font-bold border border-red-200 flex items-center gap-2 animate-in fade-in duration-200">
+              <span className="material-symbols-outlined text-base text-red-600">error</span>
+              <span>{errorMsg}</span>
+            </div>
+          )}
+
+          {/* User Hero Bento Card */}
+          <div className="bg-white rounded-3xl p-6 border border-outline-variant/15 shadow-sm flex flex-col sm:flex-row items-center justify-between gap-6">
+            <div className="flex items-center gap-5 w-full sm:w-auto">
+              <div className="relative group">
+                <div className="w-20 h-20 rounded-2xl overflow-hidden bg-primary text-white flex items-center justify-center text-3xl font-extrabold shadow-md shadow-primary/20">
+                  {profileForm.avatar_url ? (
+                    <img src={profileForm.avatar_url} alt={currentUser?.name} className="w-full h-full object-cover" />
+                  ) : (
+                    currentUser?.name?.charAt(0).toUpperCase() || 'U'
+                  )}
+                </div>
+                <label className="absolute inset-0 bg-black/40 text-white rounded-2xl opacity-0 group-hover:opacity-100 flex items-center justify-center cursor-pointer transition-opacity text-xs font-bold">
+                  Ganti
+                  <input type="file" accept="image/*" className="hidden" onChange={handleAvatarFile} />
+                </label>
+              </div>
+
               <div>
-                <div className="flex items-center gap-2 mb-1">
-                  <span className="text-[11px] font-extrabold uppercase tracking-wider bg-blue-100 text-blue-700 px-2.5 py-0.5 rounded-full">{currentUser?.role || 'Customer UMKM'}</span>
-                  <span className="text-xs text-slate-400 font-semibold">• ID #{currentUser?.id || 1}</span>
+                <div className="flex items-center gap-2">
+                  <h2 className="text-xl font-extrabold text-on-surface">{currentUser?.name || 'Pengguna ContentHub'}</h2>
+                  <span className="text-[10px] font-extrabold uppercase px-2 py-0.5 rounded bg-primary/10 text-primary">
+                    {currentUser?.role || 'Customer'}
+                  </span>
                 </div>
-                <h1 className="text-2xl font-extrabold text-slate-900 tracking-tight">{currentUser?.name}</h1>
-                <p className="text-sm text-slate-500 font-medium">{currentUser?.email}</p>
+                <p className="text-xs text-on-surface-variant mt-0.5">{currentUser?.email}</p>
+                <div className="flex items-center gap-3 mt-2 text-xs font-semibold text-outline">
+                  <span className="flex items-center gap-1">
+                    <span className="material-symbols-outlined text-sm">storefront</span>
+                    {currentUser?.business_name || 'UMKM Mitra'}
+                  </span>
+                  <span>•</span>
+                  <span className="flex items-center gap-1">
+                    <span className="material-symbols-outlined text-sm">category</span>
+                    {currentUser?.industry || 'Kuliner'}
+                  </span>
+                </div>
               </div>
-            </div>
-
-            <div className="flex items-center gap-3 w-full md:w-auto justify-end">
-              <button onClick={() => navigate('/switch-account')} className="px-4 py-2.5 rounded-xl border border-slate-200 text-slate-700 text-xs font-bold hover:bg-slate-50 transition-all flex items-center gap-1.5">
-                <span className="material-symbols-outlined text-base">switch_account</span>
-                Ganti Akun
-              </button>
-              <button
-                onClick={() => {
-                  logout();
-                  navigate('/');
-                }}
-                className="px-4 py-2.5 rounded-xl bg-red-50 text-red-600 border border-red-100 text-xs font-bold hover:bg-red-100 transition-all flex items-center gap-1.5"
-              >
-                <span className="material-symbols-outlined text-base">logout</span>
-                Keluar
-              </button>
             </div>
           </div>
 
-          {/* Form & Langganan Grid */}
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            {/* Form Informasi Akun */}
-            <div className="lg:col-span-2 bg-white rounded-3xl p-6 border border-slate-200/80 shadow-sm">
-              <h2 className="text-lg font-bold text-slate-900 mb-1">Informasi Akun Pribadi</h2>
-              <p className="text-xs text-slate-500 mb-6">Data ini digunakan untuk komunikasi invoice dan jadwal posting media sosial.</p>
+          {/* Tabs Navigation */}
+          <div className="flex gap-2 p-1.5 bg-surface-container-high rounded-2xl w-fit">
+            <button
+              onClick={() => {
+                setActiveTab('profile');
+                clearAlerts();
+              }}
+              className={`px-5 py-2.5 rounded-xl text-xs font-extrabold transition-all flex items-center gap-2 cursor-pointer ${
+                activeTab === 'profile' ? 'bg-white shadow-sm text-primary' : 'text-slate-500 hover:text-slate-800'
+              }`}
+            >
+              <span className="material-symbols-outlined text-base">badge</span>
+              1. Profil & Usaha UMKM
+            </button>
 
-              {isSaved && (
-                <div className="mb-4 p-3 bg-green-50 border border-green-200 text-green-700 text-xs font-semibold rounded-xl flex items-center gap-2">
-                  <span className="material-symbols-outlined text-base">check_circle</span>
-                  Data profil berhasil diperbarui!
+            <button
+              onClick={() => {
+                setActiveTab('password');
+                clearAlerts();
+              }}
+              className={`px-5 py-2.5 rounded-xl text-xs font-extrabold transition-all flex items-center gap-2 cursor-pointer ${
+                activeTab === 'password' ? 'bg-white shadow-sm text-primary' : 'text-slate-500 hover:text-slate-800'
+              }`}
+            >
+              <span className="material-symbols-outlined text-base">key</span>
+              2. Keamanan & Kata Sandi
+            </button>
+          </div>
+
+          {/* TAB 1: FORM GANTI PROFIL */}
+          {activeTab === 'profile' && (
+            <div className="bg-white rounded-3xl p-8 border border-outline-variant/15 shadow-sm space-y-6 animate-in fade-in duration-200">
+              <div className="pb-4 border-b border-slate-100">
+                <h3 className="text-lg font-extrabold text-on-surface">Data Identitas Pribadi & Usaha UMKM</h3>
+                <p className="text-xs text-on-surface-variant mt-0.5">
+                  Informasi ini digunakan untuk personalisasi template konten Canva dan rekomendasi jam emas postingan.
+                </p>
+              </div>
+
+              <form onSubmit={handleSaveProfile} className="space-y-5">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-bold uppercase tracking-wider text-on-surface-variant">
+                      Nama Lengkap Pemilik
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      value={profileForm.name}
+                      onChange={(e) => setProfileForm({ ...profileForm, name: e.target.value })}
+                      className="w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-200 text-sm focus:ring-2 focus:ring-primary focus:bg-white"
+                      placeholder="Masukkan nama lengkap"
+                    />
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-bold uppercase tracking-wider text-on-surface-variant">
+                      Nomor Telepon / WhatsApp
+                    </label>
+                    <input
+                      type="text"
+                      value={profileForm.phone}
+                      onChange={(e) => setProfileForm({ ...profileForm, phone: e.target.value })}
+                      className="w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-200 text-sm focus:ring-2 focus:ring-primary focus:bg-white"
+                      placeholder="Contoh: 085299887766"
+                    />
+                  </div>
                 </div>
-              )}
 
-              <form onSubmit={handleSave} className="space-y-4">
-                <div>
-                  <label className="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-2">Nama Lengkap</label>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-bold uppercase tracking-wider text-on-surface-variant">
+                      Nama Usaha / Brand UMKM
+                    </label>
+                    <input
+                      type="text"
+                      value={profileForm.business_name}
+                      onChange={(e) => setProfileForm({ ...profileForm, business_name: e.target.value })}
+                      className="w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-200 text-sm focus:ring-2 focus:ring-primary focus:bg-white"
+                      placeholder="Contoh: Donat Kampoeng Makassar"
+                    />
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-bold uppercase tracking-wider text-on-surface-variant">
+                      Kategori Industri Usaha
+                    </label>
+                    <select
+                      value={profileForm.industry}
+                      onChange={(e) => setProfileForm({ ...profileForm, industry: e.target.value })}
+                      className="w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-200 text-sm focus:ring-2 focus:ring-primary focus:bg-white"
+                    >
+                      <option value="Kuliner & F&B">Kuliner & F&B (Makanan & Minuman)</option>
+                      <option value="Fashion & Busana">Fashion, Busana & Hijab</option>
+                      <option value="Kecantikan & Skincare">Kecantikan & Skincare</option>
+                      <option value="Jasa & Layanan">Jasa & Layanan (Laundry, Salon, Barbershop)</option>
+                      <option value="Kreatif & Desain">Kreatif, Desain & Percetakan</option>
+                      <option value="Retail & Grosir">Retail, Toko Kelontong & Grosir</option>
+                      <option value="Teknologi & Digital">Teknologi & Digital Agency</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div className="space-y-1.5">
+                  <label className="text-xs font-bold uppercase tracking-wider text-on-surface-variant">
+                    URL Foto Profil / Logo Usaha
+                  </label>
                   <input
-                    type="text"
-                    name="name"
-                    value={formData.name}
-                    onChange={handleChange}
-                    className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium focus:bg-white focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
+                    type="url"
+                    value={profileForm.avatar_url}
+                    onChange={(e) => setProfileForm({ ...profileForm, avatar_url: e.target.value })}
+                    className="w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-200 text-sm focus:ring-2 focus:ring-primary focus:bg-white"
+                    placeholder="https://images.unsplash.com/..."
                   />
+                  <p className="text-[11px] text-slate-400">
+                    Anda dapat memasukkan tautan gambar langsung atau mengklik ikon foto profil di atas untuk mengunggah file.
+                  </p>
                 </div>
 
-                <div>
-                  <label className="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-2">Alamat Email (Akun Utama)</label>
-                  <input
-                    type="email"
-                    name="email"
-                    value={formData.email}
-                    onChange={handleChange}
-                    className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium focus:bg-white focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-2">Nomor WhatsApp / Telepon</label>
-                  <input
-                    type="text"
-                    name="phone"
-                    value={formData.phone}
-                    onChange={handleChange}
-                    className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium focus:bg-white focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
-                  />
-                </div>
-
-                <div className="pt-2">
-                  <button type="submit" className="px-6 py-3 rounded-xl bg-primary text-white text-xs font-bold shadow-md shadow-primary/20 hover:bg-primary-container transition-all">
-                    Simpan Perubahan
+                <div className="pt-4 flex justify-end">
+                  <button
+                    type="submit"
+                    disabled={loading}
+                    className="px-6 py-3 bg-gradient-primary text-white font-extrabold text-xs rounded-xl shadow-md shadow-primary/25 hover:scale-[1.02] active:scale-95 transition-all flex items-center gap-2"
+                  >
+                    {loading ? (
+                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                    ) : (
+                      <span className="material-symbols-outlined text-sm">save</span>
+                    )}
+                    Simpan Perubahan Profil
                   </button>
                 </div>
               </form>
             </div>
+          )}
 
-            {/* Status Paket & Quick Access */}
-            <div className="space-y-6">
-              <div className="bg-white rounded-3xl p-6 border border-slate-200/80 shadow-sm">
-                <h3 className="text-sm font-bold text-slate-900 mb-4">Paket Langganan Aktif</h3>
-                <div className="p-4 rounded-2xl bg-blue-50/60 border border-blue-100 mb-4">
-                  <div className="flex items-center justify-between mb-1">
-                    <h4 className="font-bold text-primary text-sm">ContentHub Starter (Hero)</h4>
-                    <span className="text-[10px] font-extrabold uppercase bg-green-100 text-green-700 px-2 py-0.5 rounded-full">Aktif</span>
-                  </div>
-                  <p className="text-xs text-slate-500">Rp 98.000 / bulanan • Termasuk Kalender Drag & Drop</p>
-                </div>
-
-                <Link to="/pricing" className="w-full block text-center py-2.5 rounded-xl bg-blue-100 text-blue-800 text-xs font-bold hover:bg-blue-200 transition-all">
-                  Upgrade ke Paket Pro Tahunan
-                </Link>
+          {/* TAB 2: FORM GANTI PASSWORD */}
+          {activeTab === 'password' && (
+            <div className="bg-white rounded-3xl p-8 border border-outline-variant/15 shadow-sm space-y-6 animate-in fade-in duration-200">
+              <div className="pb-4 border-b border-slate-100">
+                <h3 className="text-lg font-extrabold text-on-surface">Pembaruan Kata Sandi (Password)</h3>
+                <p className="text-xs text-on-surface-variant mt-0.5">
+                  Kata sandi baru akan dienkripsi dengan standar SHA-256 dan notifikasi konfirmasi dikirim ke email terdaftar.
+                </p>
               </div>
 
-              <div className="bg-white rounded-3xl p-6 border border-slate-200/80 shadow-sm">
-                <h3 className="text-sm font-bold text-slate-900 mb-3">Akses Cepat Pengguna</h3>
-                <div className="space-y-2">
-                  <Link to="/calendar" className="flex items-center justify-between p-3 rounded-xl hover:bg-slate-50 border border-slate-100 text-xs font-bold text-slate-700 transition-all">
-                    <span>Buka Kalender Konten</span>
-                    <span className="material-symbols-outlined text-base text-slate-400">chevron_right</span>
-                  </Link>
-                  <Link to="/transactions" className="flex items-center justify-between p-3 rounded-xl hover:bg-slate-50 border border-slate-100 text-xs font-bold text-slate-700 transition-all">
-                    <span>Lihat Bukti Transaksi</span>
-                    <span className="material-symbols-outlined text-base text-slate-400">chevron_right</span>
-                  </Link>
+              <form onSubmit={handleChangePassword} className="space-y-5 max-w-lg">
+                <div className="space-y-1.5">
+                  <label className="text-xs font-bold uppercase tracking-wider text-on-surface-variant">
+                    Kata Sandi Lama / Saat Ini
+                  </label>
+                  <input
+                    type="password"
+                    required
+                    value={passwordForm.current_password}
+                    onChange={(e) => setPasswordForm({ ...passwordForm, current_password: e.target.value })}
+                    className="w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-200 text-sm focus:ring-2 focus:ring-primary focus:bg-white"
+                    placeholder="Masukkan kata sandi lama"
+                  />
                 </div>
-              </div>
+
+                <div className="space-y-1.5">
+                  <label className="text-xs font-bold uppercase tracking-wider text-on-surface-variant">
+                    Kata Sandi Baru (Minimal 6 Karakter)
+                  </label>
+                  <input
+                    type="password"
+                    required
+                    minLength="6"
+                    value={passwordForm.new_password}
+                    onChange={(e) => setPasswordForm({ ...passwordForm, new_password: e.target.value })}
+                    className="w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-200 text-sm focus:ring-2 focus:ring-primary focus:bg-white"
+                    placeholder="Masukkan kata sandi baru"
+                  />
+                </div>
+
+                <div className="space-y-1.5">
+                  <label className="text-xs font-bold uppercase tracking-wider text-on-surface-variant">
+                    Konfirmasi Kata Sandi Baru
+                  </label>
+                  <input
+                    type="password"
+                    required
+                    minLength="6"
+                    value={passwordForm.confirm_password}
+                    onChange={(e) => setPasswordForm({ ...passwordForm, confirm_password: e.target.value })}
+                    className="w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-200 text-sm focus:ring-2 focus:ring-primary focus:bg-white"
+                    placeholder="Ulangi kata sandi baru"
+                  />
+                </div>
+
+                <div className="pt-4">
+                  <button
+                    type="submit"
+                    disabled={loading}
+                    className="px-6 py-3 bg-secondary text-white font-extrabold text-xs rounded-xl shadow-md hover:scale-[1.02] active:scale-95 transition-all flex items-center gap-2"
+                  >
+                    {loading ? (
+                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                    ) : (
+                      <span className="material-symbols-outlined text-sm">lock_reset</span>
+                    )}
+                    Enkripsi & Simpan Kata Sandi Baru
+                  </button>
+                </div>
+              </form>
             </div>
-          </div>
+          )}
         </div>
       </main>
     </div>

@@ -39,7 +39,9 @@ export default function PaymentMethodPage() {
 
     try {
       const orderPayload = {
-        user_id: currentUser?.id || 2,
+        user_id: currentUser?.id || 1,
+        customer_name: currentUser?.name || 'Pelanggan ContentHub',
+        customer_email: currentUser?.email || '',
         plan_id: plan.id,
         payment_method: selectedMethod,
         payment_channel: selectedChannel

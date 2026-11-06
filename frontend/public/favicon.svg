@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48">
+  <defs>
+    <linearGradient id="chGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#005da7" />
+      <stop offset="100%" stop-color="#2976c7" />
+    </linearGradient>
+  </defs>
+  <!-- Background Container -->
+  <rect width="48" height="48" rx="12" fill="url(#chGrad)" />
+  <!-- ContentHub Layers Symbol -->
+  <!-- Top Layer -->
+  <polygon points="24,10 37,17.5 24,25 11,17.5" fill="#ffffff" />
+  <!-- Middle Layer -->
+  <polyline points="11,23 24,30.5 37,23" fill="none" stroke="#ffffff" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" />
+  <!-- Bottom Layer -->
+  <polyline points="11,28.5 24,36 37,28.5" fill="none" stroke="#ffffff" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" />
+</svg>

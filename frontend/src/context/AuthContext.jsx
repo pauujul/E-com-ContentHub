@@ -6,18 +6,24 @@ const AuthContext = createContext();
 export function AuthProvider({ children }) {
   const [currentUser, setCurrentUser] = useState(() => {
     try {
+      const isExplicitlyLoggedOut = localStorage.getItem('contenthub_logged_out');
+      if (isExplicitlyLoggedOut === 'true') {
+        return null;
+      }
       const saved = localStorage.getItem('contenthub_user');
       if (saved) return JSON.parse(saved);
     } catch (e) {
       console.warn('Gagal membaca sesi user dari localStorage:', e);
     }
-    // Default awal: Persona UMKM Muhammad Hasran
+    // Default awal: Sesi pengguna default (Firman syah)
     return {
-      id: 2,
-      name: 'Muhammad Hasran',
-      email: 'hasran.donat@gmail.com',
-      role: 'customer',
-      phone: '085299887766',
+      id: 8,
+      name: 'Firman syah',
+      email: 'firmansyah.mks2006@gmail.com',
+      role: 'admin',
+      phone: '081234567899',
+      business_name: 'ContentHub HQ',
+      industry: 'Technology SaaS',
     };
   });
 
@@ -46,6 +52,7 @@ export function AuthProvider({ children }) {
   const login = async (email, password) => {
     const res = await api.login(email, password);
     if (res.success && res.data) {
+      localStorage.removeItem('contenthub_logged_out');
       setCurrentUser(res.data.user);
       setToken(res.data.token);
       localStorage.setItem('contenthub_user', JSON.stringify(res.data.user));
@@ -62,6 +69,7 @@ export function AuthProvider({ children }) {
     const response = await api.register(userData);
 
     if (response.data && response.data.token) {
+      localStorage.removeItem('contenthub_logged_out');
       localStorage.setItem('contenthub_token', response.data.token);
       localStorage.setItem('contenthub_user', JSON.stringify(response.data.user));
       setCurrentUser(response.data.user);
@@ -72,6 +80,7 @@ export function AuthProvider({ children }) {
   };
 
   const switchUser = (user) => {
+    localStorage.removeItem('contenthub_logged_out');
     setCurrentUser(user);
     localStorage.setItem('contenthub_user', JSON.stringify(user));
   };
@@ -79,8 +88,17 @@ export function AuthProvider({ children }) {
   const logout = () => {
     localStorage.removeItem('contenthub_user');
     localStorage.removeItem('contenthub_token');
+    localStorage.setItem('contenthub_logged_out', 'true');
     setCurrentUser(null);
     setToken(null);
+  };
+
+  const updateCurrentUser = (updatedFields) => {
+    setCurrentUser((prev) => {
+      const merged = { ...prev, ...updatedFields };
+      localStorage.setItem('contenthub_user', JSON.stringify(merged));
+      return merged;
+    });
   };
 
   const isAdmin = currentUser?.role === 'admin';
@@ -97,6 +115,7 @@ export function AuthProvider({ children }) {
         switchUser,
         logout,
         setCurrentUser,
+        updateCurrentUser,
       }}
     >
       {children}

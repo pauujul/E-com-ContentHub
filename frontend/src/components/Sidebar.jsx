@@ -5,12 +5,49 @@ import { useAuth } from '../context/AuthContext';
 export default function Sidebar() {
   const location = useLocation();
   const navigate = useNavigate();
-  const { currentUser, logout, isAdmin } = useAuth();
+  const { currentUser, isAdmin } = useAuth();
 
   const isActive = (path) => {
-    if (path === '/dashboard' && location.pathname === '/dashboard') return true;
-    if (path !== '/dashboard' && location.pathname.startsWith(path)) return true;
-    return false;
+    const current = location.pathname;
+    if (path === '/dashboard') return current === '/dashboard';
+
+    if (path === '/calendar/agenda') {
+      return current === '/calendar/agenda' || current.startsWith('/calendar/agenda/');
+    }
+
+    if (path === '/calendar/drag-drop') {
+      return current === '/calendar/drag-drop';
+    }
+
+    if (path === '/calendar') {
+      // Kalender utama & alur setup jadwal kalender; BUKAN menu Detail Agenda atau Drag & Drop
+      const calendarRoutes = [
+        '/calendar',
+        '/calendar/pick-date',
+        '/calendar/set-time',
+        '/calendar/edit-schedule',
+        '/calendar/add-label',
+      ];
+      return calendarRoutes.includes(current);
+    }
+
+    if (path === '/templates/add') {
+      return current === '/templates/add';
+    }
+
+    if (path === '/templates') {
+      return current === '/templates' || (current.startsWith('/templates') && current !== '/templates/add');
+    }
+
+    if (path === '/help') {
+      return current === '/help';
+    }
+
+    if (path === '/admin') {
+      return current.startsWith('/admin');
+    }
+
+    return current === path;
   };
 
   const navItemClass = (path) => `
@@ -83,25 +120,27 @@ export default function Sidebar() {
         </nav>
       </div>
 
-      {/* Bagian Bawah: Profil User & Tombol Cepat */}
-      <div className="p-4 border-t border-slate-100 bg-slate-50/50">
-        <div onClick={() => navigate('/profile')} className="flex items-center gap-3 p-2 rounded-xl hover:bg-white cursor-pointer transition-colors border border-transparent hover:border-slate-200">
-          <div className="w-9 h-9 rounded-full bg-primary text-white flex items-center justify-center font-bold text-xs uppercase shadow-sm">{currentUser?.name ? currentUser.name.charAt(0) : 'U'}</div>
-          <div className="flex-1 min-w-0">
-            <p className="text-xs font-bold text-slate-800 truncate">{currentUser?.name || 'Pengguna'}</p>
-            <p className="text-[10px] text-slate-500 truncate">{currentUser?.role === 'admin' ? 'Administrator' : 'Premium Plan (UMKM)'}</p>
+      {/* Bagian Bawah: Profil User */}
+      <div className="p-3 border-t border-slate-100 bg-slate-50/50">
+        <div
+          onClick={() => navigate('/profile')}
+          className="flex items-center gap-3 p-2.5 rounded-xl hover:bg-white cursor-pointer transition-all border border-transparent hover:border-slate-200 hover:shadow-sm group"
+          title="Buka Pengaturan Profil & Keamanan"
+        >
+          <div className="w-9 h-9 rounded-full bg-primary text-white flex items-center justify-center font-bold text-xs uppercase shadow-sm">
+            {currentUser?.name ? currentUser.name.charAt(0) : 'U'}
           </div>
-        </div>
-
-        <div className="mt-2 pt-2 border-t border-slate-200/60 flex items-center justify-between text-xs font-bold">
-          <Link to="/switch-account" className="text-primary hover:underline flex items-center gap-1">
-            <span className="material-symbols-outlined text-sm">switch_account</span>
-            Ganti Akun
-          </Link>
-          <button onClick={logout} className="text-red-500 hover:text-red-700 hover:underline flex items-center gap-1">
-            <span className="material-symbols-outlined text-sm">logout</span>
-            Keluar
-          </button>
+          <div className="flex-1 min-w-0">
+            <p className="text-xs font-bold text-slate-800 truncate group-hover:text-primary transition-colors">
+              {currentUser?.name || 'Pengguna'}
+            </p>
+            <p className="text-[10px] text-slate-500 truncate">
+              {currentUser?.role === 'admin' ? 'Administrator' : 'Premium Plan (UMKM)'}
+            </p>
+          </div>
+          <span className="material-symbols-outlined text-slate-400 group-hover:text-primary text-base transition-colors">
+            chevron_right
+          </span>
         </div>
       </div>
     </aside>

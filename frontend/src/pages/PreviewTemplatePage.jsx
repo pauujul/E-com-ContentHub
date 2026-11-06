@@ -9,7 +9,7 @@ export default function PreviewTemplatePage() {
 
   const template = {
     id: id || '1',
-    title: 'Flash Sale Minimalist Neon — Donat & Kuliner',
+    title: 'Flash Sale Minimalist Neon: Donat & Kuliner',
     category: 'Promosi & Diskon',
     format: '9:16 Story / Reels (1080 x 1920 px)',
     software: 'Canva Pro Sync Ready',

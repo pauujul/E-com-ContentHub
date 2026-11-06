@@ -36,3 +36,12 @@ lerna-debug.log*
 # OS metadata
 .DS_Store
 Thumbs.db
+
+# Python / Django Virtualenv
+venv/
+.venv/
+env/
+__pycache__/
+*.py[cod]
+backend_django/venv/
+backend_django/.env

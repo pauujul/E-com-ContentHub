@@ -256,7 +256,7 @@ export default function RegisterPage() {
                       name="businessName"
                       value={formData.businessName}
                       onChange={handleChange}
-                      placeholder="Contoh: Donat Madu Hasran"
+                      placeholder="Contoh: Kopi Nusantara"
                       className="w-full px-4 py-3.5 rounded-xl bg-surface-container-high border-none text-sm text-on-surface placeholder:text-outline/50 focus:ring-2 focus:ring-primary focus:bg-white transition-all"
                     />
                   </div>

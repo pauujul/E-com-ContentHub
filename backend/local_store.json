@@ -1,0 +1,478 @@
+{
+  "users": [
+    {
+      "id": 1,
+      "name": "Jerry Hernis",
+      "email": "jerry.hernis@amigos.id",
+      "password": "a665a45920422f9d417e4867efdc4fb8a04a1f3fff1fa07e998e86f7f7a27ae3",
+      "role": "admin",
+      "phone": "081234567890",
+      "business_name": "ContentHub HQ",
+      "industry": "Technology SaaS",
+      "avatar_url": "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=200&h=200&fit=crop",
+      "email_verified": true,
+      "created_at": "2026-10-01T08:00:00.000Z",
+      "updated_at": "2026-11-04T04:01:11.936Z"
+    },
+    {
+      "id": 3,
+      "name": "Fauzul Rozaq",
+      "email": "fauzul@amigos.id",
+      "password": "a665a45920422f9d417e4867efdc4fb8a04a1f3fff1fa07e998e86f7f7a27ae3",
+      "role": "admin",
+      "phone": "081298765432",
+      "business_name": "ContentHub Studio",
+      "industry": "Digital Marketing",
+      "avatar_url": "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=200&h=200&fit=crop",
+      "email_verified": true,
+      "created_at": "2026-10-10T10:15:00.000Z",
+      "updated_at": "2026-11-04T04:01:11.936Z"
+    },
+    {
+      "id": 4,
+      "name": "Zico Aryton",
+      "email": "zicoaryton@gmail.com",
+      "password": "a665a45920422f9d417e4867efdc4fb8a04a1f3fff1fa07e998e86f7f7a27ae3",
+      "role": "customer",
+      "phone": "081299001122",
+      "business_name": "Aryton Creative Studio",
+      "industry": "Desain Kreatif & Multimedia",
+      "avatar_url": "https://images.unsplash.com/photo-1570295999919-56ceb5ecca61?w=200&h=200&fit=crop",
+      "email_verified": true,
+      "created_at": "2026-11-05T07:58:22.162Z",
+      "updated_at": "2026-11-05T07:58:22.162Z"
+    },
+    {
+      "id": 8,
+      "name": "Firman syah",
+      "email": "firmansyah.mks2006@gmail.com",
+      "role": "admin",
+      "phone": "081234567899",
+      "business_name": "ContentHub HQ",
+      "industry": "Technology SaaS",
+      "password": "a665a45920422f9d417e4867efdc4fb8a04a1f3fff1fa07e998e86f7f7a27ae3",
+      "avatar_url": "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=200&h=200&fit=crop",
+      "email_verified": true,
+      "created_at": "2026-11-05T08:07:59.889Z",
+      "updated_at": "2026-11-05T08:07:59.900Z"
+    }
+  ],
+  "subscription_plans": [
+    {
+      "id": 1,
+      "sku": "CH-FREE",
+      "name": "Starter Trial (Free)",
+      "description": "Paket awal tanpa biaya untuk UMKM yang baru mulai merencanakan dan menjadwalkan konten media sosial.",
+      "price": "0.00",
+      "billing_cycle": "Free",
+      "features": [
+        "1 Kalender Konten Interaktif",
+        "3 Template Konten Siap Pakai",
+        "1 Akun Media Sosial",
+        "Export Jadwal ke Format Gambar",
+        "Akses Komunitas Komersial UMKM"
+      ],
+      "badge": "Akses Gratis",
+      "is_hero": false,
+      "is_active": true,
+      "created_at": "2026-10-01T08:00:00.000Z"
+    },
+    {
+      "id": 2,
+      "sku": "CH-START-M",
+      "name": "ContentHub Starter",
+      "description": "Solusi paling praktis dan terlaris bagi pelaku UMKM yang membutuhkan kalender interaktif drag-and-drop dan puluhan template Canva siap pakai.",
+      "price": "98000.00",
+      "billing_cycle": "Bulanan",
+      "features": [
+        "Semua Fitur Paket Trial Free",
+        "Kalender Drag & Drop Interaktif Penuh",
+        "50+ Library Template Konten Siap Pakai",
+        "Direct Integration & Editor Canva Pro",
+        "Pengingat Jadwal Posting (Email Alert)",
+        "Hingga 5 Akun Media Sosial Terhubung",
+        "Customer Support Prioritas via WhatsApp"
+      ],
+      "badge": "Paling Sesuai untuk UMKM",
+      "is_hero": true,
+      "is_active": true,
+      "created_at": "2026-10-01T08:00:00.000Z"
+    },
+    {
+      "id": 3,
+      "sku": "CH-PRO-Y",
+      "name": "ContentHub Pro",
+      "description": "Paket komprehensif tahunan untuk UMKM berkembang dengan frekuensi konten tinggi, multi-admin, dan analitik jadwal posting.",
+      "price": "898000.00",
+      "billing_cycle": "Tahunan",
+      "features": [
+        "Semua Fitur Starter Bulanan",
+        "Akses 200+ Template Premium Canva",
+        "Akun Media Sosial Tanpa Batas",
+        "Analytics & Estimasi Performa Jadwal",
+        "Persiapan Integrasi AI Copywriting Assistant",
+        "Dukungan Multi-User Team (Hingga 3 Orang)",
+        "Hemat 24% Dibandingkan Bayar Bulanan"
+      ],
+      "badge": "Paling Hemat",
+      "is_hero": false,
+      "is_active": true,
+      "created_at": "2026-10-01T08:00:00.000Z"
+    },
+    {
+      "id": 4,
+      "sku": "CH-ENT-Y",
+      "name": "ContentHub Enterprise",
+      "description": "Solusi korporasi dan multi-cabang UMKM dengan kebutuhan kustomisasi aset, tim kreatif terdedikasi, dan SLA dukungan 24/7.",
+      "price": "2499000.00",
+      "billing_cycle": "Tahunan",
+      "features": [
+        "Semua Fitur Paket Pro Tahunan",
+        "Integrasi White-Label Brand Perusahaan",
+        "Dedicated Account Manager & Creative Strategist",
+        "Custom Template Design Khusus Brand Anda",
+        "API Access untuk Export & Penjadwalan Otomatis",
+        "SLA Dukungan 24/7 & Pelatihan Tim Privat"
+      ],
+      "badge": "Solusi Skala Besar",
+      "is_hero": false,
+      "is_active": true,
+      "created_at": "2026-10-01T08:00:00.000Z"
+    }
+  ],
+  "orders": [
+    {
+      "id": 3,
+      "order_number": "ORD-1793767297040-7669",
+      "user_id": 8,
+      "customer_name": "Firman syah",
+      "customer_email": "firmansyah.mks2006@gmail.com",
+      "plan_id": 3,
+      "total_amount": "898000.00",
+      "status": "Pending",
+      "payment_method": "BCA Virtual Account",
+      "payment_channel": "BCA Virtual Account",
+      "paid_at": null,
+      "created_at": "2026-11-04T04:41:37.040Z"
+    },
+    {
+      "id": 1,
+      "order_number": "ORD-20261016-0001",
+      "user_id": 8,
+      "customer_name": "Firman syah",
+      "customer_email": "firmansyah.mks2006@gmail.com",
+      "plan_id": 2,
+      "total_amount": "98000.00",
+      "status": "Paid",
+      "payment_method": "Virtual Account",
+      "payment_channel": "BCA Virtual Account",
+      "paid_at": "2026-10-16T14:20:00.000Z",
+      "created_at": "2026-10-16T14:15:00.000Z"
+    },
+    {
+      "id": 2,
+      "order_number": "ORD-20261024-0002",
+      "user_id": 8,
+      "customer_name": "Firman syah",
+      "customer_email": "firmansyah.mks2006@gmail.com",
+      "plan_id": 3,
+      "total_amount": "898000.00",
+      "status": "Pending",
+      "payment_method": "E-Wallet",
+      "payment_channel": "GoPay QRIS",
+      "paid_at": null,
+      "created_at": "2026-10-24T10:00:00.000Z"
+    }
+  ],
+  "order_items": [
+    {
+      "id": 1,
+      "order_id": 1,
+      "plan_id": 2,
+      "item_name": "ContentHub Starter - 1 Bulan Langganan",
+      "price": "98000.00",
+      "quantity": 1,
+      "subtotal": "98000.00",
+      "created_at": "2026-10-16T14:15:00.000Z"
+    },
+    {
+      "id": 2,
+      "order_id": 2,
+      "plan_id": 3,
+      "item_name": "ContentHub Pro - 1 Tahun Langganan Penuh",
+      "price": "898000.00",
+      "quantity": 1,
+      "subtotal": "898000.00",
+      "created_at": "2026-10-24T10:00:00.000Z"
+    },
+    {
+      "id": 3,
+      "order_id": 3,
+      "plan_id": 3,
+      "item_name": "ContentHub Pro (Tahunan)",
+      "price": "898000.00",
+      "quantity": 1,
+      "subtotal": "898000.00",
+      "created_at": "2026-11-04T04:41:37.040Z"
+    }
+  ],
+  "content_posts": [
+    {
+      "id": 1,
+      "user_id": 2,
+      "judul": "Tips Donat Anti Bantat untuk Pemula",
+      "caption": "3 rahasia adonan donat mengembang sempurna tanpa pengembang berlebih! Simak resep rahasia dapur kami.",
+      "platform": "Instagram",
+      "category": "Edukasi",
+      "color_label": "bg-blue-100 text-blue-700 border-blue-300",
+      "scheduled_at": "2026-10-24T10:00:00.000Z",
+      "status": "Scheduled",
+      "stage": "scheduled",
+      "order_position": 0,
+      "media_url": null,
+      "thumbnail_url": "https://images.unsplash.com/photo-1551024709-8f23befc6f87?w=400&fit=crop",
+      "reminder_sent": false,
+      "created_at": "2026-10-15T08:00:00.000Z",
+      "updated_at": "2026-11-04T04:01:11.936Z"
+    },
+    {
+      "id": 2,
+      "user_id": 2,
+      "judul": "TikTok Reel Resep Baru Donat Madu",
+      "caption": "Eksperimen pertama bikin donat madu murni khas Sulawesi! Gimana menurut kalian teksturnya?",
+      "platform": "TikTok",
+      "category": "Video",
+      "color_label": "bg-slate-900 text-cyan-300 border-slate-700",
+      "scheduled_at": "2026-10-24T13:00:00.000Z",
+      "status": "Scheduled",
+      "stage": "scheduled",
+      "order_position": 1,
+      "media_url": null,
+      "thumbnail_url": "https://images.unsplash.com/photo-1527515637462-cff94eecc1ac?w=400&fit=crop",
+      "reminder_sent": false,
+      "created_at": "2026-10-15T09:00:00.000Z",
+      "updated_at": "2026-11-04T04:01:11.936Z"
+    },
+    {
+      "id": 3,
+      "user_id": 2,
+      "judul": "Diskon Payday Akhir Pekan Beli 1 Gratis 1",
+      "caption": "Promo gajian datang lagi! Datang langsung ke outlet atau order lewat WhatsApp sekarang.",
+      "platform": "Instagram",
+      "category": "Promo",
+      "color_label": "bg-amber-100 text-amber-800 border-amber-300",
+      "scheduled_at": "2026-10-25T18:30:00.000Z",
+      "status": "Draft",
+      "stage": "ready",
+      "order_position": 0,
+      "media_url": null,
+      "thumbnail_url": "https://images.unsplash.com/photo-1607083206869-4c7672e72a8a?w=400&fit=crop",
+      "reminder_sent": false,
+      "created_at": "2026-10-16T10:00:00.000Z",
+      "updated_at": "2026-11-04T04:01:11.936Z"
+    },
+    {
+      "id": 4,
+      "user_id": 2,
+      "judul": "Banner Promo Beli 2 Gratis 1",
+      "caption": "Desain banner visual promo weekend untuk Instagram Story dan status WhatsApp.",
+      "platform": "Instagram",
+      "category": "Desain",
+      "color_label": "bg-purple-100 text-purple-700 border-purple-300",
+      "scheduled_at": "2026-10-26T12:00:00.000Z",
+      "status": "Draft",
+      "stage": "design",
+      "order_position": 0,
+      "media_url": null,
+      "thumbnail_url": "https://images.unsplash.com/photo-1607082348824-0a96f2a4b9da?w=400&fit=crop",
+      "reminder_sent": false,
+      "created_at": "2026-10-17T11:00:00.000Z",
+      "updated_at": "2026-11-04T04:01:11.936Z"
+    },
+    {
+      "id": 5,
+      "user_id": 2,
+      "judul": "Ide Konten: Donat Gluten-Free untuk Diet Sehat",
+      "caption": "Rencana riset konten untuk audiens peduli kesehatan dan penderita intoleransi gluten.",
+      "platform": "Instagram",
+      "category": "Ide",
+      "color_label": "bg-blue-100 text-blue-700 border-blue-300",
+      "scheduled_at": "2026-10-28T09:00:00.000Z",
+      "status": "Draft",
+      "stage": "backlog",
+      "order_position": 0,
+      "media_url": null,
+      "thumbnail_url": null,
+      "reminder_sent": false,
+      "created_at": "2026-10-18T08:00:00.000Z",
+      "updated_at": "2026-11-04T04:01:11.936Z"
+    },
+    {
+      "id": 6,
+      "user_id": 2,
+      "judul": "Video Reels Unboxing Packaging Baru Ramah Lingkungan",
+      "caption": "Dokumentasi transisi ke kemasan ramah lingkungan berbahan singkong.",
+      "platform": "TikTok",
+      "category": "Branding",
+      "color_label": "bg-purple-100 text-purple-700 border-purple-300",
+      "scheduled_at": "2026-10-29T14:00:00.000Z",
+      "status": "Draft",
+      "stage": "backlog",
+      "order_position": 1,
+      "media_url": null,
+      "thumbnail_url": null,
+      "reminder_sent": false,
+      "created_at": "2026-10-19T10:00:00.000Z",
+      "updated_at": "2026-11-04T04:01:11.937Z"
+    }
+  ],
+  "terms_conditions": [
+    {
+      "id": 1,
+      "title": "Syarat dan Ketentuan Layanan ContentHub",
+      "slug": "syarat-dan-ketentuan-layanan",
+      "description": "Selamat datang di ContentHub. Dokumen Syarat & Ketentuan ini mengatur seluruh penggunaan platform SaaS ContentHub, situs web, API, dan layanan terkait yang dioperasikan oleh Amigos Team.\n\n1. PENERIMAAN KETENTUAN\nDengan mendaftar, mengakses, atau menggunakan layanan ContentHub, Anda (\"Pengguna\" atau \"Pelaku UMKM\") menyatakan telah membaca, memahami, dan menyetujui untuk terikat oleh seluruh Syarat & Ketentuan ini.\n\n2. PENDAFTARAN AKUN DAN KEAMANAN\n- Pengguna wajib memberikan data yang akurat, lengkap, dan terkini saat registrasi.\n- Anda bertanggung jawab penuh menjaga kerahasiaan kata sandi dan seluruh aktivitas akun Anda.\n- ContentHub tidak bertanggung jawab atas kerugian akibat kelalaian Pengguna menjaga keamanan kredensial akun.\n\n3. KEPEMILIKAN HAK CIPTA DAN KONTEN\n- Seluruh hak cipta atas teks, gambar, video, dan materi yang diunggah oleh Pengguna tetap menjadi milik Pengguna.\n- Template visual yang disediakan oleh ContentHub dan integrasi Canva dapat digunakan untuk keperluan promosi komersial brand Pengguna selama masa aktif langganan.\n- Pengguna dilarang mendistribusikan ulang atau memperjualbelikan template bawaan ContentHub sebagai produk terpisah tanpa izin tertulis.\n\n4. SISTEM LANGGANAN DAN PEMBAYARAN\n- Layanan berbayar ContentHub (Paket Starter, Pro, Enterprise) ditagihkan sesuai siklus penagihan yang dipilih (bulanan atau tahunan).\n- Seluruh pembayaran diproses melalui saluran gateway resmi (Virtual Account, QRIS, E-Wallet).\n- Akses fitur premium aktif seketika setelah sistem kami menerima konfirmasi pembayaran berhasil (Status: Paid).\n\n5. PEMBATALAN DAN PENGEMBALIAN DANA (REFUND)\n- Pengguna dapat membatalkan langganan kapan saja melalui panel pengaturan.\n- Layanan yang telah dibayar tidak dapat direfund untuk periode yang sedang berjalan, namun hak akses tetap aktif hingga akhir masa siklus yang telah dibayarkan.",
+      "image_url": "https://images.unsplash.com/photo-1450133064473-71024230f91b?w=1000&fit=crop",
+      "author": "Legal Amigos Team",
+      "category": "Legal & Ketentuan",
+      "created_at": "2026-10-01T08:00:00.000Z",
+      "updated_at": "2026-11-04T04:01:11.937Z"
+    }
+  ],
+  "privacy_policies": [
+    {
+      "id": 1,
+      "title": "Kebijakan Privasi Pengguna Platform ContentHub",
+      "slug": "kebijakan-privasi-pengguna",
+      "description": "Privasi dan keamanan data Anda merupakan prioritas utama bagi ContentHub. Kebijakan Privasi ini menjelaskan bagaimana kami mengumpulkan, menggunakan, menyimpan, dan melindungi informasi pribadi Pengguna.\n\n1. INFORMASI YANG KAMI KUMPULKAN\n- Informasi Akun: Nama lengkap, alamat email, nomor telepon WhatsApp, nama bisnis/UMKM, dan kategori industri usaha Anda.\n- Informasi Konten: Judul postingan, caption, jadwal tayang, aset visual, dan preferensi template kalender.\n- Data Teknis: Alamat IP, jenis peramban (browser), log aktivitas, dan data transaksi pembayaran (tanpa menyimpan nomor kartu kredit/PIN).\n\n2. PENGGUNAAN INFORMASI\nKami menggunakan informasi yang dikumpulkan untuk:\n- Mengoperasikan, memelihara, dan menyediakan fitur kalender editorial dan integrasi Canva.\n- Memproses transaksi langganan dan mengirimkan invoice tanda terima otomatis via email.\n- Mengirimkan pengingat jadwal posting (reminder) dan notifikasi penting terkait keamanan akun.\n- Menganalisis pola penggunaan guna meningkatkan performa sistem dan kecerdasan rekomendasi jam emas postingan.\n\n3. PERLINDUNGAN DAN KEAMANAN DATA\n- Kata sandi Pengguna dienkripsi menggunakan protokol hashing SHA-256 yang aman.\n- Komunikasi data antara peramban Pengguna dan server kami dilindungi dengan enkripsi SSL/TLS 256-bit standar industri.\n- Kami tidak pernah menjual, menyewakan, atau memberikan data pribadi Pengguna kepada pihak ketiga untuk tujuan pemasaran tanpa persetujuan eksplisit Anda.\n\n4. INTEGRASI LAYANAN PIHAK KETIGA\n- Ketika menggunakan integrasi Canva, Pengguna tunduk pada standar privasi dan otorisasi Canva untuk pertukaran aset desain visual.\n- Pembayaran diproses melalui payment gateway berlisensi Bank Indonesia dengan protokol enkripsi PCI-DSS.",
+      "image_url": "https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=1000&fit=crop",
+      "author": "Data Protection Officer",
+      "category": "Kebijakan Privasi",
+      "created_at": "2026-10-01T08:00:00.000Z",
+      "updated_at": "2026-11-04T04:01:11.937Z"
+    }
+  ],
+  "partnerships": [
+    {
+      "id": 1,
+      "title": "Kemitraan Strategis ContentHub & Ekosistem Desain Canva",
+      "slug": "integrasi-platform-canva-dan-contenthub",
+      "description": "ContentHub secara resmi mengintegrasikan teknologi dan alur kerja desain visual Canva ke dalam ekosistem kalender konten editorial UMKM Indonesia. Kemitraan ini dirancang khusus untuk memangkas hambatan teknis desain bagi pelaku usaha mikro, kecil, dan menengah sehingga dapat memproduksi materi promosi berstandar agensi profesional dalam hitungan menit.\n\nFITUR-FITUR UNGGULAN INTEGRASI CANVA DI CONTENTHUB:\n\n1. Seamless One-Click Canva Transition\nPelaku UMKM tidak perlu lagi berpindah aplikasi secara manual atau mengekspor-impor file berulang kali. Dari dashboard kalender jadwal ContentHub, Anda cukup memilih template yang diminati dan mengklik tombol \"Buka di Canva\". Workspace desain Canva akan terbuka secara langsung dengan kanvas siap edit.\n\n2. Otomasi Ekspor & Sinkronisasi Kalender\nBegitu proses penyuntingan visual di Canva selesai, aset visual (Feed Instagram, TikTok Cover, Story Banner) langsung tersinkronisasi kembali ke slot kalender ContentHub lengkap dengan metadata tanggal dan jam posting emas yang telah Anda jadwalkan sebelumnya.\n\n3. Ratusan Template Desain Khusus Persona UMKM Indonesia\nBersama para kreator visual terkurasi, kami menyediakan lebih dari 200+ template desain siap pakai yang disesuaikan dengan ceruk pasar lokal: Kuliner & F&B (Bakery, Kopi, Rice Bowl), Fashion & Hijab, Jasa Laundry, Barbershop, serta Produk Herbal & Skincare.\n\n4. Konsistensi Brand Kit & Font Usaha\nIntegrasi ini mendukung pengelolaan warna tema brand, logo bisnis dengan latar transparan, serta tipografi konsisten agar seluruh postingan media sosial Anda memiliki identitas visual yang solid dan mudah dikenali konsumen.\n\n5. Peluang Kerja Sama Bisnis & Komunitas\nContentHub juga membuka peluang kemitraan bagi:\n- Asosiasi & Komunitas UMKM Daerah untuk program pelatihan konten digital.\n- Desainer Visual & Canva Creator untuk menerbitkan template karya mereka ke dalam ContentHub Marketplace.\n- Platform Pembayaran & Logistik yang ingin bersinergi memperkuat ekosistem e-commerce lokal.\n\nTertarik bermitra dengan ContentHub? Hubungi divisi kerja sama resmi kami melalui email: partnership@amigos.id atau WhatsApp Bisnis Resmi.",
+      "image_url": "https://images.unsplash.com/photo-1557804506-669a67965ba0?w=1000&fit=crop",
+      "author": "Head of Strategic Partnership",
+      "category": "Canva Integration",
+      "created_at": "2026-10-01T08:00:00.000Z",
+      "updated_at": "2026-11-04T04:01:11.937Z"
+    }
+  ],
+  "articles": [
+    {
+      "id": 1,
+      "title": "5 Strategi Kalender Konten yang Bikin Penjualan Donat Naik 300%",
+      "slug": "strategi-kalender-konten-umkm-kuliner",
+      "description": "Banyak pemilik bisnis kuliner mengeluh sepi orderan padahal rasa makanan mereka sangat lezat. Masalah utamanya seringkali adalah ketidakkonsistenan hadir di media sosial calon pelanggan.\n\nDalam studi kasus mitra UMKM Donat Kampoeng Makassar, kami menerapkan metode \"3-Pillar Social Content\":\n1. Hari Senin-Rabu: Fokus pada Konten Edukasi & Behind The Scene (proses pemilihan bahan baku berkualitas dan kebersihan dapur).\n2. Hari Kamis-Jumat: Konten Social Proof & Testimoni Pelanggan yang menggugah selera menjelang akhir pekan.\n3. Hari Sabtu-Minggu: Promo Bundling Keluarga & Flash Sale Jam Emas (Pukul 16:00 - 19:00 WIB).\n\nDengan menyusun rencana konten sebulan di muka menggunakan fitur drag-and-drop ContentHub, tim hanya butuh waktu 1 jam per minggu untuk mengunci 28 postingan berkualitas tinggi.",
+      "image_url": "https://images.unsplash.com/photo-1551024709-8f23befc6f87?w=1000&fit=crop",
+      "author": "Jerry Hernis",
+      "category": "Tips Bisnis UMKM",
+      "created_at": "2026-10-18T10:00:00.000Z",
+      "updated_at": "2026-11-04T04:01:11.937Z"
+    },
+    {
+      "id": 2,
+      "title": "Panduan Memilih Jam Emas (Prime Time) Posting Instagram & TikTok 2026",
+      "slug": "panduan-jam-emas-posting-sosial-media-2026",
+      "description": "Membuat konten visual yang cantik akan sia-sia jika diunggah di saat target audiens Anda sedang tertidur lelap atau sibuk bekerja. Berdasarkan analisis lebih dari 100.000 jadwal posting di ContentHub, berikut adalah waktu tayang paling optimal untuk audiens Indonesia:\n\n- Slot Pagi (07:30 - 08:30 WIB): Periode \"Commute Time\" saat orang mengecek ponsel di perjalanan menuju kantor atau kampus. Cocok untuk quote motivasi, menu sarapan, dan tips singkat.\n- Slot Siang (12:00 - 13:00 WIB): Istirahat makan siang. Waktu emas untuk konten kuliner, voucher diskon, dan polling interaktif.\n- Slot Malam Emas (19:00 - 21:00 WIB): Waktu santai di rumah. Slot terbaik untuk video TikTok berdurasi panjang, carousel edukasi mendalam, dan pengumuman produk baru.",
+      "image_url": "https://images.unsplash.com/photo-1611162617474-5b21e879e113?w=1000&fit=crop",
+      "author": "Fauzul Rozaq",
+      "category": "Strategi Konten",
+      "created_at": "2026-10-20T11:00:00.000Z",
+      "updated_at": "2026-11-04T04:01:11.937Z"
+    },
+    {
+      "id": 3,
+      "title": "Mengapa Desain Canva yang Sederhana Lebih Menghasilkan Penjualan?",
+      "slug": "desain-canva-sederhana-tingkatkan-konversi",
+      "description": "Kesalahan terbesar pemula dalam mendesain konten promosi adalah memasukkan terlalu banyak elemen grafis, efek bayangan, dan font rumit yang membuat pesan utama tenggelam.\n\nKonsumen masa kini hanya meluangkan waktu kurang dari 2 detik sebelum memutuskan untuk scroll lanjut atau membaca postingan Anda. Desain yang bersih dengan 1 fokus gambar produk yang tajam, headline promo yang kontras, dan call-to-action (CTA) yang jelas terbukti memiliki tingkat konversi 45% lebih tinggi dibanding desain yang terlalu ramai.",
+      "image_url": "https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=1000&fit=crop",
+      "author": "Tim Kreatif Amigos",
+      "category": "Desain Visual & Canva",
+      "created_at": "2026-10-22T09:00:00.000Z",
+      "updated_at": "2026-11-04T04:01:11.937Z"
+    },
+    {
+      "id": 4,
+      "title": "Project awal dari agang",
+      "slug": "project-awal-dari-agang-",
+      "description": "Pilar pilar content agang",
+      "image_url": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSivFn0NwiGg74Rucf7IxfgvTGh8tzlFnb7V_OFLitldA&s=10",
+      "author": "Editorial ContentHub",
+      "category": "Video",
+      "created_at": "2026-11-04T07:38:16.727Z",
+      "updated_at": "2026-11-04T07:38:16.727Z"
+    }
+  ],
+  "about_content": [
+    {
+      "id": 1,
+      "title": "Tentang ContentHub & Kisah Perjalanan Kami",
+      "slug": "tentang-kami-contenthub",
+      "description": "ContentHub adalah platform Software as a Service (SaaS) manajemen dan perencanaan editorial konten media sosial yang didesain dari nol untuk menjawab kebutuhan riil pelaku Usaha Mikro, Kecil, dan Menengah (UMKM) Indonesia.\n\nVISI KAMI:\nMenjadi platform ekosistem konten terpercaya yang mendemokratisasi akses pemasaran digital profesional bagi setiap pelaku usaha lokal di seluruh Nusantara.\n\nMISI KAMI:\n1. Menyederhanakan perencanaan konten dari yang semula membingungkan dan memakan waktu menjadi proses menyenangkan yang selesai dalam hitungan menit.\n2. Menyediakan jembatan integrasi visual tanpa hambatan bersama platform global seperti Canva.\n3. Memberikan kepastian harga langganan yang transparan, terjangkau, dan berdampak langsung pada kenaikan omzet mitra bisnis.\n\nMASALAH NYATA YANG KAMI SELESAIKAN: \"THE CONSISTENCY GAP\"\nBanyak produk lokal memiliki kualitas luar biasa tetapi gagal bersaing karena ketiadaan konsistensi publikasi digital. ContentHub memecahkan kesenjangan konsistensi ini melalui kalender interaktif, rekomendasi jam tayang pintar, dan pustaka template visual terintegrasi.",
+      "image_url": "https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=1000&fit=crop",
+      "author": "Amigos Team Leadership",
+      "category": "Company Profile",
+      "created_at": "2026-10-01T08:00:00.000Z",
+      "updated_at": "2026-11-04T04:01:11.937Z"
+    }
+  ],
+  "web_settings": {
+    "general": {
+      "tagline": "Solusi Perencanaan & Manajemen Konten Media Sosial UMKM Indonesia",
+      "description": "ContentHub membantu ribuan pelaku usaha merencanakan jadwal posting, merancang visual Canva profesional, dan meningkatkan penjualan secara konsisten.",
+      "logo_url": "https://cdn-icons-png.flaticon.com/512/919/919851.png",
+      "favicon_url": "https://cdn-icons-png.flaticon.com/512/919/919851.png",
+      "support_email": "support@contenthub.id",
+      "support_phone": "+62 812-3456-7890",
+      "address": "Gedung Cyber Tech Amigos Lt. 5, Jl. Perintis Kemerdekaan, Makassar, Sulawesi Selatan",
+      "social_instagram": "@contenthub.id",
+      "social_tiktok": "@contenthub_official"
+    },
+    "email": {
+      "smtp_host": "smtp.gmail.com",
+      "smtp_port": 587,
+      "smtp_from": "no-reply@contenthub.id",
+      "smtp_user": "notifikasi.contenthub@gmail.com",
+      "smtp_pass": "••••••••••••••••",
+      "smtp_secure": false,
+      "templates": {
+        "welcome": {
+          "subject": "Selamat Datang di ContentHub, {name}! Akun Anda Siap Digunakan",
+          "body": "Halo {name},\n\nTerima kasih telah bergabung dengan ContentHub SaaS. Akun Anda dengan email {email} telah resmi aktif.\n\nMari mulai menjadwalkan konten media sosial bisnis Anda secara teratur dan tingkatkan omzet UMKM Anda sekarang juga!\n\nSalam hangat,\nTim ContentHub"
+        },
+        "invoice": {
+          "subject": "Invoice Pembayaran #{order_number} - Paket {plan_name}",
+          "body": "Halo {customer_name},\n\nPesanan langganan Anda dengan No. Order #{order_number} sebesar Rp {total_amount} telah berhasil kami proses dengan status: {status}.\n\nTerima kasih atas kepercayaan Anda bermitra dengan ContentHub!\n\nHormat kami,\nTim Keuangan ContentHub"
+        },
+        "reset_password": {
+          "subject": "Instruksi Pembaruan Kata Sandi Akun ContentHub Anda",
+          "body": "Halo {name},\n\nKami menerima permintaan untuk mengganti kata sandi akun Anda ({email}). Jika ini adalah Anda, silakan ikuti tautan verifikasi berikut untuk mengonfirmasi perubahan.\n\nJika Anda tidak merasa melakukan permintaan ini, segera hubungi customer support kami.\n\nSalam aman,\nTim Keamanan ContentHub"
+        }
+      }
+    },
+    "payment_gateway": {
+      "mode": "sandbox",
+      "provider": "Midtrans",
+      "server_key": "SB-Mid-server-TEST-KEY-CONTENTHUB-2026",
+      "client_key": "SB-Mid-client-TEST-KEY-CONTENTHUB-2026",
+      "merchant_id": "M10928374",
+      "supported_channels": [
+        "BCA Virtual Account",
+        "Mandiri Virtual Account",
+        "BRI Virtual Account",
+        "GoPay QRIS",
+        "OVO",
+        "DANA"
+      ]
+    }
+  },
+  "password_resets": []
+}

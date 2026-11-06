@@ -12,13 +12,8 @@ export default function Pricing({ onOrderCreated }) {
 
   // State Modal Checkout
   const [selectedPlan, setSelectedPlan] = useState(null);
-<<<<<<< HEAD
-  const [customerName, setCustomerName] = useState(currentUser ? currentUser.name : 'Muhammad Hasran (UMKM Donat)');
-  const [customerEmail, setCustomerEmail] = useState(currentUser ? currentUser.email : 'hasran.donat@gmail.com');
-=======
-  const [customerName, setCustomerName] = useState('Muhammad Hasran (UMKM Donat)');
-  const [customerEmail, setCustomerEmail] = useState('hasran.donat@gmail.com');
->>>>>>> e2e81f391c4379bdef82cb04f6e1e391fed0e7bc
+  const [customerName, setCustomerName] = useState(currentUser?.name || '');
+  const [customerEmail, setCustomerEmail] = useState(currentUser?.email || '');
   const [paymentMethod, setPaymentMethod] = useState('Virtual Account');
   const [paymentChannel, setPaymentChannel] = useState('BCA Virtual Account');
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -26,17 +21,13 @@ export default function Pricing({ onOrderCreated }) {
 
   const API_BASE = 'http://localhost:5000/api';
 
-<<<<<<< HEAD
   // Sinkronisasi data user aktif saat checkout
   useEffect(() => {
     if (currentUser) {
-      setCustomerName(currentUser.name);
-      setCustomerEmail(currentUser.email);
+      setCustomerName(currentUser.name || '');
+      setCustomerEmail(currentUser.email || '');
     }
   }, [currentUser]);
-
-=======
->>>>>>> e2e81f391c4379bdef82cb04f6e1e391fed0e7bc
   // 1. Fetch katalog produk dari backend Node.js menggunakan Axios
   useEffect(() => {
     fetchProducts();
@@ -75,11 +66,7 @@ export default function Pricing({ onOrderCreated }) {
     setIsSubmitting(true);
     try {
       const payload = {
-<<<<<<< HEAD
-        user_id: currentUser ? currentUser.id : 2, // Sesuai user yang login (default: Hasran)
-=======
-        user_id: 2, // Sesuai customer persona LKM (Muhammad Hasran)
->>>>>>> e2e81f391c4379bdef82cb04f6e1e391fed0e7bc
+        user_id: currentUser ? currentUser.id : null,
         plan_id: selectedPlan.id,
         payment_method: selectedPlan.price === 0 || selectedPlan.price === '0.00' ? 'Free Activation' : paymentMethod,
         payment_channel: selectedPlan.price === 0 || selectedPlan.price === '0.00' ? 'System' : paymentChannel

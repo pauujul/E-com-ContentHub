@@ -13,9 +13,9 @@ export default function HomePage() {
         <section className="relative overflow-hidden pt-20 pb-32 px-8">
           <div className="max-w-7xl mx-auto grid lg:grid-cols-2 gap-16 items-center">
             <div className="space-y-8">
-              <div className="inline-flex items-center gap-2 px-3 py-1 bg-primary-fixed text-on-primary-fixed rounded-full text-xs font-bold uppercase tracking-wider">
-                <span className="material-symbols-outlined text-sm" style={{ fontVariationSettings: '"FILL" 1' }}>auto_awesome</span>
-                AI-Powered Content Management
+              <div className="inline-flex items-center gap-2 px-3.5 py-1.5 bg-primary/10 text-primary rounded-full text-xs font-bold uppercase tracking-wider">
+                <span className="material-symbols-outlined text-sm">calendar_month</span>
+                Platform Manajemen Konten Terpadu
               </div>
 
               <h1 className="text-5xl lg:text-6xl font-extrabold tracking-tight text-on-background leading-[1.1]">
@@ -23,7 +23,7 @@ export default function HomePage() {
               </h1>
 
               <p className="text-xl text-on-surface-variant leading-relaxed max-w-xl">
-                Ubah cara Anda mengelola media sosial. Dari ide, perancangan kalender interaktif, hingga template siap pakai Canva—kelola semuanya dalam satu platform terpadu.
+                Ubah cara Anda mengelola media sosial. Dari ide, perancangan kalender interaktif, hingga template siap pakai Canva untuk mengelola semuanya dalam satu platform terpadu.
               </p>
 
               <div className="flex flex-wrap gap-4 pt-4">
@@ -201,7 +201,7 @@ export default function HomePage() {
               Paling Populer untuk UMKM
             </span>
             <h2 className="text-4xl font-extrabold text-on-surface">
-              Paket Starter Hero — Hanya Rp 98.000 / bulan
+              Paket Starter Hero: Hanya Rp 98.000 / bulan
             </h2>
             <p className="text-on-surface-variant max-w-xl mx-auto">
               Dapatkan kalender konten interaktif tanpa batas, 50+ template premium Canva, dan reminder jadwal posting instan.

@@ -4,7 +4,6 @@ import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import api from '../services/api';
 import { useAuth } from '../context/AuthContext';
-
 export default function PricingPage() {
   const [plans, setPlans] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -14,20 +13,28 @@ export default function PricingPage() {
 
   useEffect(() => {
     api.getProducts()
-      .then(res => {
+      .then((res) => {
         if (res.success && res.data) {
-          setPlans(res.data);
+          // Filter out Enterprise and inactive plans
+          const filtered = res.data.filter(
+            (p) => p.sku !== 'CH-ENT-Y' && !p.name?.toLowerCase().includes('enterprise') && p.is_active !== false
+          );
+          setPlans(filtered);
         }
       })
-      .catch(err => {
+      .catch((err) => {
         console.error('Failed to fetch pricing products:', err);
-        setError('Gagal memuat katalog paket langganan.');
+        setError('Gagal memuat katalog paket langganan dari database.');
       })
       .finally(() => setLoading(false));
   }, []);
 
   const handleSelectPlan = (plan) => {
     navigate(`/checkout/${plan.id}`);
+  };
+
+  const handleAddToCart = (plan) => {
+    addToCart(plan);
   };
 
   const formatPrice = (price) => {
@@ -37,26 +44,26 @@ export default function PricingPage() {
   };
 
   return (
-    <div className="min-h-screen bg-surface text-on-surface">
+    <div className="min-h-screen bg-surface text-on-surface flex flex-col justify-between">
       <Navbar />
 
-      <main className="pt-28 pb-24 px-6 md:px-12 max-w-7xl mx-auto">
+      <main className="pt-28 pb-24 px-6 md:px-12 max-w-7xl mx-auto flex-1 w-full">
         <header className="text-center mb-16 space-y-4">
           <span className="text-primary font-bold tracking-widest text-xs uppercase bg-primary-fixed px-3 py-1 rounded-full">
-            Rencana Berlangganan SaaS UMKM
+            Katalog Paket Langganan ContentHub SaaS
           </span>
           <h1 className="text-4xl md:text-5xl font-extrabold tracking-tight text-on-background">
-            Pilih Paket yang Tepat untuk Bisnis Kamu
+            Investasi Cerdas untuk Konten Berkualitas Tinggi
           </h1>
-          <p className="text-on-surface-variant max-w-2xl mx-auto text-lg">
-            Investasi terjangkau untuk perencanaan visual konten berkualitas tinggi yang meningkatkan penjualan dan engagement brand Anda.
+          <p className="text-on-surface-variant max-w-2xl mx-auto text-sm md:text-base">
+            Pilih paket langganan yang transparan sesuai skala usaha Anda. Dilengkapi integrasi penuh kalender editorial interaktif dan ratusan template visual Canva siap pakai.
           </p>
         </header>
 
         {loading ? (
           <div className="text-center py-20">
             <div className="inline-block animate-spin rounded-full h-10 w-10 border-4 border-primary border-t-transparent"></div>
-            <p className="mt-4 text-on-surface-variant text-sm font-semibold">Memuat paket langganan dari database...</p>
+            <p className="mt-4 text-on-surface-variant text-sm font-semibold">Memuat paket langganan dari database PostgreSQL/Neon...</p>
           </div>
         ) : error ? (
           <div className="text-center py-12 bg-red-50 text-red-700 rounded-2xl max-w-xl mx-auto border border-red-200">
@@ -69,22 +76,22 @@ export default function PricingPage() {
             </button>
           </div>
         ) : (
-          <section className="grid grid-cols-1 md:grid-cols-3 gap-8 items-stretch mb-24">
+          <section className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 items-stretch mb-20 max-w-5xl mx-auto justify-center">
             {plans.map((plan) => {
-              const isHero = plan.is_hero || plan.price === '98000.00';
+              const isHero = plan.is_hero || plan.sku === 'CH-START-M';
               const features = Array.isArray(plan.features) ? plan.features : JSON.parse(plan.features || '[]');
 
               return (
                 <div
                   key={plan.id}
-                  className={`relative p-8 rounded-3xl flex flex-col justify-between transition-all duration-300 ${
+                  className={`relative p-7 rounded-3xl flex flex-col justify-between transition-all duration-300 ${
                     isHero
-                      ? 'bg-surface-container-lowest shadow-[0_16px_40px_-6px_rgba(0,93,167,0.15)] border-2 border-primary transform md:scale-105 z-10'
-                      : 'bg-surface-container-lowest border border-outline-variant/15 shadow-sm hover:shadow-md'
+                      ? 'bg-white shadow-[0_16px_40px_-6px_rgba(0,93,167,0.2)] border-2 border-primary z-10'
+                      : 'bg-white border border-outline-variant/20 shadow-sm hover:shadow-lg'
                   }`}
                 >
                   {isHero && (
-                    <div className="absolute -top-4 left-1/2 -translate-x-1/2 bg-gradient-to-r from-primary to-primary-container text-white px-5 py-1 rounded-full text-xs font-bold tracking-wide shadow-md">
+                    <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 bg-gradient-to-r from-primary to-primary-container text-white px-4 py-0.5 rounded-full text-[10px] font-extrabold tracking-wide shadow-md uppercase">
                       {plan.badge || 'PRODUK HERO TERLARIS'}
                     </div>
                   )}
@@ -92,57 +99,49 @@ export default function PricingPage() {
                   <div>
                     <div className="mb-6">
                       <div className="flex justify-between items-center mb-1">
-                        <h3 className="text-2xl font-bold text-on-surface">{plan.name}</h3>
-                        <span className="text-[10px] font-bold uppercase tracking-wider text-outline bg-surface-container-high px-2 py-0.5 rounded">
+                        <h3 className="text-xl font-extrabold text-on-surface">{plan.name}</h3>
+                        <span className="text-[9px] font-extrabold uppercase tracking-wider text-outline bg-surface-container-high px-2 py-0.5 rounded">
                           {plan.sku}
                         </span>
                       </div>
-                      <p className="text-on-surface-variant text-xs min-h-[36px] leading-relaxed">
+                      <p className="text-on-surface-variant text-xs min-h-[48px] leading-relaxed">
                         {plan.description}
                       </p>
                     </div>
 
-                    <div className="mb-8 p-4 bg-surface-container-low rounded-2xl">
-                      <div className="flex items-baseline gap-1">
-                        <span className="text-4xl font-extrabold text-on-surface">{formatPrice(plan.price)}</span>
-                        <span className="text-on-surface-variant text-sm font-semibold">
-                          /{plan.billing_cycle.toLowerCase()}
-                        </span>
-                      </div>
-                      <p className="text-[11px] text-outline mt-1 font-medium">
-                        {parseFloat(plan.price) === 0 ? 'Tanpa kartu kredit' : 'BCA Virtual Account, GoPay, QRIS'}
-                      </p>
+                    <div className="mb-6 p-4 rounded-2xl bg-surface-container-low flex items-baseline gap-1">
+                      <span className="text-2xl font-extrabold text-on-surface">{formatPrice(plan.price)}</span>
+                      <span className="text-xs font-semibold text-outline">
+                        {plan.price === '0.00' ? '' : `/${plan.billing_cycle.toLowerCase()}`}
+                      </span>
                     </div>
 
                     <div className="space-y-3 mb-8">
-                      <span className="text-[11px] font-bold uppercase tracking-wider text-outline block">
-                        Fitur yang Anda dapatkan:
+                      <span className="text-[10px] font-extrabold uppercase tracking-wider text-outline block">
+                        Fitur Termasuk:
                       </span>
-                      <ul className="space-y-3">
-                        {features.map((feature, idx) => (
-                          <li key={idx} className="flex items-start gap-3 text-sm">
-                            <span className="material-symbols-outlined text-green-600 text-lg flex-shrink-0">
-                              check_circle
-                            </span>
-                            <span className={isHero ? 'font-semibold text-on-surface' : 'text-on-surface-variant'}>
-                              {feature}
-                            </span>
+                      <ul className="space-y-2 text-xs">
+                        {features.map((feat, idx) => (
+                          <li key={idx} className="flex items-start gap-2 text-on-surface-variant">
+                            <span className="material-symbols-outlined text-primary text-base flex-shrink-0">check_circle</span>
+                            <span className="leading-tight">{feat}</span>
                           </li>
                         ))}
                       </ul>
                     </div>
                   </div>
 
-                  <div>
+                  <div className="pt-4 border-t border-slate-100">
                     <button
                       onClick={() => handleSelectPlan(plan)}
-                      className={`w-full py-4 px-6 rounded-2xl font-bold text-sm transition-all ${
+                      className={`w-full py-3.5 rounded-xl font-extrabold text-sm transition-all flex items-center justify-center gap-2 cursor-pointer ${
                         isHero
-                          ? 'bg-gradient-primary text-white shadow-lg shadow-primary/25 hover:scale-[1.02] active:scale-95'
-                          : 'bg-surface-container-highest text-on-surface hover:bg-surface-dim'
+                          ? 'bg-gradient-primary text-white shadow-md shadow-primary/20 hover:scale-[1.02] active:scale-95'
+                          : 'bg-primary text-white hover:bg-primary/90'
                       }`}
                     >
-                      {parseFloat(plan.price) === 0 ? 'Mulai Gratis Sekarang' : `Pilih ${plan.name}`}
+                      <span className="material-symbols-outlined text-base">bolt</span>
+                      {plan.price === '0.00' ? 'Aktivasi Gratis' : 'Checkout Sekarang'}
                     </button>
                   </div>
                 </div>
@@ -151,62 +150,19 @@ export default function PricingPage() {
           </section>
         )}
 
-        {/* Feature Comparison Table */}
-        <section className="mb-24">
-          <h2 className="text-3xl font-bold text-center mb-10 text-on-surface">Bandingkan Seluruh Fitur</h2>
-          <div className="overflow-x-auto rounded-3xl bg-surface-container-lowest p-6 shadow-sm border border-outline-variant/15">
-            <table className="w-full text-left border-collapse">
-              <thead>
-                <tr className="border-b border-outline-variant/15">
-                  <th className="py-5 px-4 text-sm font-bold text-on-surface-variant">Fitur Utama Platform</th>
-                  <th className="py-5 px-4 text-sm font-bold text-center">Free (Rp 0)</th>
-                  <th className="py-5 px-4 text-sm font-bold text-center text-primary font-extrabold">
-                    Starter Hero (Rp 98rb)
-                  </th>
-                  <th className="py-5 px-4 text-sm font-bold text-center">Pro Tahunan (Rp 898rb)</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-outline-variant/10 text-sm">
-                <tr>
-                  <td className="py-4 px-4 font-semibold text-on-surface">Kalender Konten Interaktif</td>
-                  <td className="py-4 px-4 text-center">1 Kalender</td>
-                  <td className="py-4 px-4 text-center font-bold text-primary">Drag & Drop Lengkap</td>
-                  <td className="py-4 px-4 text-center font-bold">Multi-Workspace</td>
-                </tr>
-                <tr>
-                  <td className="py-4 px-4 font-semibold text-on-surface">Akses Library Template</td>
-                  <td className="py-4 px-4 text-center">3 Template</td>
-                  <td className="py-4 px-4 text-center font-bold text-primary">50+ Template UMKM</td>
-                  <td className="py-4 px-4 text-center font-bold">200+ Template Premium</td>
-                </tr>
-                <tr>
-                  <td className="py-4 px-4 font-semibold text-on-surface">Integrasi Editor Canva</td>
-                  <td className="py-4 px-4 text-center">Terbatas</td>
-                  <td className="py-4 px-4 text-center font-bold text-primary">1-Click Direct Transition</td>
-                  <td className="py-4 px-4 text-center font-bold">Prioritas High-Res Sync</td>
-                </tr>
-                <tr>
-                  <td className="py-4 px-4 font-semibold text-on-surface">Akun Media Sosial</td>
-                  <td className="py-4 px-4 text-center">1 Akun</td>
-                  <td className="py-4 px-4 text-center font-bold text-primary">Hingga 5 Akun</td>
-                  <td className="py-4 px-4 text-center font-bold">Unlimited</td>
-                </tr>
-                <tr>
-                  <td className="py-4 px-4 font-semibold text-on-surface">Reminder & Notifikasi Jadwal</td>
-                  <td className="py-4 px-4 text-center text-slate-400">—</td>
-                  <td className="py-4 px-4 text-center font-bold text-primary">Aktif 24 Jam</td>
-                  <td className="py-4 px-4 text-center font-bold">Aktif + Analitik</td>
-                </tr>
-                <tr>
-                  <td className="py-4 px-4 font-semibold text-on-surface">Customer Support</td>
-                  <td className="py-4 px-4 text-center">Komunitas</td>
-                  <td className="py-4 px-4 text-center font-bold text-primary">Prioritas WA / CS</td>
-                  <td className="py-4 px-4 text-center font-bold">24/7 Dedicated Manager</td>
-                </tr>
-              </tbody>
-            </table>
+        {/* Customer Care & Assistance Banner */}
+        <div className="p-8 bg-surface-container-low rounded-3xl border border-outline-variant/15 flex flex-col md:flex-row items-center justify-between gap-6 max-w-5xl mx-auto shadow-xs">
+          <div className="space-y-1 text-center md:text-left">
+            <h4 className="text-base font-extrabold text-on-surface">Butuh Bantuan Memilih Paket atau Konsultasi Penggunaan?</h4>
+            <p className="text-xs text-on-surface-variant">Tim Customer Care ContentHub siap mendampingi Anda memaksimalkan perencanaan konten usaha.</p>
           </div>
-        </section>
+          <Link
+            to="/help"
+            className="px-6 py-3 bg-white border border-slate-200 rounded-xl text-xs font-bold text-slate-800 hover:bg-slate-50 transition-colors whitespace-nowrap shadow-xs"
+          >
+            Buka Pusat Bantuan
+          </Link>
+        </div>
       </main>
 
       <Footer />

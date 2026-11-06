@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { api } from '../services/api';
 
 export default function LoginPage() {
   const [email, setEmail] = useState('');
@@ -9,6 +10,18 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
   const [successMsg, setSuccessMsg] = useState('');
+
+  // States untuk Modal Lupa & Reset Kata Sandi
+  const [isForgotModalOpen, setIsForgotModalOpen] = useState(false);
+  const [forgotStep, setForgotStep] = useState(1); // 1 = Input Email, 2 = Input OTP & Password Baru, 3 = Selesai
+  const [forgotEmail, setForgotEmail] = useState('');
+  const [forgotOtp, setForgotOtp] = useState('');
+  const [forgotNewPassword, setForgotNewPassword] = useState('');
+  const [forgotConfirmPassword, setForgotConfirmPassword] = useState('');
+  const [forgotShowPass, setForgotShowPass] = useState(false);
+  const [forgotLoading, setForgotLoading] = useState(false);
+  const [forgotError, setForgotError] = useState('');
+  const [forgotSuccess, setForgotSuccess] = useState('');
 
   const { login } = useAuth();
   const navigate = useNavigate();
@@ -40,6 +53,89 @@ export default function LoginPage() {
       setErrorMsg(err.message || 'Terjadi kesalahan saat login.');
     } finally {
       setLoading(false);
+    }
+  };
+
+  // Buka Modal Reset Password
+  const handleOpenForgotModal = () => {
+    setForgotStep(1);
+    setForgotEmail(email || '');
+    setForgotOtp('');
+    setForgotNewPassword('');
+    setForgotConfirmPassword('');
+    setForgotError('');
+    setForgotSuccess('');
+    setIsForgotModalOpen(true);
+  };
+
+  // Step 1: Kirim Kode OTP ke Gmail
+  const handleRequestOtp = async (e) => {
+    e.preventDefault();
+    if (!forgotEmail) {
+      setForgotError('Harap masukkan alamat email Gmail yang terdaftar.');
+      return;
+    }
+
+    setForgotLoading(true);
+    setForgotError('');
+    setForgotSuccess('');
+
+    try {
+      const res = await api.forgotPassword(forgotEmail);
+      if (res.success) {
+        setForgotSuccess(res.message);
+        setForgotStep(2);
+      } else {
+        throw new Error(res.message || 'Gagal mengirim kode verifikasi.');
+      }
+    } catch (err) {
+      setForgotError(err.response?.data?.message || err.message || 'Gagal mengirim kode ke Gmail.');
+    } finally {
+      setForgotLoading(false);
+    }
+  };
+
+  // Step 2: Verifikasi OTP & Terapkan Sandi Baru
+  const handleResetPassword = async (e) => {
+    e.preventDefault();
+    if (!forgotOtp || !forgotNewPassword) {
+      setForgotError('Kode OTP dan kata sandi baru wajib diisi.');
+      return;
+    }
+
+    if (forgotNewPassword.length < 6) {
+      setForgotError('Kata sandi baru minimal 6 karakter.');
+      return;
+    }
+
+    if (forgotNewPassword !== forgotConfirmPassword) {
+      setForgotError('Konfirmasi kata sandi tidak cocok.');
+      return;
+    }
+
+    setForgotLoading(true);
+    setForgotError('');
+
+    try {
+      const res = await api.resetPassword({
+        email: forgotEmail,
+        otp: forgotOtp,
+        new_password: forgotNewPassword,
+        confirm_password: forgotConfirmPassword,
+      });
+
+      if (res.success) {
+        setForgotSuccess(res.message);
+        setForgotStep(3);
+        setEmail(forgotEmail);
+        setPassword('');
+      } else {
+        throw new Error(res.message || 'Gagal mereset kata sandi.');
+      }
+    } catch (err) {
+      setForgotError(err.response?.data?.message || err.message || 'Kode verifikasi tidak valid atau telah kedaluwarsa.');
+    } finally {
+      setForgotLoading(false);
     }
   };
 
@@ -84,7 +180,7 @@ export default function LoginPage() {
                 </div>
                 <div>
                   <p className="font-semibold text-white">"ContentHub sangat membantu efisiensi tim!"</p>
-                  <p className="text-white/70 text-sm italic">— Sarah, Owner Atelier Bali</p>
+                  <p className="text-white/70 text-sm italic">Sarah, Owner Atelier Bali</p>
                 </div>
               </div>
             </div>
@@ -127,7 +223,6 @@ export default function LoginPage() {
               </div>
             )}
 
-           
             <form onSubmit={handleSubmit} className="space-y-5">
               <div className="space-y-1.5">
                 <label className="text-xs font-bold uppercase tracking-wider text-on-surface-variant" htmlFor="email">
@@ -149,9 +244,13 @@ export default function LoginPage() {
                   <label className="text-xs font-bold uppercase tracking-wider text-on-surface-variant" htmlFor="password">
                     Kata Sandi
                   </label>
-                  <a href="#" className="text-xs font-bold text-primary hover:underline">
+                  <button
+                    type="button"
+                    onClick={handleOpenForgotModal}
+                    className="text-xs font-bold text-primary hover:underline cursor-pointer"
+                  >
                     Lupa Kata Sandi?
-                  </a>
+                  </button>
                 </div>
                 <div className="relative">
                   <input
@@ -204,6 +303,222 @@ export default function LoginPage() {
           </div>
         </section>
       </main>
+
+      {/* ======================================================== */}
+      {/* MODAL RESET KATA SANDI VIA GMAIL SMTP                    */}
+      {/* ======================================================== */}
+      {isForgotModalOpen && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4 animate-in fade-in duration-200"
+          onClick={() => !forgotLoading && setIsForgotModalOpen(false)}
+        >
+          <div
+            className="bg-white w-full max-w-md rounded-3xl shadow-2xl border border-slate-100 overflow-hidden relative"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Header Modal */}
+            <div className="p-6 pb-4 border-b border-slate-100 flex items-start justify-between">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-2xl bg-primary/10 text-primary flex items-center justify-center">
+                  <span className="material-symbols-outlined text-2xl">
+                    {forgotStep === 3 ? 'verified' : forgotStep === 2 ? 'mail_lock' : 'lock_reset'}
+                  </span>
+                </div>
+                <div>
+                  <h3 className="text-lg font-extrabold text-slate-800">
+                    {forgotStep === 1 && 'Lupa Kata Sandi'}
+                    {forgotStep === 2 && 'Verifikasi Kode OTP'}
+                    {forgotStep === 3 && 'Sandi Berhasil Diperbarui'}
+                  </h3>
+                  <span className="text-[11px] text-slate-400 font-medium">Google Gmail SMTP Security</span>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => !forgotLoading && setIsForgotModalOpen(false)}
+                className="w-8 h-8 rounded-full hover:bg-slate-100 flex items-center justify-center text-slate-400 hover:text-slate-700 transition-colors cursor-pointer"
+              >
+                <span className="material-symbols-outlined text-lg">close</span>
+              </button>
+            </div>
+
+            {/* Error & Info Alerts */}
+            {forgotError && (
+              <div className="mx-6 mt-4 p-3.5 bg-red-50 border border-red-200 rounded-xl text-xs font-semibold text-red-700 flex items-center gap-2">
+                <span className="material-symbols-outlined text-base flex-shrink-0">error</span>
+                <span>{forgotError}</span>
+              </div>
+            )}
+
+            {/* Modal Body: STEP 1 - INPUT EMAIL */}
+            {forgotStep === 1 && (
+              <form onSubmit={handleRequestOtp} className="p-6 space-y-4">
+                <p className="text-xs text-slate-600 leading-relaxed">
+                  Masukkan alamat email akun ContentHub Anda. Sistem akan memverifikasi dan mengirimkan <strong>kode OTP 6 digit</strong> via Google Gmail SMTP.
+                </p>
+
+                <div className="space-y-1.5">
+                  <label className="text-xs font-bold uppercase tracking-wider text-slate-500">
+                    Alamat Email Terdaftar
+                  </label>
+                  <input
+                    type="email"
+                    required
+                    value={forgotEmail}
+                    onChange={(e) => setForgotEmail(e.target.value)}
+                    placeholder="nama@gmail.com atau nama@bisnis.com"
+                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-primary focus:bg-white transition-all text-slate-800"
+                  />
+                  <p className="text-[11px] text-slate-400 leading-relaxed">
+                    Catatan: Akun dengan email samaran/asalan tetap bebas dibuat dan login, namun hanya email yang terdaftar resmi di Google Gmail yang dapat menerima notifikasi pesan reset sandi ini.
+                  </p>
+                </div>
+
+                <div className="pt-2">
+                  <button
+                    type="submit"
+                    disabled={forgotLoading}
+                    className="w-full py-3.5 bg-gradient-primary text-white font-bold rounded-xl shadow-md shadow-primary/25 hover:scale-[1.01] active:scale-95 transition-all text-sm flex items-center justify-center gap-2 cursor-pointer"
+                  >
+                    {forgotLoading ? (
+                      <>
+                        <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                        <span>Mengirim Kode ke Gmail...</span>
+                      </>
+                    ) : (
+                      <>
+                        <span className="material-symbols-outlined text-base">send</span>
+                        <span>Kirim Kode Verifikasi ke Gmail</span>
+                      </>
+                    )}
+                  </button>
+                </div>
+              </form>
+            )}
+
+            {/* Modal Body: STEP 2 - INPUT OTP & KATA SANDI BARU */}
+            {forgotStep === 2 && (
+              <form onSubmit={handleResetPassword} className="p-6 space-y-4">
+                <div className="p-3 bg-sky-50 border border-sky-200 rounded-xl flex items-start gap-2.5 text-xs text-sky-800">
+                  <span className="material-symbols-outlined text-sky-600 text-lg flex-shrink-0">mark_email_read</span>
+                  <div>
+                    <p className="font-bold">Kode telah dikirim ke:</p>
+                    <p className="font-mono text-xs font-extrabold text-primary">{forgotEmail}</p>
+                    <p className="text-[11px] text-sky-700/80 mt-1">Periksa kotak masuk (inbox) atau folder spam akun Gmail Anda.</p>
+                  </div>
+                </div>
+
+                <div className="space-y-1.5">
+                  <label className="text-xs font-bold uppercase tracking-wider text-slate-500">
+                    Kode Verifikasi (OTP 6 Digit)
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    maxLength="6"
+                    value={forgotOtp}
+                    onChange={(e) => setForgotOtp(e.target.value.replace(/\D/g, ''))}
+                    placeholder="123456"
+                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-center text-xl font-mono tracking-[8px] font-extrabold focus:ring-2 focus:ring-primary focus:bg-white transition-all text-slate-800"
+                  />
+                </div>
+
+                <div className="space-y-1.5">
+                  <label className="text-xs font-bold uppercase tracking-wider text-slate-500">
+                    Kata Sandi Baru (Min. 6 Karakter)
+                  </label>
+                  <div className="relative">
+                    <input
+                      type={forgotShowPass ? 'text' : 'password'}
+                      required
+                      minLength="6"
+                      value={forgotNewPassword}
+                      onChange={(e) => setForgotNewPassword(e.target.value)}
+                      placeholder="Masukkan kata sandi baru"
+                      className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-primary focus:bg-white transition-all text-slate-800"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setForgotShowPass(!forgotShowPass)}
+                      className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+                    >
+                      <span className="material-symbols-outlined text-base">
+                        {forgotShowPass ? 'visibility_off' : 'visibility'}
+                      </span>
+                    </button>
+                  </div>
+                </div>
+
+                <div className="space-y-1.5">
+                  <label className="text-xs font-bold uppercase tracking-wider text-slate-500">
+                    Konfirmasi Kata Sandi Baru
+                  </label>
+                  <input
+                    type="password"
+                    required
+                    minLength="6"
+                    value={forgotConfirmPassword}
+                    onChange={(e) => setForgotConfirmPassword(e.target.value)}
+                    placeholder="Ulangi kata sandi baru"
+                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-primary focus:bg-white transition-all text-slate-800"
+                  />
+                </div>
+
+                <div className="pt-2 flex flex-col gap-2">
+                  <button
+                    type="submit"
+                    disabled={forgotLoading}
+                    className="w-full py-3.5 bg-gradient-primary text-white font-bold rounded-xl shadow-md shadow-primary/25 hover:scale-[1.01] active:scale-95 transition-all text-sm flex items-center justify-center gap-2 cursor-pointer"
+                  >
+                    {forgotLoading ? (
+                      <>
+                        <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                        <span>Memperbarui Sandi...</span>
+                      </>
+                    ) : (
+                      <>
+                        <span className="material-symbols-outlined text-base">check</span>
+                        <span>Verifikasi & Simpan Kata Sandi</span>
+                      </>
+                    )}
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setForgotStep(1)}
+                    disabled={forgotLoading}
+                    className="w-full py-2 text-xs font-bold text-slate-500 hover:text-slate-700 text-center"
+                  >
+                    Salah alamat email? Ubah Email
+                  </button>
+                </div>
+              </form>
+            )}
+
+            {/* Modal Body: STEP 3 - SUKSES */}
+            {forgotStep === 3 && (
+              <div className="p-8 text-center space-y-4">
+                <div className="w-16 h-16 rounded-full bg-green-100 text-green-600 flex items-center justify-center mx-auto shadow-sm">
+                  <span className="material-symbols-outlined text-3xl">check_circle</span>
+                </div>
+                <div>
+                  <h4 className="text-lg font-bold text-slate-800">Kata Sandi Berhasil Diperbarui!</h4>
+                  <p className="text-xs text-slate-500 mt-1.5 leading-relaxed">
+                    Kata sandi baru Anda telah aktif. Konfirmasi pembaruan keamanan juga telah dikirim ke kotak masuk Gmail Anda.
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setIsForgotModalOpen(false)}
+                  className="w-full py-3.5 bg-primary text-white font-bold rounded-xl shadow-md shadow-primary/25 hover:scale-[1.01] active:scale-95 transition-all text-sm cursor-pointer"
+                >
+                  Masuk Sekarang dengan Sandi Baru
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
