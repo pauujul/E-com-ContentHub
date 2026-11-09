@@ -27,9 +27,9 @@ export default function Navbar({ publicMode = false }) {
     '/transactions',
   ];
 
-  const isNavbarHidden = hiddenNavbarRoutes.some((path) =>
-    location.pathname.startsWith(path)
-  );
+  const isNavbarHidden =
+    !publicMode &&
+    hiddenNavbarRoutes.some((path) => location.pathname.startsWith(path));
 
   if (isNavbarHidden) {
     return null;

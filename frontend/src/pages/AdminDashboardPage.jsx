@@ -529,12 +529,14 @@ export default function AdminDashboardPage() {
               return (
                 <button
                   key={menu.key}
+                  type="button"
                   onClick={() => setActiveMenu(menu.key)}
-                  className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl font-medium text-xs transition-all text-left cursor-pointer ${
+                  className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl font-medium text-xs text-left cursor-pointer transition-colors duration-100 outline-none focus:outline-none focus:ring-0 focus-visible:outline-none active:outline-none select-none border-0 ${
                     isSelected
-                      ? 'bg-primary/10 text-primary font-bold shadow-xs'
+                      ? 'bg-primary/10 text-primary font-bold'
                       : 'text-slate-600 hover:bg-slate-100 hover:text-primary'
                   }`}
+                  style={{ outline: 'none', WebkitTapHighlightColor: 'transparent', boxShadow: 'none' }}
                 >
                   <span className={`material-symbols-outlined text-lg ${isSelected ? 'text-primary font-bold' : 'text-slate-400'}`}>
                     {menu.icon}

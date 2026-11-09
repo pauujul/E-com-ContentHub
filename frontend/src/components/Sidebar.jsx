@@ -53,7 +53,7 @@ export default function Sidebar() {
   };
 
   const navItemClass = (path) => `
-    flex items-center gap-3 px-3.5 py-2.5 rounded-xl font-medium text-sm transition-all
+    flex items-center gap-3 px-3.5 py-2.5 rounded-xl font-medium text-sm transition-colors duration-100 outline-none focus:outline-none focus:ring-0 focus-visible:outline-none border-0 select-none
     ${isActive(path) ? 'bg-primary/10 text-primary font-bold shadow-sm' : 'text-slate-600 hover:bg-slate-100 hover:text-primary'}
   `;
 

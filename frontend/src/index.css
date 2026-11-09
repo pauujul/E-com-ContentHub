@@ -25,6 +25,24 @@
   box-sizing: border-box;
 }
 
+/* Hilangkan kotak outline hitam default browser saat tombol / link diklik agar animasi cepat dan tidak lalot */
+button,
+[role="button"],
+a {
+  outline: none !important;
+  -webkit-tap-highlight-color: transparent !important;
+}
+
+button:focus,
+button:focus-visible,
+button:active,
+a:focus,
+a:focus-visible,
+a:active {
+  outline: none !important;
+  box-shadow: none !important;
+}
+
 body {
   font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   background-color: #f8fafc;

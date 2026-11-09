@@ -105,6 +105,16 @@
         background: rgba(248, 249, 255, 0.85);
         backdrop-filter: blur(24px);
       }
+      /* Hilangkan kotak/outline hitam default browser saat tombol diklik agar animasi instan dan tidak lalot */
+      button, [role="button"], a {
+        outline: none !important;
+        -webkit-tap-highlight-color: transparent !important;
+      }
+      button:focus, button:focus-visible, button:active,
+      a:focus, a:focus-visible, a:active {
+        outline: none !important;
+        box-shadow: none !important;
+      }
     </style>
   </head>
   <body class="bg-surface text-on-surface selection:bg-primary-fixed">
