@@ -11,8 +11,6 @@ export default function UpgradeModal({ isOpen, onClose, config, setStep }) {
   const [loadingPlans, setLoadingPlans] = useState(false);
 
   // Form Pembayaran Checkout di dalam Modal
-  const [paymentCategory, setPaymentCategory] = useState('va'); // 'va' | 'qris'
-  const [paymentChannel, setPaymentChannel] = useState('BCA Virtual Account');
   const [isProcessing, setIsProcessing] = useState(false);
   const [paymentError, setPaymentError] = useState('');
 
@@ -98,9 +96,9 @@ export default function UpgradeModal({ isOpen, onClose, config, setStep }) {
         user_id: currentUser?.id || 1,
         plan_id: activePlan.id,
         customer_name: currentUser?.name || 'Pelanggan ContentHub',
-        customer_email: currentUser?.email || 'user@contenthub.id',
-        payment_method: paymentCategory === 'va' ? 'Virtual Account' : 'E-Wallet / QRIS',
-        payment_channel: paymentChannel,
+        customer_email: currentUser?.email || 'customer@contenthub.id',
+        payment_method: 'Midtrans Gateway',
+        payment_channel: 'Midtrans Snap',
       };
 
       // 1. Buat order di database Neon
@@ -109,29 +107,68 @@ export default function UpgradeModal({ isOpen, onClose, config, setStep }) {
         throw new Error(createRes.message || 'Gagal memproses transaksi upgrade.');
       }
 
-      const orderId = createRes.data.order?.id || createRes.data.id;
+      const orderNumber = createRes.data.order?.order_number || createRes.data.order?.id || createRes.data.id;
 
-      // 2. Simulasi gateway callback: update status menjadi 'Paid' seketika
-      await api.updateOrderStatus(orderId, 'Paid');
+      // 2. Dapatkan token Snap dari Midtrans backend
+      const backendUrl = import.meta.env.VITE_API_URL
+        ? import.meta.env.VITE_API_URL.replace(/\/api\/?$/, '')
+        : 'http://localhost:5000';
 
-      // 3. Pindah ke modal step 4: Success confirmation
-      setStep('success');
+      const midtransRes = await fetch(`${backendUrl}/api/payment/midtrans/create`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ order_id: orderNumber }),
+      });
 
-      // 4. Sinkronisasi status langganan di AuthContext secara realtime
-      await refreshSubscription(currentUser?.id);
+      const midtransData = await midtransRes.json();
 
-      // 5. Jalankan custom callback jika ada
-      if (typeof config.onSuccessCallback === 'function') {
-        config.onSuccessCallback(activePlan);
+      if (!midtransData.success || !midtransData.token) {
+        throw new Error(midtransData.message || 'Gagal membuat transaksi Midtrans');
       }
 
-      // 6. Tutup modal secara otomatis setelah 2 detik
-      setTimeout(() => {
-        onClose();
-      }, 2000);
+      if (typeof window.snap === 'undefined') {
+        throw new Error('Script Midtrans Snap belum termuat. Pastikan koneksi internet aktif dan AdBlocker dinonaktifkan.');
+      }
+
+      // 3. Tampilkan popup interaktif resmi Midtrans Snap (Gambar 2)
+      window.snap.pay(midtransData.token, {
+        onSuccess: async function (res) {
+          try {
+            await fetch(`${backendUrl}/api/orders/${orderNumber}/status`, {
+              method: 'PATCH',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ status: 'Paid' }),
+            });
+          } catch (e) {
+            console.warn('Gagal update status pesanan manual:', e);
+          }
+
+          // Sinkronisasi status langganan di AuthContext secara realtime
+          await refreshSubscription(currentUser?.id);
+
+          // Pindah ke modal step 4: Success confirmation
+          setStep('success');
+
+          // Jalankan custom callback jika ada
+          if (typeof config.onSuccessCallback === 'function') {
+            config.onSuccessCallback(activePlan);
+          }
+        },
+        onPending: function (res) {
+          setPaymentError('Pembayaran masih dalam status menunggu transfer di Midtrans.');
+          setIsProcessing(false);
+        },
+        onError: function (res) {
+          setPaymentError('Pembayaran tidak berhasil diproses oleh Midtrans.');
+          setIsProcessing(false);
+        },
+        onClose: function () {
+          setIsProcessing(false);
+        },
+      });
     } catch (err) {
+      console.error('UpgradeModal Checkout Error:', err);
       setPaymentError(err.response?.data?.message || err.message || 'Terjadi kesalahan sistem saat memproses pembayaran.');
-    } finally {
       setIsProcessing(false);
     }
   };
@@ -382,82 +419,64 @@ export default function UpgradeModal({ isOpen, onClose, config, setStep }) {
               </div>
             </div>
 
-            {/* Pilihan Metode Pembayaran Gateway */}
-            <div className="space-y-3">
-              <label className="text-xs font-extrabold uppercase tracking-wider text-slate-600 block">
-                Pilih Saluran Pembayaran Gateway:
-              </label>
-
-              {/* Tab Category VA vs QRIS */}
-              <div className="grid grid-cols-2 gap-2 p-1 bg-slate-100 rounded-xl">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setPaymentCategory('va');
-                    setPaymentChannel('BCA Virtual Account');
-                  }}
-                  className={`py-2 text-xs font-extrabold rounded-lg transition-all ${
-                    paymentCategory === 'va' ? 'bg-white shadow-xs text-primary' : 'text-slate-500'
-                  }`}
-                >
-                  Virtual Account
-                </button>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setPaymentCategory('qris');
-                    setPaymentChannel('GoPay / QRIS Instant');
-                  }}
-                  className={`py-2 text-xs font-extrabold rounded-lg transition-all ${
-                    paymentCategory === 'qris' ? 'bg-white shadow-xs text-primary' : 'text-slate-500'
-                  }`}
-                >
-                  QRIS / E-Wallet
-                </button>
+            {/* Kartu Gerbang Pembayaran Resmi Midtrans */}
+            <div className="p-5 rounded-2xl border-2 border-primary/20 bg-gradient-to-br from-blue-50/40 via-white to-indigo-50/30 space-y-4">
+              <div className="flex items-start justify-between gap-4">
+                <div className="flex items-center gap-3">
+                  <div className="w-11 h-11 rounded-xl bg-primary/10 text-primary flex items-center justify-center flex-shrink-0">
+                    <span className="material-symbols-outlined text-2xl">account_balance_wallet</span>
+                  </div>
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <span className="text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full bg-primary/10 text-primary">
+                        Gerbang Pembayaran Resmi
+                      </span>
+                      <span className="text-[10px] font-extrabold text-emerald-600 flex items-center gap-1">
+                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                        Verifikasi Otomatis 24/7
+                      </span>
+                    </div>
+                    <h3 className="text-base font-black text-slate-900 mt-1">
+                      Midtrans Payment Gateway
+                    </h3>
+                  </div>
+                </div>
               </div>
 
-              {/* Sub-channel pilihan */}
-              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 pt-1">
-                {paymentCategory === 'va' ? (
-                  ['BCA Virtual Account', 'Mandiri Virtual Account', 'BRI Virtual Account'].map((ch) => (
-                    <button
-                      key={ch}
-                      type="button"
-                      onClick={() => setPaymentChannel(ch)}
-                      className={`p-3 rounded-xl border text-left text-xs font-extrabold transition-all ${
-                        paymentChannel === ch
-                          ? 'border-primary bg-primary/5 text-primary ring-1 ring-primary'
-                          : 'border-slate-200 bg-white text-slate-700 hover:bg-slate-50'
-                      }`}
-                    >
-                      <div className="text-[10px] text-slate-400 font-bold">Bank Transfer</div>
-                      <div>{ch.replace(' Virtual Account', '')}</div>
-                    </button>
-                  ))
-                ) : (
-                  ['GoPay / QRIS Instant', 'OVO Instant Pay', 'ShopeePay QRIS'].map((ch) => (
-                    <button
-                      key={ch}
-                      type="button"
-                      onClick={() => setPaymentChannel(ch)}
-                      className={`p-3 rounded-xl border text-left text-xs font-extrabold transition-all ${
-                        paymentChannel === ch
-                          ? 'border-primary bg-primary/5 text-primary ring-1 ring-primary'
-                          : 'border-slate-200 bg-white text-slate-700 hover:bg-slate-50'
-                      }`}
-                    >
-                      <div className="text-[10px] text-slate-400 font-bold">QRIS Instant</div>
-                      <div>{ch.split(' ')[0]}</div>
-                    </button>
-                  ))
-                )}
+              <p className="text-xs text-slate-500 leading-relaxed">
+                Satu gerbang pembayaran resmi untuk semua metode. Anda dapat memilih metode pembayaran favorit langsung di jendela pembayaran setelah menekan tombol lanjutkan pembayaran.
+              </p>
+
+              {/* Supported methods preview */}
+              <div className="pt-2 border-t border-slate-100">
+                <span className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 block mb-2">
+                  Metode Pembayaran yang Tersedia:
+                </span>
+                <div className="grid grid-cols-2 gap-2 text-[11px] text-slate-600 font-semibold">
+                  <div className="flex items-center gap-2 p-2 rounded-xl bg-white border border-slate-100 shadow-xs">
+                    <span className="material-symbols-outlined text-base text-primary">account_balance</span>
+                    <span>Virtual Account (BCA, Mandiri, BRI, BNI)</span>
+                  </div>
+                  <div className="flex items-center gap-2 p-2 rounded-xl bg-white border border-slate-100 shadow-xs">
+                    <span className="material-symbols-outlined text-base text-emerald-600">qr_code_2</span>
+                    <span>QRIS & E-Wallet (GoPay, dll.)</span>
+                  </div>
+                  <div className="flex items-center gap-2 p-2 rounded-xl bg-white border border-slate-100 shadow-xs">
+                    <span className="material-symbols-outlined text-base text-indigo-600">credit_card</span>
+                    <span>Kartu Kredit / Debit</span>
+                  </div>
+                  <div className="flex items-center gap-2 p-2 rounded-xl bg-white border border-slate-100 shadow-xs">
+                    <span className="material-symbols-outlined text-base text-amber-600">storefront</span>
+                    <span>Gerai Ritel (Indomaret, Alfamart)</span>
+                  </div>
+                </div>
               </div>
             </div>
 
-            {/* Info Keamanan & Integrasi */}
-            <div className="flex items-center gap-2 text-[11px] text-slate-400 bg-emerald-50/50 p-2.5 rounded-xl border border-emerald-100">
-              <span className="material-symbols-outlined text-sm text-emerald-600">lock</span>
-              <span>Transaksi aman & terenkripsi otomatis. Akses fitur langsung aktif seketika di workspace.</span>
+            {/* Info Keamanan */}
+            <div className="flex items-center gap-2 text-[11px] text-slate-500 bg-emerald-50/70 p-3 rounded-xl border border-emerald-100">
+              <span className="material-symbols-outlined text-base text-emerald-600">verified_user</span>
+              <span>Transaksi aman & terenkripsi. Paket langsung aktif setelah pembayaran berhasil.</span>
             </div>
 
             {/* Tombol Eksekusi Bayar */}
@@ -466,7 +485,7 @@ export default function UpgradeModal({ isOpen, onClose, config, setStep }) {
                 type="button"
                 onClick={() => setStep('pricing')}
                 disabled={isProcessing}
-                className="py-3 px-4 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl font-bold text-xs transition-colors"
+                className="py-3 px-5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl font-bold text-xs transition-colors"
               >
                 Batal
               </button>
@@ -479,12 +498,11 @@ export default function UpgradeModal({ isOpen, onClose, config, setStep }) {
                 {isProcessing ? (
                   <>
                     <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                    <span>Memproses Transaksi Gateway...</span>
+                    <span>Membuka Jendela Pembayaran Midtrans...</span>
                   </>
                 ) : (
                   <>
-                    <span>Bayar & Aktifkan Paket ({paymentChannel.split(' ')[0]})</span>
-                    <span className="material-symbols-outlined text-sm">verified</span>
+                    <span>Lanjutkan Pembayaran via Midtrans →</span>
                   </>
                 )}
               </button>

@@ -1567,13 +1567,16 @@ app.patch('/api/orders/:id/status', async (req, res) => {
       });
     }
 
+    const orderIdNum = !isNaN(parseInt(id, 10)) ? parseInt(id, 10) : -1;
+    const orderIdStr = String(id);
+
     const query = `
       UPDATE orders 
       SET status = $1, paid_at = $2
-      WHERE id = $3 OR order_number = $3
+      WHERE id = $3 OR order_number = $4
       RETURNING *;
     `;
-    const result = await db.query(query, [status, paidAt, id]);
+    const result = await db.query(query, [status, paidAt, orderIdNum, orderIdStr]);
     if (result.rows.length === 0) {
       return res.status(404).json({ success: false, message: 'Order tidak ditemukan' });
     }
