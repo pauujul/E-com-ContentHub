@@ -3,6 +3,65 @@ import { Link, useNavigate } from 'react-router-dom';
 import api from '../services/api';
 import { useAuth } from '../context/AuthContext';
 
+// Default fallback plans if API/database is slow or offline
+const defaultPlans = [
+  {
+    id: 1,
+    sku: 'CH-FREE',
+    name: 'ContentHub Free',
+    description: 'Paket awal tanpa biaya untuk UMKM yang baru mulai merencanakan dan menjadwalkan konten media sosial.',
+    price: '0.00',
+    billing_cycle: 'Free',
+    badge: 'Akses Gratis',
+    is_hero: false,
+    features: [
+      'Maksimal 3 Agenda Konten / Minggu',
+      'Template Library Basic (Free)',
+      '1 Akun Media Sosial',
+      'Export Kalender ke Gambar',
+      'Komunitas UMKM',
+    ],
+  },
+  {
+    id: 2,
+    sku: 'CH-PRO-3M',
+    name: 'ContentHub Pro',
+    description: 'Solusi paling praktis dan terlaris bagi pelaku UMKM yang membutuhkan kalender interaktif drag-and-drop dan puluhan template Canva siap pakai.',
+    price: '199000.00',
+    billing_cycle: '3 Bulan',
+    badge: 'Paling Sesuai untuk UMKM',
+    is_hero: true,
+    features: [
+      'Semua Fitur Paket Trial Free',
+      'Kalender Drag & Drop Interaktif Penuh',
+      '50+ Library Template Konten Siap Pakai',
+      'Direct Integration & Editor Canva Pro',
+      'Pengingat Jadwal Posting (Email Alert)',
+      'Hingga 5 Akun Media Sosial Terhubung',
+      'Customer Support Prioritas via WhatsApp',
+    ],
+  },
+  {
+    id: 3,
+    sku: 'CH-PLUS-1Y',
+    name: 'ContentHub Plus',
+    description: 'Paket komprehensif tahunan untuk UMKM berkembang dengan frekuensi konten tinggi, multi-admin, dan analitik jadwal posting.',
+    price: '699000.00',
+    billing_cycle: '1 Tahun',
+    badge: 'Paling Hemat',
+    is_hero: false,
+    features: [
+      'Semua Fitur Starter Bulanan',
+      'Akses 200+ Template Premium Canva',
+      'Akun Media Sosial Tanpa Batas',
+      'Analytics & Estimasi Performa Jadwal',
+      'Persiapan Integrasi AI Copywriting Assistant',
+      'Dukungan Multi-User Team (Hingga 3 Orang)',
+      'Hemat 24% Dibandingkan Bayar Bulanan',
+    ],
+  },
+];
+
 /**
  * Reusable 3-Tier Pricing Component for ContentHub
  * Connected dynamically to Neon PostgreSQL / database subscription_plans table.
@@ -23,28 +82,40 @@ export default function PricingSection({
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const { currentUser } = useAuth();
-  const navigate = useNavigate();
+
+  // Safe navigation hook in case router context is missing
+  let navigate = null;
+  try {
+    navigate = useNavigate();
+  } catch (e) {
+    navigate = null;
+  }
 
   const fetchPlans = () => {
     setLoading(true);
     setError(null);
     api.getProducts()
       .then((res) => {
-        if (res.success && Array.isArray(res.data)) {
+        if (res.success && Array.isArray(res.data) && res.data.length > 0) {
           // Filter out Enterprise and inactive plans to maintain the 3-Tier layout (Free, Pro, Plus)
           const filtered = res.data.filter(
             (p) => p.sku !== 'CH-ENT-Y' && !p.name?.toLowerCase().includes('enterprise') && p.is_active !== false
           );
           // Sort by price ascending: Free (Rp 0), Pro (Rp 199.000), Plus (Rp 699.000)
           filtered.sort((a, b) => parseFloat(a.price) - parseFloat(b.price));
-          setPlans(filtered);
+          if (filtered.length > 0) {
+            setPlans(filtered);
+          } else {
+            setPlans(defaultPlans);
+          }
         } else {
-          setError('Format data paket langganan tidak sesuai.');
+          setPlans(defaultPlans);
         }
       })
       .catch((err) => {
         console.error('Failed to fetch pricing products:', err);
-        setError('Gagal memuat katalog paket langganan dari database PostgreSQL/Neon.');
+        // Fallback to default plans so user never sees empty screen
+        setPlans(defaultPlans);
       })
       .finally(() => setLoading(false));
   };
@@ -58,11 +129,15 @@ export default function PricingSection({
       onSelectPlan(plan);
       return;
     }
-    if (!currentUser) {
-      navigate(`/login?redirect=${encodeURIComponent(`/checkout/${plan.id}`)}`);
-      return;
+    const targetUrl = !currentUser
+      ? `/login?redirect=${encodeURIComponent(`/checkout/${plan.id}`)}`
+      : `/checkout/${plan.id}`;
+
+    if (navigate) {
+      navigate(targetUrl);
+    } else {
+      window.location.href = targetUrl;
     }
-    navigate(`/checkout/${plan.id}`);
   };
 
   const formatPrice = (price) => {
@@ -126,7 +201,7 @@ export default function PricingSection({
         )}
 
         {/* 3-Tier Pricing Cards Grid */}
-        {!loading && !error && (
+        {!loading && (
           <div
             className={`items-stretch justify-center ${
               compact
@@ -134,7 +209,7 @@ export default function PricingSection({
                 : 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mb-16 max-w-5xl mx-auto'
             }`}
           >
-            {plans.map((plan) => {
+            {(plans.length > 0 ? plans : defaultPlans).map((plan) => {
               // Highlight Pro card in the center with distinctive blue border and elevated elevation
               const isHero = Boolean(
                 plan.is_hero ||
@@ -282,12 +357,21 @@ export default function PricingSection({
                 Tim Customer Care ContentHub siap mendampingi Anda memaksimalkan perencanaan konten usaha.
               </p>
             </div>
-            <Link
-              to="/help"
-              className="px-6 py-3 bg-white border border-slate-200 rounded-xl text-xs font-bold text-slate-800 hover:bg-slate-50 transition-colors whitespace-nowrap shadow-xs"
-            >
-              Buka Pusat Bantuan
-            </Link>
+            {navigate ? (
+              <Link
+                to="/help"
+                className="px-6 py-3 bg-white border border-slate-200 rounded-xl text-xs font-bold text-slate-800 hover:bg-slate-50 transition-colors whitespace-nowrap shadow-xs"
+              >
+                Buka Pusat Bantuan
+              </Link>
+            ) : (
+              <a
+                href="/help"
+                className="px-6 py-3 bg-white border border-slate-200 rounded-xl text-xs font-bold text-slate-800 hover:bg-slate-50 transition-colors whitespace-nowrap shadow-xs"
+              >
+                Buka Pusat Bantuan
+              </a>
+            )}
           </div>
         )}
       </div>

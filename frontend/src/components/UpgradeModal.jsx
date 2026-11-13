@@ -240,7 +240,13 @@ export default function UpgradeModal({ isOpen, onClose, config, setStep }) {
               </div>
               <button
                 type="button"
-                onClick={() => setStep('limit')}
+                onClick={() => {
+                  if (reason && reason !== 'upgrade_button') {
+                    setStep('limit');
+                  } else {
+                    onClose();
+                  }
+                }}
                 className="text-xs font-bold text-slate-500 hover:text-slate-800 flex items-center gap-1 transition-colors px-3 py-1.5 rounded-xl hover:bg-slate-100 cursor-pointer"
               >
                 <span className="material-symbols-outlined text-sm">arrow_back</span>

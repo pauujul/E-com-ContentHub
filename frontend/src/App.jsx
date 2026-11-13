@@ -67,204 +67,204 @@ function AdminRoute({ children }) {
 
 export default function App() {
   return (
-    <AuthProvider>
-      <UpgradeModalProvider>
-        <ScheduleProvider>
-          <CartProvider>
-            <BrowserRouter>
+    <BrowserRouter>
+      <AuthProvider>
+        <UpgradeModalProvider>
+          <ScheduleProvider>
+            <CartProvider>
               <CartDrawer />
               <Routes>
-            {/* 1. Public Marketing Pages */}
-            <Route path="/" element={<HomePage />} />
-            <Route path="/home" element={<HomePage />} />
-            <Route path="/about" element={<AboutPage />} />
-            <Route path="/pricing" element={<PricingPage />} />
-            <Route path="/help" element={<HelpCenterPage />} />
-            <Route path="/terms" element={<TermsPage />} />
-            <Route path="/syarat-ketentuan" element={<TermsPage />} />
-            <Route path="/privacy" element={<PrivacyPage />} />
-            <Route path="/kebijakan-privasi" element={<PrivacyPage />} />
-            <Route path="/partnership" element={<PartnershipPage />} />
-            <Route path="/kerja-sama" element={<PartnershipPage />} />
-            <Route path="/blog" element={<BlogPage />} />
+                {/* 1. Public Marketing Pages */}
+                <Route path="/" element={<HomePage />} />
+                <Route path="/home" element={<HomePage />} />
+                <Route path="/about" element={<AboutPage />} />
+                <Route path="/pricing" element={<PricingPage />} />
+                <Route path="/help" element={<HelpCenterPage />} />
+                <Route path="/terms" element={<TermsPage />} />
+                <Route path="/syarat-ketentuan" element={<TermsPage />} />
+                <Route path="/privacy" element={<PrivacyPage />} />
+                <Route path="/kebijakan-privasi" element={<PrivacyPage />} />
+                <Route path="/partnership" element={<PartnershipPage />} />
+                <Route path="/kerja-sama" element={<PartnershipPage />} />
+                <Route path="/blog" element={<BlogPage />} />
 
-            {/* 2. Authentication & User Profile */}
-            <Route path="/login" element={<LoginPage />} />
-            <Route path="/register" element={<RegisterPage />} />
-            <Route
-              path="/profile"
-              element={
-                <ProtectedRoute>
-                  <UserProfilePage />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/switch-account"
-              element={
-                <ProtectedRoute>
-                  <SwitchAccountPage />
-                </ProtectedRoute>
-              }
-            />
+                {/* 2. Authentication & User Profile */}
+                <Route path="/login" element={<LoginPage />} />
+                <Route path="/register" element={<RegisterPage />} />
+                <Route
+                  path="/profile"
+                  element={
+                    <ProtectedRoute>
+                      <UserProfilePage />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/switch-account"
+                  element={
+                    <ProtectedRoute>
+                      <SwitchAccountPage />
+                    </ProtectedRoute>
+                  }
+                />
 
-            {/* 3. Dashboard & Scheduling Calendar Suite */}
-            <Route
-              path="/dashboard"
-              element={
-                <ProtectedRoute>
-                  <DashboardPage />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/calendar"
-              element={
-                <ProtectedRoute>
-                  <CalendarPage />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/calendar/agenda"
-              element={
-                <ProtectedRoute>
-                  <AgendaDetailPage />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/calendar/agenda/:id"
-              element={
-                <ProtectedRoute>
-                  <AgendaDetailPage />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/calendar/drag-drop"
-              element={
-                <ProtectedRoute>
-                  <DragDropContentPage />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/calendar/pick-date"
-              element={
-                <ProtectedRoute>
-                  <PickDatePage />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/calendar/set-time"
-              element={
-                <ProtectedRoute>
-                  <SetTimePage />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/calendar/edit-schedule"
-              element={
-                <ProtectedRoute>
-                  <EditSchedulePage />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/calendar/add-label"
-              element={
-                <ProtectedRoute>
-                  <AddLabelPage />
-                </ProtectedRoute>
-              }
-            />
+                {/* 3. Dashboard & Scheduling Calendar Suite */}
+                <Route
+                  path="/dashboard"
+                  element={
+                    <ProtectedRoute>
+                      <DashboardPage />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/calendar"
+                  element={
+                    <ProtectedRoute>
+                      <CalendarPage />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/calendar/agenda"
+                  element={
+                    <ProtectedRoute>
+                      <AgendaDetailPage />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/calendar/agenda/:id"
+                  element={
+                    <ProtectedRoute>
+                      <AgendaDetailPage />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/calendar/drag-drop"
+                  element={
+                    <ProtectedRoute>
+                      <DragDropContentPage />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/calendar/pick-date"
+                  element={
+                    <ProtectedRoute>
+                      <PickDatePage />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/calendar/set-time"
+                  element={
+                    <ProtectedRoute>
+                      <SetTimePage />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/calendar/edit-schedule"
+                  element={
+                    <ProtectedRoute>
+                      <EditSchedulePage />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/calendar/add-label"
+                  element={
+                    <ProtectedRoute>
+                      <AddLabelPage />
+                    </ProtectedRoute>
+                  }
+                />
 
-            {/* 4. Templates & Canva Integration Suite */}
-            <Route
-              path="/templates"
-              element={
-                <ProtectedRoute>
-                  <TemplatesPage />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/templates/search"
-              element={
-                <ProtectedRoute>
-                  <SearchTemplatePage />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/templates/results"
-              element={
-                <ProtectedRoute>
-                  <SearchResultsPage />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/templates/preview"
-              element={
-                <ProtectedRoute>
-                  <PreviewTemplatePage />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/templates/preview/:id"
-              element={
-                <ProtectedRoute>
-                  <PreviewTemplatePage />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/templates/add"
-              element={
-                <ProtectedRoute>
-                  <AddTemplatePage />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/templates/canva-transition"
-              element={
-                <ProtectedRoute>
-                  <CanvaTransitionPage />
-                </ProtectedRoute>
-              }
-            />
+                {/* 4. Templates & Canva Integration Suite */}
+                <Route
+                  path="/templates"
+                  element={
+                    <ProtectedRoute>
+                      <TemplatesPage />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/templates/search"
+                  element={
+                    <ProtectedRoute>
+                      <SearchTemplatePage />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/templates/results"
+                  element={
+                    <ProtectedRoute>
+                      <SearchResultsPage />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/templates/preview"
+                  element={
+                    <ProtectedRoute>
+                      <PreviewTemplatePage />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/templates/preview/:id"
+                  element={
+                    <ProtectedRoute>
+                      <PreviewTemplatePage />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/templates/add"
+                  element={
+                    <ProtectedRoute>
+                      <AddTemplatePage />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/templates/canva-transition"
+                  element={
+                    <ProtectedRoute>
+                      <CanvaTransitionPage />
+                    </ProtectedRoute>
+                  }
+                />
 
-            {/* 5. Checkout, Payments & Transactions Suite */}
-            <Route path="/checkout" element={<PaymentMethodPage />} />
-            <Route path="/checkout/:planId" element={<PaymentMethodPage />} />
-            <Route path="/payment-confirmation" element={<PaymentConfirmationPage />} />
-            <Route path="/payment-confirmation/:orderNumber" element={<PaymentConfirmationPage />} />
-            <Route path="/transactions" element={<TransactionDetailPage />} />
-            <Route path="/transactions/:orderNumber" element={<TransactionDetailPage />} />
+                {/* 5. Checkout, Payments & Transactions Suite */}
+                <Route path="/checkout" element={<PaymentMethodPage />} />
+                <Route path="/checkout/:planId" element={<PaymentMethodPage />} />
+                <Route path="/payment-confirmation" element={<PaymentConfirmationPage />} />
+                <Route path="/payment-confirmation/:orderNumber" element={<PaymentConfirmationPage />} />
+                <Route path="/transactions" element={<TransactionDetailPage />} />
+                <Route path="/transactions/:orderNumber" element={<TransactionDetailPage />} />
 
-            {/* 6. Admin Panel (Role-Protected) */}
-            <Route
-              path="/admin"
-              element={
-                <AdminRoute>
-                  <AdminDashboardPage />
-                </AdminRoute>
-              }
-            />
+                {/* 6. Admin Panel (Role-Protected) */}
+                <Route
+                  path="/admin"
+                  element={
+                    <AdminRoute>
+                      <AdminDashboardPage />
+                    </AdminRoute>
+                  }
+                />
 
-            {/* Fallback */}
-            <Route path="*" element={<Navigate to="/" replace />} />
-          </Routes>
-        </BrowserRouter>
-          </CartProvider>
-        </ScheduleProvider>
-      </UpgradeModalProvider>
-    </AuthProvider>
+                {/* Fallback */}
+                <Route path="*" element={<Navigate to="/" replace />} />
+              </Routes>
+            </CartProvider>
+          </ScheduleProvider>
+        </UpgradeModalProvider>
+      </AuthProvider>
+    </BrowserRouter>
   );
 }
