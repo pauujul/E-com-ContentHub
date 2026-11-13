@@ -1352,9 +1352,12 @@ app.post('/api/payment/midtrans/create', async (req, res) => {
     if (store) {
       order = store.orders.find(o => o.order_number === order_id || o.id === parseInt(order_id, 10));
     } else {
-      const isNumeric = !isNaN(parseInt(order_id, 10));
-      const query = `SELECT * FROM orders WHERE ${isNumeric ? 'id = $1 OR order_number = $1' : 'order_number = $1'}`;
-      const result = await db.query(query, [order_id]);
+      const isNumeric = !isNaN(parseInt(order_id, 10)) && /^\d+$/.test(String(order_id).trim());
+      const query = isNumeric
+        ? `SELECT * FROM orders WHERE id = $1 OR order_number = $2`
+        : `SELECT * FROM orders WHERE order_number = $1`;
+      const params = isNumeric ? [parseInt(order_id, 10), String(order_id)] : [String(order_id)];
+      const result = await db.query(query, params);
       if (result.rows.length > 0) order = result.rows[0];
     }
 
@@ -1368,8 +1371,8 @@ app.post('/api/payment/midtrans/create', async (req, res) => {
         gross_amount: Math.round(parseFloat(order.total_amount)), // Midtrans butuh integer
       },
       customer_details: {
-        first_name: order.customer_name,
-        email: order.customer_email,
+        first_name: order.customer_name || 'Pelanggan ContentHub',
+        email: order.customer_email || 'customer@contenthub.id',
       }
     };
 
