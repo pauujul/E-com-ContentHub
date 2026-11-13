@@ -71,25 +71,6 @@ export default function Navbar({ publicMode = false }) {
         </nav>
 
         <div className="flex items-center gap-2.5 sm:gap-3 flex-shrink-0">
-
-          {activeUser && (
-            <button
-              onClick={() => setIsCartOpen(true)}
-              className="relative p-2 rounded-xl text-slate-700 hover:text-primary hover:bg-slate-100 transition-colors flex items-center justify-center cursor-pointer"
-              title="Buka Keranjang Belanja"
-            >
-              <span className="material-symbols-outlined text-2xl">
-                shopping_cart
-              </span>
-
-              {cartCount > 0 && (
-                <span className="absolute -top-1 -right-1 bg-red-600 text-white text-[10px] font-extrabold w-5 h-5 rounded-full flex items-center justify-center shadow-sm animate-pulse">
-                  {cartCount}
-                </span>
-              )}
-            </button>
-          )}
-
           {activeUser ? (
             <Link
               to="/dashboard"
@@ -148,21 +129,6 @@ export default function Navbar({ publicMode = false }) {
           </Link>
 
           <div className="pt-3 border-t border-slate-100 flex flex-col gap-2">
-            {activeUser && (
-              <button
-                onClick={() => {
-                  setMobileMenuOpen(false);
-                  setIsCartOpen(true);
-                }}
-                className="w-full text-left py-2 text-xs font-bold text-primary flex items-center justify-between"
-              >
-                <span>Lihat Keranjang Belanja</span>
-                <span className="bg-primary text-white text-[10px] px-2 py-0.5 rounded-full">
-                  {cartCount} Item
-                </span>
-              </button>
-            )}
-
             {!activeUser && (
               <>
                 <Link

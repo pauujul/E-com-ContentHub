@@ -176,8 +176,8 @@ export default function UpgradeModal({ isOpen, onClose, config, setStep }) {
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-md animate-in fade-in duration-200">
-      <div className="relative w-full max-w-2xl bg-white rounded-3xl shadow-2xl border border-slate-200 overflow-hidden text-slate-800 transition-all duration-300">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-900/60 backdrop-blur-md animate-in fade-in duration-200">
+      <div className="relative w-full max-w-xl bg-white rounded-2xl sm:rounded-3xl shadow-2xl border border-slate-200 overflow-hidden text-slate-800 transition-all duration-300 max-h-[92vh] flex flex-col">
         
         {/* Tombol Close */}
         <button
@@ -381,11 +381,11 @@ export default function UpgradeModal({ isOpen, onClose, config, setStep }) {
 
         {/* STEP 3: IN-WORKSPACE PAYMENT CHECKOUT MODAL */}
         {step === 'checkout' && activePlan && (
-          <div className="p-6 sm:p-8 space-y-6">
-            <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+          <div className="p-4 sm:p-5 space-y-3 overflow-y-auto">
+            <div className="flex items-center justify-between pb-2 border-b border-slate-100">
               <div>
-                <span className="text-[10px] font-extrabold uppercase tracking-widest text-primary">Langkah 2 dari 2</span>
-                <h2 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">Konfirmasi Pembayaran</h2>
+                <span className="text-[9px] font-extrabold uppercase tracking-widest text-primary">Langkah 2 dari 2</span>
+                <h2 className="text-base sm:text-lg font-black text-slate-900 tracking-tight">Konfirmasi Pembayaran</h2>
               </div>
               <button
                 type="button"
@@ -398,94 +398,90 @@ export default function UpgradeModal({ isOpen, onClose, config, setStep }) {
             </div>
 
             {paymentError && (
-              <div className="p-3 bg-red-50 text-red-700 border border-red-200 rounded-xl text-xs font-bold flex items-center gap-2">
-                <span className="material-symbols-outlined text-base">error</span>
+              <div className="p-2.5 bg-red-50 text-red-700 border border-red-200 rounded-xl text-xs font-bold flex items-center gap-2">
+                <span className="material-symbols-outlined text-sm">error</span>
                 <span>{paymentError}</span>
               </div>
             )}
 
             {/* Ringkasan Paket Terpilih */}
-            <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200 flex items-center justify-between">
+            <div className="p-3 rounded-xl bg-slate-50 border border-slate-200 flex items-center justify-between">
               <div>
-                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Paket Dipilih:</span>
-                <div className="font-black text-slate-900 text-base">{activePlan.name}</div>
-                <span className="text-xs text-primary font-bold">Masa Aktif: {activePlan.billing_cycle}</span>
+                <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider block">Paket Dipilih:</span>
+                <div className="font-black text-slate-900 text-sm">{activePlan.name}</div>
+                <span className="text-[11px] text-primary font-bold">Masa Aktif: {activePlan.billing_cycle}</span>
               </div>
               <div className="text-right">
-                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Total Tagihan:</span>
-                <div className="font-black text-lg text-slate-900">
+                <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider block">Total Tagihan:</span>
+                <div className="font-black text-base text-slate-900">
                   Rp {parseFloat(activePlan.price).toLocaleString('id-ID')}
                 </div>
               </div>
             </div>
 
             {/* Kartu Gerbang Pembayaran Resmi Midtrans */}
-            <div className="p-5 rounded-2xl border-2 border-primary/20 bg-gradient-to-br from-blue-50/40 via-white to-indigo-50/30 space-y-4">
-              <div className="flex items-start justify-between gap-4">
-                <div className="flex items-center gap-3">
-                  <div className="w-11 h-11 rounded-xl bg-primary/10 text-primary flex items-center justify-center flex-shrink-0">
-                    <span className="material-symbols-outlined text-2xl">account_balance_wallet</span>
+            <div className="p-3.5 rounded-xl border border-primary/20 bg-gradient-to-br from-blue-50/40 via-white to-indigo-50/30 space-y-2.5">
+              <div className="flex items-center justify-between gap-3">
+                <div className="flex items-center gap-2.5">
+                  <div className="w-8 h-8 rounded-lg bg-primary/10 text-primary flex items-center justify-center flex-shrink-0">
+                    <span className="material-symbols-outlined text-xl">account_balance_wallet</span>
                   </div>
                   <div>
-                    <div className="flex items-center gap-2">
-                      <span className="text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full bg-primary/10 text-primary">
-                        Gerbang Pembayaran Resmi
-                      </span>
-                      <span className="text-[10px] font-extrabold text-emerald-600 flex items-center gap-1">
-                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
-                        Verifikasi Otomatis 24/7
-                      </span>
-                    </div>
-                    <h3 className="text-base font-black text-slate-900 mt-1">
+                    <h3 className="text-xs sm:text-sm font-black text-slate-900 leading-tight">
                       Midtrans Payment Gateway
                     </h3>
+                    <p className="text-[10px] text-slate-400 font-medium">Gerbang Pembayaran Resmi</p>
                   </div>
                 </div>
+                <span className="text-[9px] font-extrabold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200 flex items-center gap-1">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                  Verifikasi Otomatis 24/7
+                </span>
               </div>
 
-              <p className="text-xs text-slate-500 leading-relaxed">
-                Satu gerbang pembayaran resmi untuk semua metode. Anda dapat memilih metode pembayaran favorit langsung di jendela pembayaran setelah menekan tombol lanjutkan pembayaran.
+              <p className="text-[11px] text-slate-500 leading-relaxed">
+                Pilih metode pembayaran (QRIS, VA BCA/Mandiri/BRI/BNI, GoPay, Kartu Kredit) langsung di jendela pembayaran aman Midtrans.
               </p>
 
               {/* Supported methods preview */}
               <div className="pt-2 border-t border-slate-100">
-                <span className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 block mb-2">
+                <span className="text-[9px] font-extrabold uppercase tracking-wider text-slate-400 block mb-1.5">
                   Metode Pembayaran yang Tersedia:
                 </span>
-                <div className="grid grid-cols-2 gap-2 text-[11px] text-slate-600 font-semibold">
-                  <div className="flex items-center gap-2 p-2 rounded-xl bg-white border border-slate-100 shadow-xs">
-                    <span className="material-symbols-outlined text-base text-primary">account_balance</span>
-                    <span>Virtual Account (BCA, Mandiri, BRI, BNI)</span>
+                <div className="grid grid-cols-2 gap-1.5 text-[10px] text-slate-600 font-semibold">
+                  <div className="flex items-center gap-1.5 p-1.5 rounded-lg bg-white border border-slate-100 shadow-2xs">
+                    <span className="material-symbols-outlined text-xs text-primary">account_balance</span>
+                    <span className="truncate">Virtual Account (BCA, Mandiri, BRI, BNI)</span>
                   </div>
-                  <div className="flex items-center gap-2 p-2 rounded-xl bg-white border border-slate-100 shadow-xs">
-                    <span className="material-symbols-outlined text-base text-emerald-600">qr_code_2</span>
-                    <span>QRIS & E-Wallet (GoPay, dll.)</span>
+                  <div className="flex items-center gap-1.5 p-1.5 rounded-lg bg-white border border-slate-100 shadow-2xs">
+                    <span className="material-symbols-outlined text-xs text-emerald-600">qr_code_2</span>
+                    <span className="truncate">QRIS & E-Wallet (GoPay, dll.)</span>
                   </div>
-                  <div className="flex items-center gap-2 p-2 rounded-xl bg-white border border-slate-100 shadow-xs">
-                    <span className="material-symbols-outlined text-base text-indigo-600">credit_card</span>
-                    <span>Kartu Kredit / Debit</span>
+                  <div className="flex items-center gap-1.5 p-1.5 rounded-lg bg-white border border-slate-100 shadow-2xs">
+                    <span className="material-symbols-outlined text-xs text-indigo-600">credit_card</span>
+                    <span className="truncate">Kartu Kredit / Debit</span>
                   </div>
-                  <div className="flex items-center gap-2 p-2 rounded-xl bg-white border border-slate-100 shadow-xs">
-                    <span className="material-symbols-outlined text-base text-amber-600">storefront</span>
-                    <span>Gerai Ritel (Indomaret, Alfamart)</span>
+                  <div className="flex items-center gap-1.5 p-1.5 rounded-lg bg-white border border-slate-100 shadow-2xs">
+                    <span className="material-symbols-outlined text-xs text-amber-600">storefront</span>
+                    <span className="truncate">Gerai Ritel (Indomaret, Alfamart)</span>
                   </div>
                 </div>
               </div>
             </div>
 
             {/* Info Keamanan */}
-            <div className="flex items-center gap-2 text-[11px] text-slate-500 bg-emerald-50/70 p-3 rounded-xl border border-emerald-100">
-              <span className="material-symbols-outlined text-base text-emerald-600">verified_user</span>
+            <div className="flex items-center gap-2 text-[10px] text-slate-500 bg-emerald-50/70 py-2 px-3 rounded-xl border border-emerald-100">
+              <span className="material-symbols-outlined text-xs text-emerald-600">verified_user</span>
               <span>Transaksi aman & terenkripsi. Paket langsung aktif setelah pembayaran berhasil.</span>
             </div>
 
             {/* Tombol Eksekusi Bayar */}
-            <div className="flex items-center gap-3 pt-2">
+            <div className="flex items-center gap-2.5 pt-1">
               <button
                 type="button"
                 onClick={() => setStep('pricing')}
                 disabled={isProcessing}
-                className="py-3 px-5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl font-bold text-xs transition-colors"
+                className="py-2.5 px-4 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl font-bold text-xs transition-colors"
               >
                 Batal
               </button>
@@ -493,12 +489,12 @@ export default function UpgradeModal({ isOpen, onClose, config, setStep }) {
                 type="button"
                 onClick={handleProcessCheckout}
                 disabled={isProcessing}
-                className="flex-1 py-3 bg-gradient-primary text-white rounded-xl font-black text-xs shadow-md shadow-primary/25 hover:scale-[1.02] active:scale-95 transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
+                className="flex-1 py-2.5 bg-gradient-primary text-white rounded-xl font-black text-xs shadow-md shadow-primary/25 hover:scale-[1.01] active:scale-95 transition-all flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-50"
               >
                 {isProcessing ? (
                   <>
-                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                    <span>Membuka Jendela Pembayaran Midtrans...</span>
+                    <div className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                    <span>Membuka Jendela Midtrans...</span>
                   </>
                 ) : (
                   <>
