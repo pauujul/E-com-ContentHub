@@ -58,9 +58,9 @@ export default function AdminDashboardPage() {
     is_active: true,
   });
 
-  // 4. Terms State
+  // 4 & 5. Legal State & Sub-tab
+  const [legalSubTab, setLegalSubTab] = useState('terms'); // 'terms' | 'privacy'
   const [termsData, setTermsData] = useState(null);
-  // 5. Privacy State
   const [privacyData, setPrivacyData] = useState(null);
   // 6. Partnerships State
   const [partnershipData, setPartnershipData] = useState(null);
@@ -490,8 +490,7 @@ export default function AdminDashboardPage() {
     { key: 'users', label: 'Kelola Pengguna', icon: 'group' },
     { key: 'user_posts', label: 'Jadwal Konten Pengguna', icon: 'event_note' },
     { key: 'catalog', label: 'Katalog Paket Langganan', icon: 'loyalty' },
-    { key: 'terms', label: 'Syarat & Ketentuan', icon: 'gavel' },
-    { key: 'privacy', label: 'Kebijakan & Privasi', icon: 'security' },
+    { key: 'legal', label: 'S&K & Kebijakan Privasi', icon: 'policy' },
     { key: 'partnerships', label: 'Kerja Sama (Canva)', icon: 'handshake' },
     { key: 'blog', label: 'Kelola Artikel Blog', icon: 'menu_book' },
     { key: 'about', label: 'Kelola Halaman About', icon: 'info' },
@@ -525,7 +524,7 @@ export default function AdminDashboardPage() {
             </span>
 
             {adminMenuItems.map((menu) => {
-              const isSelected = activeMenu === menu.key;
+              const isSelected = activeMenu === menu.key || (menu.key === 'legal' && (activeMenu === 'terms' || activeMenu === 'privacy'));
               return (
                 <button
                   key={menu.key}
@@ -1273,182 +1272,266 @@ export default function AdminDashboardPage() {
           )}
 
           {/* ======================================================== */}
-          {/* 4. MENU: KELOLA SYARAT & KETENTUAN */}
+          {/* 4 & 5. MENU TERPADU: KELOLA S&K & KEBIJAKAN PRIVASI */}
           {/* ======================================================== */}
-          {activeMenu === 'terms' && termsData && (
-            <div className="bg-white rounded-3xl border border-slate-200/80 shadow-xs p-6 space-y-5 animate-in fade-in duration-200">
-              <div className="flex justify-between items-center pb-3 border-b border-slate-100">
-                <div>
-                  <h2 className="text-lg font-extrabold text-slate-900">Kelola Syarat & Ketentuan (Tabel terms_conditions)</h2>
-                  <p className="text-xs text-slate-500">Perbarui pasal-pasal ketentuan layanan yang tayang di halaman publik /terms.</p>
+          {(activeMenu === 'legal' || activeMenu === 'terms' || activeMenu === 'privacy') && (
+            <div className="space-y-6 animate-in fade-in duration-200">
+              {/* Header Kamar Dokumen Legal */}
+              <div className="bg-white rounded-3xl border border-slate-200/80 shadow-xs p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div className="flex items-center gap-3.5">
+                  <div className="w-12 h-12 rounded-2xl bg-primary/10 text-primary flex items-center justify-center flex-shrink-0 shadow-xs">
+                    <span className="material-symbols-outlined text-2xl">policy</span>
+                  </div>
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <span className="text-[10px] font-extrabold uppercase tracking-wider px-2.5 py-0.5 rounded-md bg-primary/10 text-primary">
+                        Dokumen Legal Terpadu
+                      </span>
+                      <span className="text-[10px] font-bold text-slate-400">
+                        {legalSubTab === 'terms' ? 'Tabel: terms_conditions' : 'Tabel: privacy_policies'}
+                      </span>
+                    </div>
+                    <h2 className="text-lg font-extrabold text-slate-900 leading-tight mt-1">
+                      Kelola S&K & Kebijakan Privasi
+                    </h2>
+                    <p className="text-xs text-slate-500 mt-0.5">
+                      Atur seluruh regulasi hukum layanan dan perlindungan privasi data UMKM dalam satu ruang kontrol.
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-2.5 self-start sm:self-auto">
+                  <a
+                    href={legalSubTab === 'terms' ? '/terms' : '/privacy'}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold transition-all shadow-xs"
+                    title="Buka halaman publik yang dilihat pengunjung"
+                  >
+                    <span>Preview Halaman {legalSubTab === 'terms' ? 'S&K' : 'Privasi'}</span>
+                    <span className="material-symbols-outlined text-sm">open_in_new</span>
+                  </a>
                 </div>
               </div>
 
-              <form onSubmit={handleSaveTerms} className="space-y-4">
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div className="space-y-1">
-                    <label className="text-xs font-bold uppercase text-slate-600">Judul Dokumen</label>
-                    <input
-                      type="text"
-                      required
-                      value={termsData.title || ''}
-                      onChange={(e) => setTermsData({ ...termsData, title: e.target.value })}
-                      className="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-xs focus:ring-2 focus:ring-primary font-bold"
-                    />
-                  </div>
-                  <div className="space-y-1">
-                    <label className="text-xs font-bold uppercase text-slate-600">Slug URL</label>
-                    <input
-                      type="text"
-                      required
-                      value={termsData.slug || ''}
-                      onChange={(e) => setTermsData({ ...termsData, slug: e.target.value })}
-                      className="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-xs font-mono"
-                    />
-                  </div>
-                </div>
+              {/* Segmented Sub-Tab Switcher di Dalam Kamar */}
+              <div className="flex items-center gap-2 bg-slate-200/60 p-1.5 rounded-2xl max-w-lg">
+                <button
+                  type="button"
+                  onClick={() => setLegalSubTab('terms')}
+                  className={`flex-1 flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                    legalSubTab === 'terms'
+                      ? 'bg-white text-primary shadow-sm font-extrabold'
+                      : 'text-slate-600 hover:text-slate-900 hover:bg-white/50'
+                  }`}
+                >
+                  <span className="material-symbols-outlined text-base">gavel</span>
+                  <span>1. Syarat & Ketentuan</span>
+                </button>
 
-                <div className="space-y-1">
-                  <label className="text-xs font-bold uppercase text-slate-600">Isi Naskah Syarat & Ketentuan</label>
-                  <textarea
-                    rows="14"
-                    required
-                    value={termsData.description || ''}
-                    onChange={(e) => setTermsData({ ...termsData, description: e.target.value })}
-                    className="w-full p-4 rounded-xl border border-slate-200 text-xs font-mono leading-relaxed focus:ring-2 focus:ring-primary"
-                  ></textarea>
-                </div>
-
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                  <div className="space-y-1">
-                    <label className="text-xs font-bold uppercase text-slate-600">Penulis / Author</label>
-                    <input
-                      type="text"
-                      value={termsData.author || ''}
-                      onChange={(e) => setTermsData({ ...termsData, author: e.target.value })}
-                      className="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs"
-                    />
-                  </div>
-                  <div className="space-y-1">
-                    <label className="text-xs font-bold uppercase text-slate-600">Kategori</label>
-                    <input
-                      type="text"
-                      value={termsData.category || ''}
-                      onChange={(e) => setTermsData({ ...termsData, category: e.target.value })}
-                      className="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs"
-                    />
-                  </div>
-                  <div className="space-y-1">
-                    <label className="text-xs font-bold uppercase text-slate-600">URL Gambar Banner</label>
-                    <input
-                      type="url"
-                      value={termsData.image_url || ''}
-                      onChange={(e) => setTermsData({ ...termsData, image_url: e.target.value })}
-                      className="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs"
-                    />
-                  </div>
-                </div>
-
-                <div className="pt-3 flex justify-end">
-                  <button
-                    type="submit"
-                    className="px-6 py-2.5 bg-primary text-white rounded-xl text-xs font-bold shadow-md hover:bg-primary/90 flex items-center gap-1.5"
-                  >
-                    <span className="material-symbols-outlined text-sm">save</span>
-                    Simpan Syarat & Ketentuan ke Database
-                  </button>
-                </div>
-              </form>
-            </div>
-          )}
-
-          {/* ======================================================== */}
-          {/* 5. MENU: KELOLA KEBIJAKAN & PRIVASI */}
-          {/* ======================================================== */}
-          {activeMenu === 'privacy' && privacyData && (
-            <div className="bg-white rounded-3xl border border-slate-200/80 shadow-xs p-6 space-y-5 animate-in fade-in duration-200">
-              <div className="flex justify-between items-center pb-3 border-b border-slate-100">
-                <div>
-                  <h2 className="text-lg font-extrabold text-slate-900">Kelola Kebijakan & Privasi (Tabel privacy_policies)</h2>
-                  <p className="text-xs text-slate-500">Perbarui dokumen perlindungan data dan privasi pengguna (/privacy).</p>
-                </div>
+                <button
+                  type="button"
+                  onClick={() => setLegalSubTab('privacy')}
+                  className={`flex-1 flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                    legalSubTab === 'privacy'
+                      ? 'bg-white text-primary shadow-sm font-extrabold'
+                      : 'text-slate-600 hover:text-slate-900 hover:bg-white/50'
+                  }`}
+                >
+                  <span className="material-symbols-outlined text-base">security</span>
+                  <span>2. Kebijakan & Privasi</span>
+                </button>
               </div>
 
-              <form onSubmit={handleSavePrivacy} className="space-y-4">
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div className="space-y-1">
-                    <label className="text-xs font-bold uppercase text-slate-600">Judul Dokumen</label>
-                    <input
-                      type="text"
-                      required
-                      value={privacyData.title || ''}
-                      onChange={(e) => setPrivacyData({ ...privacyData, title: e.target.value })}
-                      className="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-xs focus:ring-2 focus:ring-secondary font-bold"
-                    />
+              {/* KONTEN TAB 1: FORM SYARAT & KETENTUAN */}
+              {legalSubTab === 'terms' && termsData && (
+                <div className="bg-white rounded-3xl border border-slate-200/80 shadow-xs p-6 sm:p-8 space-y-6 animate-in fade-in duration-200">
+                  <div className="flex justify-between items-center pb-3 border-b border-slate-100">
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <span className="w-2.5 h-2.5 rounded-full bg-blue-600"></span>
+                        <h3 className="text-base font-extrabold text-slate-900">Form Naskah Syarat & Ketentuan (Terms of Service)</h3>
+                      </div>
+                      <p className="text-xs text-slate-500 mt-0.5">Perbarui pasal-pasal ketentuan layanan yang tayang di halaman publik /terms.</p>
+                    </div>
                   </div>
-                  <div className="space-y-1">
-                    <label className="text-xs font-bold uppercase text-slate-600">Slug URL</label>
-                    <input
-                      type="text"
-                      required
-                      value={privacyData.slug || ''}
-                      onChange={(e) => setPrivacyData({ ...privacyData, slug: e.target.value })}
-                      className="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-xs font-mono"
-                    />
-                  </div>
-                </div>
 
-                <div className="space-y-1">
-                  <label className="text-xs font-bold uppercase text-slate-600">Isi Kebijakan Privasi</label>
-                  <textarea
-                    rows="14"
-                    required
-                    value={privacyData.description || ''}
-                    onChange={(e) => setPrivacyData({ ...privacyData, description: e.target.value })}
-                    className="w-full p-4 rounded-xl border border-slate-200 text-xs font-mono leading-relaxed focus:ring-2 focus:ring-secondary"
-                  ></textarea>
-                </div>
+                  <form onSubmit={handleSaveTerms} className="space-y-5">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <div className="space-y-1.5">
+                        <label className="text-xs font-bold uppercase text-slate-600">Judul Dokumen</label>
+                        <input
+                          type="text"
+                          required
+                          value={termsData.title || ''}
+                          onChange={(e) => setTermsData({ ...termsData, title: e.target.value })}
+                          className="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-xs focus:ring-2 focus:ring-primary font-bold"
+                        />
+                      </div>
+                      <div className="space-y-1.5">
+                        <label className="text-xs font-bold uppercase text-slate-600">Slug URL</label>
+                        <input
+                          type="text"
+                          required
+                          value={termsData.slug || ''}
+                          onChange={(e) => setTermsData({ ...termsData, slug: e.target.value })}
+                          className="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-xs font-mono"
+                        />
+                      </div>
+                    </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                  <div className="space-y-1">
-                    <label className="text-xs font-bold uppercase text-slate-600">Otoritas / Author</label>
-                    <input
-                      type="text"
-                      value={privacyData.author || ''}
-                      onChange={(e) => setPrivacyData({ ...privacyData, author: e.target.value })}
-                      className="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs"
-                    />
-                  </div>
-                  <div className="space-y-1">
-                    <label className="text-xs font-bold uppercase text-slate-600">Kategori</label>
-                    <input
-                      type="text"
-                      value={privacyData.category || ''}
-                      onChange={(e) => setPrivacyData({ ...privacyData, category: e.target.value })}
-                      className="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs"
-                    />
-                  </div>
-                  <div className="space-y-1">
-                    <label className="text-xs font-bold uppercase text-slate-600">URL Gambar Banner</label>
-                    <input
-                      type="url"
-                      value={privacyData.image_url || ''}
-                      onChange={(e) => setPrivacyData({ ...privacyData, image_url: e.target.value })}
-                      className="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs"
-                    />
-                  </div>
-                </div>
+                    <div className="space-y-1.5">
+                      <div className="flex justify-between items-center">
+                        <label className="text-xs font-bold uppercase text-slate-600">Isi Naskah Syarat & Ketentuan</label>
+                        <span className="text-[11px] text-slate-400 font-medium">Mendukung paragraf terstruktur</span>
+                      </div>
+                      <textarea
+                        rows="14"
+                        required
+                        value={termsData.description || ''}
+                        onChange={(e) => setTermsData({ ...termsData, description: e.target.value })}
+                        className="w-full p-4 rounded-xl border border-slate-200 text-xs font-mono leading-relaxed focus:ring-2 focus:ring-primary"
+                        placeholder="Masukkan poin-poin aturan layanan..."
+                      ></textarea>
+                    </div>
 
-                <div className="pt-3 flex justify-end">
-                  <button
-                    type="submit"
-                    className="px-6 py-2.5 bg-secondary text-white rounded-xl text-xs font-bold shadow-md hover:bg-secondary/90 flex items-center gap-1.5"
-                  >
-                    <span className="material-symbols-outlined text-sm">save</span>
-                    Simpan Kebijakan & Privasi ke Database
-                  </button>
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                      <div className="space-y-1.5">
+                        <label className="text-xs font-bold uppercase text-slate-600">Penulis / Author</label>
+                        <input
+                          type="text"
+                          value={termsData.author || ''}
+                          onChange={(e) => setTermsData({ ...termsData, author: e.target.value })}
+                          className="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs"
+                        />
+                      </div>
+                      <div className="space-y-1.5">
+                        <label className="text-xs font-bold uppercase text-slate-600">Kategori</label>
+                        <input
+                          type="text"
+                          value={termsData.category || ''}
+                          onChange={(e) => setTermsData({ ...termsData, category: e.target.value })}
+                          className="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs"
+                        />
+                      </div>
+                      <div className="space-y-1.5">
+                        <label className="text-xs font-bold uppercase text-slate-600">URL Gambar Banner</label>
+                        <input
+                          type="url"
+                          value={termsData.image_url || ''}
+                          onChange={(e) => setTermsData({ ...termsData, image_url: e.target.value })}
+                          className="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="pt-2 flex justify-end">
+                      <button
+                        type="submit"
+                        className="px-6 py-2.5 bg-primary text-white rounded-xl text-xs font-bold shadow-md hover:bg-primary/90 flex items-center gap-2 cursor-pointer transition-all hover:scale-[1.01]"
+                      >
+                        <span className="material-symbols-outlined text-sm">save</span>
+                        <span>Simpan Perubahan S&K</span>
+                      </button>
+                    </div>
+                  </form>
                 </div>
-              </form>
+              )}
+
+              {/* KONTEN TAB 2: FORM KEBIJAKAN & PRIVASI */}
+              {legalSubTab === 'privacy' && privacyData && (
+                <div className="bg-white rounded-3xl border border-slate-200/80 shadow-xs p-6 sm:p-8 space-y-6 animate-in fade-in duration-200">
+                  <div className="flex justify-between items-center pb-3 border-b border-slate-100">
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <span className="w-2.5 h-2.5 rounded-full bg-emerald-600"></span>
+                        <h3 className="text-base font-extrabold text-slate-900">Form Naskah Kebijakan Privasi (Privacy Policy)</h3>
+                      </div>
+                      <p className="text-xs text-slate-500 mt-0.5">Perbarui dokumen perlindungan data dan privasi pengguna yang tayang di /privacy.</p>
+                    </div>
+                  </div>
+
+                  <form onSubmit={handleSavePrivacy} className="space-y-5">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <div className="space-y-1.5">
+                        <label className="text-xs font-bold uppercase text-slate-600">Judul Dokumen</label>
+                        <input
+                          type="text"
+                          required
+                          value={privacyData.title || ''}
+                          onChange={(e) => setPrivacyData({ ...privacyData, title: e.target.value })}
+                          className="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-xs focus:ring-2 focus:ring-primary font-bold"
+                        />
+                      </div>
+                      <div className="space-y-1.5">
+                        <label className="text-xs font-bold uppercase text-slate-600">Slug URL</label>
+                        <input
+                          type="text"
+                          required
+                          value={privacyData.slug || ''}
+                          onChange={(e) => setPrivacyData({ ...privacyData, slug: e.target.value })}
+                          className="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-xs font-mono"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="space-y-1.5">
+                      <div className="flex justify-between items-center">
+                        <label className="text-xs font-bold uppercase text-slate-600">Isi Naskah Kebijakan Privasi</label>
+                        <span className="text-[11px] text-slate-400 font-medium">Mendukung regulasi standar GDPR & UU PDP</span>
+                      </div>
+                      <textarea
+                        rows="14"
+                        required
+                        value={privacyData.description || ''}
+                        onChange={(e) => setPrivacyData({ ...privacyData, description: e.target.value })}
+                        className="w-full p-4 rounded-xl border border-slate-200 text-xs font-mono leading-relaxed focus:ring-2 focus:ring-primary"
+                        placeholder="Masukkan kebijakan perlindungan data..."
+                      ></textarea>
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                      <div className="space-y-1.5">
+                        <label className="text-xs font-bold uppercase text-slate-600">Otoritas / Author</label>
+                        <input
+                          type="text"
+                          value={privacyData.author || ''}
+                          onChange={(e) => setPrivacyData({ ...privacyData, author: e.target.value })}
+                          className="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs"
+                        />
+                      </div>
+                      <div className="space-y-1.5">
+                        <label className="text-xs font-bold uppercase text-slate-600">Kategori</label>
+                        <input
+                          type="text"
+                          value={privacyData.category || ''}
+                          onChange={(e) => setPrivacyData({ ...privacyData, category: e.target.value })}
+                          className="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs"
+                        />
+                      </div>
+                      <div className="space-y-1.5">
+                        <label className="text-xs font-bold uppercase text-slate-600">URL Gambar Banner</label>
+                        <input
+                          type="url"
+                          value={privacyData.image_url || ''}
+                          onChange={(e) => setPrivacyData({ ...privacyData, image_url: e.target.value })}
+                          className="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="pt-2 flex justify-end">
+                      <button
+                        type="submit"
+                        className="px-6 py-2.5 bg-primary text-white rounded-xl text-xs font-bold shadow-md hover:bg-primary/90 flex items-center gap-2 cursor-pointer transition-all hover:scale-[1.01]"
+                      >
+                        <span className="material-symbols-outlined text-sm">save</span>
+                        <span>Simpan Perubahan Kebijakan & Privasi</span>
+                      </button>
+                    </div>
+                  </form>
+                </div>
+              )}
             </div>
           )}
 
