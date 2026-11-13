@@ -2366,7 +2366,6 @@ export default function AdminDashboardPage() {
                   >
                     <option value="customer">Customer (Pelaku UMKM)</option>
                     <option value="admin">Administrator</option>
-                    <option value="editor">Editor Konten</option>
                   </select>
                 </div>
 
