@@ -2,6 +2,7 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
+import PricingSection from '../components/PricingSection';
 
 export default function HomePage() {
   return (
@@ -27,12 +28,12 @@ export default function HomePage() {
               </p>
 
               <div className="flex flex-wrap gap-4 pt-4">
-                <Link
-                  to="/pricing"
+                <a
+                  href="#pricing"
                   className="px-8 py-4 bg-gradient-to-br from-primary to-primary-container text-white rounded-2xl font-bold shadow-lg shadow-primary/20 hover:scale-105 active:scale-95 transition-all text-center"
                 >
-                  Mulai Dari Rp98.000 / bln
-                </Link>
+                  Pilih Paket Langganan
+                </a>
                 <Link
                   to="/calendar"
                   className="px-8 py-4 bg-surface-container-highest text-primary rounded-2xl font-bold hover:bg-surface-container-high transition-all flex items-center gap-2 justify-center"
@@ -194,34 +195,11 @@ export default function HomePage() {
           </div>
         </section>
 
-        {/* Pricing Teaser Section */}
-        <section className="py-24 px-8 bg-surface-container-low">
-          <div className="max-w-5xl mx-auto text-center space-y-6">
-            <span className="text-primary font-bold text-xs uppercase tracking-widest bg-primary-fixed px-3 py-1 rounded-full">
-              Paling Populer untuk UMKM
-            </span>
-            <h2 className="text-4xl font-extrabold text-on-surface">
-              Paket Starter Hero: Hanya Rp 98.000 / bulan
-            </h2>
-            <p className="text-on-surface-variant max-w-xl mx-auto">
-              Dapatkan kalender konten interaktif tanpa batas, 50+ template premium Canva, dan reminder jadwal posting instan.
-            </p>
-            <div className="pt-4 flex flex-col sm:flex-row gap-4 justify-center items-center">
-              <Link
-                to="/checkout/2"
-                className="px-8 py-4 bg-gradient-primary text-white font-bold rounded-xl shadow-lg shadow-primary/25 hover:scale-105 active:scale-95 transition-all"
-              >
-                Langganan Sekarang (Rp 98.000)
-              </Link>
-              <Link
-                to="/pricing"
-                className="px-6 py-4 bg-surface-container-highest text-on-surface font-semibold rounded-xl hover:bg-surface-dim transition-all"
-              >
-                Lihat Semua Paket
-              </Link>
-            </div>
-          </div>
-        </section>
+        {/* 3-Tier Subscription Pricing Section (Posisi tepat sebelum Footer) */}
+        <PricingSection
+          id="pricing"
+          className="bg-surface-container-low/40"
+        />
       </main>
 
       <Footer />

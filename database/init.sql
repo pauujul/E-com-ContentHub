@@ -48,7 +48,7 @@ CREATE TABLE subscription_plans (
     name VARCHAR(150) NOT NULL,
     description TEXT NOT NULL,
     price NUMERIC(12, 2) NOT NULL DEFAULT 0.00,
-    billing_cycle VARCHAR(50) NOT NULL CHECK (billing_cycle IN ('Free', 'Bulanan', 'Tahunan')),
+    billing_cycle VARCHAR(50) NOT NULL CHECK (billing_cycle IN ('Free', 'Bulanan', 'Tahunan', '3 Bulan', '1 Tahun')),
     features JSONB NOT NULL DEFAULT '[]',
     badge VARCHAR(50) DEFAULT NULL,
     is_hero BOOLEAN DEFAULT FALSE,
@@ -260,36 +260,36 @@ INSERT INTO users (name, email, password, role, phone, business_name, industry, 
 ('Fauzul Rozaq', 'fauzul@amigos.id', 'a665a45920422f9d417e4867efdc4fb8a04a1f3fff1fa07e998e86f7f7a27ae3', 'admin', '081298765432', 'ContentHub Studio', 'Digital Marketing', 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=200&h=200&fit=crop'),
 ('Zico Aryton', 'zicoaryton@gmail.com', 'a665a45920422f9d417e4867efdc4fb8a04a1f3fff1fa07e998e86f7f7a27ae3', 'customer', '081299001122', 'Aryton Creative Studio', 'Desain Kreatif & Multimedia', 'https://images.unsplash.com/photo-1570295999919-56ceb5ecca61?w=200&h=200&fit=crop');
 
--- 2. Katalog Paket Subscription (Free, Starter Hero Rp98rb, Pro Rp898rb, Enterprise Rp2.499rb)
+-- 2. Katalog Paket Subscription (Free, Pro Rp199rb / 3 Bulan, Plus Rp699rb / 1 Tahun, Enterprise Rp2.499rb)
 INSERT INTO subscription_plans (sku, name, description, price, billing_cycle, features, badge, is_hero, is_active) VALUES
 (
     'CH-FREE',
-    'Starter Trial (Free)',
+    'ContentHub Free',
     'Paket awal tanpa biaya untuk UMKM yang baru mulai merencanakan dan menjadwalkan konten media sosial.',
     0.00,
     'Free',
-    '["1 Kalender Konten Interaktif", "3 Template Konten Siap Pakai", "1 Akun Media Sosial", "Export Jadwal ke Format Gambar", "Akses Komunitas Komersial UMKM"]'::jsonb,
+    '["Maksimal 3 Agenda Konten / Minggu", "Template Library Basic (Free)", "1 Akun Media Sosial", "Export Kalender ke Gambar", "Komunitas UMKM"]'::jsonb,
     'Akses Gratis',
     FALSE,
     TRUE
 ),
 (
-    'CH-START-M',
-    'ContentHub Starter',
+    'CH-PRO-3M',
+    'ContentHub Pro',
     'Solusi paling praktis dan terlaris bagi pelaku UMKM yang membutuhkan kalender interaktif drag-and-drop dan puluhan template Canva siap pakai.',
-    98000.00,
-    'Bulanan',
+    199000.00,
+    '3 Bulan',
     '["Semua Fitur Paket Trial Free", "Kalender Drag & Drop Interaktif Penuh", "50+ Library Template Konten Siap Pakai", "Direct Integration & Editor Canva Pro", "Pengingat Jadwal Posting (Email Alert)", "Hingga 5 Akun Media Sosial Terhubung", "Customer Support Prioritas via WhatsApp"]'::jsonb,
     'Paling Sesuai untuk UMKM',
     TRUE,
     TRUE
 ),
 (
-    'CH-PRO-Y',
-    'ContentHub Pro',
+    'CH-PLUS-1Y',
+    'ContentHub Plus',
     'Paket komprehensif tahunan untuk UMKM berkembang dengan frekuensi konten tinggi, multi-admin, dan analitik jadwal posting.',
-    898000.00,
-    'Tahunan',
+    699000.00,
+    '1 Tahun',
     '["Semua Fitur Starter Bulanan", "Akses 200+ Template Premium Canva", "Akun Media Sosial Tanpa Batas", "Analytics & Estimasi Performa Jadwal", "Persiapan Integrasi AI Copywriting Assistant", "Dukungan Multi-User Team (Hingga 3 Orang)", "Hemat 24% Dibandingkan Bayar Bulanan"]'::jsonb,
     'Paling Hemat',
     FALSE,

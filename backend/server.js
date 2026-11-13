@@ -1019,6 +1019,7 @@ app.delete('/api/auth/users/:id', async (req, res) => {
 // GET /api/products
 app.get('/api/products', async (req, res) => {
   try {
+    res.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
     const activeOnly = req.query.all !== 'true';
     const store = db.getStore ? db.getStore() : null;
     if (store) {

@@ -73,11 +73,11 @@ const initialSeedData = {
     {
       id: 1,
       sku: 'CH-FREE',
-      name: 'Starter Trial (Free)',
+      name: 'ContentHub Free',
       description: 'Paket awal tanpa biaya untuk UMKM yang baru mulai merencanakan dan menjadwalkan konten media sosial.',
       price: '0.00',
       billing_cycle: 'Free',
-      features: ['1 Kalender Konten Interaktif', '3 Template Konten Siap Pakai', '1 Akun Media Sosial', 'Export Jadwal ke Format Gambar', 'Akses Komunitas Komersial UMKM'],
+      features: ['Maksimal 3 Agenda Konten / Minggu', 'Template Library Basic (Free)', '1 Akun Media Sosial', 'Export Kalender ke Gambar', 'Komunitas UMKM'],
       badge: 'Akses Gratis',
       is_hero: false,
       is_active: true,
@@ -85,11 +85,11 @@ const initialSeedData = {
     },
     {
       id: 2,
-      sku: 'CH-START-M',
-      name: 'ContentHub Starter',
+      sku: 'CH-PRO-3M',
+      name: 'ContentHub Pro',
       description: 'Solusi paling praktis dan terlaris bagi pelaku UMKM yang membutuhkan kalender interaktif drag-and-drop dan puluhan template Canva siap pakai.',
-      price: '98000.00',
-      billing_cycle: 'Bulanan',
+      price: '199000.00',
+      billing_cycle: '3 Bulan',
       features: [
         'Semua Fitur Paket Trial Free',
         'Kalender Drag & Drop Interaktif Penuh',
@@ -106,11 +106,11 @@ const initialSeedData = {
     },
     {
       id: 3,
-      sku: 'CH-PRO-Y',
-      name: 'ContentHub Pro',
+      sku: 'CH-PLUS-1Y',
+      name: 'ContentHub Plus',
       description: 'Paket komprehensif tahunan untuk UMKM berkembang dengan frekuensi konten tinggi, multi-admin, dan analitik jadwal posting.',
-      price: '898000.00',
-      billing_cycle: 'Tahunan',
+      price: '699000.00',
+      billing_cycle: '1 Tahun',
       features: [
         'Semua Fitur Starter Bulanan',
         'Akses 200+ Template Premium Canva',
@@ -121,6 +121,26 @@ const initialSeedData = {
         'Hemat 24% Dibandingkan Bayar Bulanan',
       ],
       badge: 'Paling Hemat',
+      is_hero: false,
+      is_active: true,
+      created_at: new Date('2026-10-01T08:00:00Z').toISOString(),
+    },
+    {
+      id: 4,
+      sku: 'CH-ENT-Y',
+      name: 'ContentHub Enterprise',
+      description: 'Solusi korporasi dan multi-cabang UMKM dengan kebutuhan kustomisasi aset, tim kreatif terdedikasi, dan SLA dukungan 24/7.',
+      price: '2499000.00',
+      billing_cycle: 'Tahunan',
+      features: [
+        'Semua Fitur Paket Pro Tahunan',
+        'Integrasi White-Label Brand Perusahaan',
+        'Dedicated Account Manager & Creative Strategist',
+        'Custom Template Design Khusus Brand Anda',
+        'API Access untuk Export & Penjadwalan Otomatis',
+        'SLA Dukungan 24/7 & Pelatihan Tim Privat',
+      ],
+      badge: 'Solusi Skala Besar',
       is_hero: false,
       is_active: true,
       created_at: new Date('2026-10-01T08:00:00Z').toISOString(),
@@ -746,7 +766,11 @@ function executeLocalQuery(text, params = []) {
       const found = localData.subscription_plans.filter((p) => p.id === id);
       return { rows: found };
     }
-    return { rows: [...localData.subscription_plans].sort((a, b) => parseFloat(a.price) - parseFloat(b.price)) };
+    let plans = [...localData.subscription_plans];
+    if (upper.includes('IS_ACTIVE = TRUE')) {
+      plans = plans.filter((p) => p.is_active !== false && p.sku !== 'CH-ENT-Y');
+    }
+    return { rows: plans.sort((a, b) => parseFloat(a.price) - parseFloat(b.price)) };
   }
 
   // ORDERS
