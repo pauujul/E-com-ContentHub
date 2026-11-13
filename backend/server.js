@@ -10,6 +10,17 @@ require('dotenv').config({ path: path.join(__dirname, '.env') });
 
 const db = require('./db');
 
+// ==========================================
+// INISIALISASI MIDTRANS
+// ==========================================
+const midtransClient = require('midtrans-client');
+const snap = new midtransClient.Snap({
+  isProduction: process.env.MIDTRANS_IS_PRODUCTION === 'true',
+  serverKey: process.env.MIDTRANS_SERVER_KEY || '',
+  clientKey: process.env.MIDTRANS_CLIENT_KEY || '',
+});
+// ==========================================
+
 const app = express();
 const PORT = parseInt(process.env.PORT, 10) || 5000;
 
@@ -1321,6 +1332,107 @@ app.post('/api/orders', async (req, res) => {
     res.status(500).json({ success: false, message: 'Gagal membuat pesanan.', error: error.message });
   }
 });
+
+// ==========================================
+// ENDPOINT MIDTRANS (SISIPAN BARU)
+// ==========================================
+
+// POST /api/payment/midtrans/create (Buat Snap Token)
+app.post('/api/payment/midtrans/create', async (req, res) => {
+  try {
+    const { order_id } = req.body;
+    if (!order_id) {
+      return res.status(400).json({ success: false, message: 'order_id wajib dikirim.' });
+    }
+
+    let order = null;
+    const store = db.getStore ? db.getStore() : null;
+
+    // 1. Ambil data order dari Database / Memory
+    if (store) {
+      order = store.orders.find(o => o.order_number === order_id || o.id === parseInt(order_id, 10));
+    } else {
+      const isNumeric = !isNaN(parseInt(order_id, 10));
+      const query = `SELECT * FROM orders WHERE ${isNumeric ? 'id = $1 OR order_number = $1' : 'order_number = $1'}`;
+      const result = await db.query(query, [order_id]);
+      if (result.rows.length > 0) order = result.rows[0];
+    }
+
+    if (!order) return res.status(404).json({ success: false, message: 'Order tidak ditemukan.' });
+    if (order.status === 'Paid') return res.status(400).json({ success: false, message: 'Order ini sudah dibayar.' });
+
+    // 2. Minta Token ke Midtrans
+    const parameter = {
+      transaction_details: {
+        order_id: order.order_number, // Gunakan order_number (string unik)
+        gross_amount: Math.round(parseFloat(order.total_amount)), // Midtrans butuh integer
+      },
+      customer_details: {
+        first_name: order.customer_name,
+        email: order.customer_email,
+      }
+    };
+
+    const transaction = await snap.createTransaction(parameter);
+    
+    // 3. Kirim token ke frontend
+    res.json({
+      success: true,
+      token: transaction.token,
+      redirect_url: transaction.redirect_url,
+    });
+
+  } catch (error) {
+    console.error('Midtrans Create Error:', error);
+    res.status(500).json({ success: false, message: 'Gagal membuat transaksi Midtrans', error: error.message });
+  }
+});
+
+// POST /api/payment/midtrans/notification (Webhook Midtrans)
+app.post('/api/payment/midtrans/notification', async (req, res) => {
+  try {
+    const notification = req.body;
+    
+    // 1. Verifikasi Signature (SHA512)
+    const signatureInput = notification.order_id + notification.status_code + notification.gross_amount + process.env.MIDTRANS_SERVER_KEY;
+    const expectedSignature = crypto.createHash('sha512').update(signatureInput).digest('hex');
+
+    if (notification.signature_key !== expectedSignature) {
+      console.warn('Midtrans Webhook: Signature tidak valid!');
+      return res.status(403).json({ message: 'Invalid signature' });
+    }
+
+    // 2. Cek Status Transaksi
+    if (notification.transaction_status === 'settlement' || 
+       (notification.transaction_status === 'capture' && notification.fraud_status === 'accept')) {
+        
+        // Panggil logika update status yang sudah ada di server.js
+        const orderId = notification.order_id;
+        const paidAt = new Date().toISOString();
+        const store = db.getStore ? db.getStore() : null;
+
+        if (store) {
+          const oIndex = store.orders.findIndex((o) => o.order_number === orderId || o.id === parseInt(orderId, 10));
+          if (oIndex !== -1) {
+            store.orders[oIndex].status = 'Paid';
+            store.orders[oIndex].paid_at = paidAt;
+            db.saveStore();
+          }
+        } else {
+          await db.query(`UPDATE orders SET status = 'Paid', paid_at = $1 WHERE order_number = $2 OR id::text = $2`, [paidAt, orderId]);
+        }
+        console.log(`[Midtrans] Order #${orderId} BERHASIL DIBAYAR.`);
+    }
+
+    // 3. Selalu balas 200 OK agar Midtrans tidak mengirim ulang notifikasi
+    res.status(200).json({ status: 'OK' });
+  } catch (error) {
+    console.error('Midtrans Webhook Error:', error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
+
+// ==========================================
 
 // GET /api/orders (Riwayat Pesanan)
 app.get('/api/orders', async (req, res) => {

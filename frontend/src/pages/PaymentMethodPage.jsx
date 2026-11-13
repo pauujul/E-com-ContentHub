@@ -20,7 +20,7 @@ export default function PaymentMethodPage() {
     api.getProducts()
       .then(res => {
         if (res.success && res.data) {
-          const targetId = planId ? parseInt(planId, 10) : 2; // Default hero product Rp98k (id 2)
+          const targetId = planId ? parseInt(planId, 10) : 2;
           const matched = res.data.find(p => p.id === targetId) || res.data[1] || res.data[0];
           setPlan(matched);
         }
@@ -48,13 +48,70 @@ export default function PaymentMethodPage() {
       };
 
       const result = await api.createOrder(orderPayload);
+      
       if (result.success && result.data?.order) {
         const orderNumber = result.data.order.order_number;
-        // Jika paket berbayar, arahkan ke halaman detail transaksi & invoice
+        
         if (parseFloat(plan.price) === 0) {
           navigate(`/payment-confirmation/${orderNumber}`);
-        } else {
-          navigate(`/transactions/${orderNumber}`);
+          return;
+        }
+
+        try {
+          const midtransRes = await fetch('http://localhost:5000/api/payment/midtrans/create', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ order_id: orderNumber })
+          });
+          
+          const midtransData = await midtransRes.json();
+
+          if (midtransData.success) {
+            // PENGECEKAN KETAT: Apakah script Midtrans benar-benar termuat?
+            if (typeof window.snap === 'undefined') {
+              throw new Error("Script Midtrans tidak termuat (window.snap is undefined). Pastikan tidak ada AdBlocker dan Client Key sudah benar di index.html.");
+            }
+
+            window.snap.pay(midtransData.token, {
+              onSuccess: async function(res) {
+                alert("Pembayaran Berhasil!");
+                try {
+                  await fetch(`http://localhost:5000/api/orders/${orderNumber}/status`, {
+                    method: 'PATCH',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ status: 'Paid' })
+                  });
+                } catch (e) {
+                  console.warn('Gagal update status manual:', e);
+                }
+                navigate(`/payment-confirmation/${orderNumber}`);
+              },
+              onPending: function(res) {
+                alert("Menunggu Pembayaran.");
+                navigate(`/transactions/${orderNumber}`);
+              },
+              onError: function(res) {
+                alert("Pembayaran Gagal!");
+                setSubmitting(false);
+              },
+              onClose: function() {
+                alert('Anda menutup popup tanpa menyelesaikan pembayaran.');
+                setSubmitting(false);
+              }
+            });
+            return;
+          } else {
+            throw new Error(midtransData.message || 'Gagal mendapatkan token dari backend.');
+          }
+        } catch (midtransErr) {
+          console.error("Midtrans Error:", midtransErr);
+          
+          // FALLBACK DIMATIKAN SEMENTARA AGAR ERROR MUNCUL DI LAYAR
+          // navigate(`/transactions/${orderNumber}`);
+          
+          setErrorMsg("Gagal memuat Midtrans: " + midtransErr.message);
+          setSubmitting(false);
+          return; 
         }
       } else {
         throw new Error(result.message || 'Gagal membuat pesanan.');
@@ -62,9 +119,8 @@ export default function PaymentMethodPage() {
     } catch (err) {
       console.error('Checkout error:', err);
       setErrorMsg(err.message || 'Terjadi kesalahan saat memproses pesanan.');
-    } finally {
-      setSubmitting(false);
-    }
+      setSubmitting(false); 
+    } 
   };
 
   const planPriceNum = plan ? parseFloat(plan.price) : 98000;
@@ -72,7 +128,6 @@ export default function PaymentMethodPage() {
 
   return (
     <div className="min-h-screen bg-surface text-on-surface">
-      {/* Header Pembayaran Eksklusif & Fokus (Tanpa Navbar Landing Page) */}
       <header className="sticky top-0 left-0 right-0 h-16 bg-white/95 backdrop-blur-xl border-b border-slate-200 z-30 shadow-xs">
         <div className="max-w-7xl mx-auto h-full px-6 md:px-16 flex items-center justify-between">
           <div className="flex items-center gap-3">
@@ -98,7 +153,6 @@ export default function PaymentMethodPage() {
             <Link
               to="/dashboard"
               className="text-xs font-bold text-slate-500 hover:text-red-600 transition-colors flex items-center gap-1"
-              title="Batalkan & Kembali ke Workspace"
             >
               <span className="material-symbols-outlined text-sm">close</span>
               <span className="hidden sm:inline">Batalkan</span>
@@ -108,7 +162,6 @@ export default function PaymentMethodPage() {
       </header>
 
       <main className="py-8 pb-20 px-6 md:px-16 max-w-7xl mx-auto">
-        {/* Progress Step Header */}
         <header className="mb-10 flex flex-col md:flex-row md:items-center justify-between gap-4 pb-6 border-b border-outline-variant/15">
           <div className="flex items-center gap-4">
             <Link
@@ -137,7 +190,6 @@ export default function PaymentMethodPage() {
           </div>
         ) : (
           <div className="flex flex-col lg:flex-row gap-12">
-            {/* Left Area: Payment Selection */}
             <div className="flex-1 space-y-10">
               {errorMsg && (
                 <div className="p-4 bg-red-50 text-red-700 rounded-xl text-xs font-bold flex items-center gap-2 border border-red-200">
@@ -146,7 +198,6 @@ export default function PaymentMethodPage() {
                 </div>
               )}
 
-              {/* Virtual Account Group */}
               <section>
                 <div className="flex items-center justify-between mb-4">
                   <h3 className="text-xs font-bold uppercase tracking-wider text-outline">
@@ -198,7 +249,6 @@ export default function PaymentMethodPage() {
                 </div>
               </section>
 
-              {/* E-Wallets */}
               <section>
                 <div className="flex items-center justify-between mb-4">
                   <h3 className="text-xs font-bold uppercase tracking-wider text-outline">
@@ -248,12 +298,10 @@ export default function PaymentMethodPage() {
               </section>
             </div>
 
-            {/* Right Sidebar: Ringkasan Langganan & CTA */}
             <aside className="w-full lg:w-[380px]">
               <div className="sticky top-28 bg-surface-container-low p-6 md:p-8 rounded-3xl border border-outline-variant/15 shadow-sm space-y-6">
                 <h3 className="text-lg font-extrabold text-on-surface">Ringkasan Pemesanan</h3>
 
-                {/* Plan Card */}
                 <div className="flex items-start gap-3.5 p-4 bg-white rounded-2xl border border-outline-variant/15">
                   <div className="w-10 h-10 rounded-xl bg-primary-fixed flex items-center justify-center text-primary flex-shrink-0">
                     <span className="material-symbols-outlined text-xl">auto_awesome</span>
@@ -267,7 +315,6 @@ export default function PaymentMethodPage() {
                   </Link>
                 </div>
 
-                {/* Price Breakdown */}
                 <div className="space-y-3 text-xs">
                   <div className="flex justify-between text-on-surface-variant">
                     <span>Harga Paket</span>
@@ -291,7 +338,6 @@ export default function PaymentMethodPage() {
                   </div>
                 </div>
 
-                {/* Checkout Trigger */}
                 <div className="space-y-3">
                   <div className="flex gap-2.5 p-3.5 bg-primary/5 rounded-xl border border-primary/10 text-xs text-on-primary-fixed-variant">
                     <span className="material-symbols-outlined text-primary text-base flex-shrink-0">verified_user</span>
@@ -303,12 +349,12 @@ export default function PaymentMethodPage() {
                   <button
                     onClick={handleCheckout}
                     disabled={submitting}
-                    className="w-full py-4 bg-gradient-primary text-white font-bold rounded-2xl text-sm shadow-lg shadow-primary/25 hover:scale-[1.01] active:scale-95 transition-all flex items-center justify-center gap-2"
+                    className="w-full py-4 bg-gradient-primary text-white font-bold rounded-2xl text-sm shadow-lg shadow-primary/25 hover:scale-[1.01] active:scale-95 transition-all flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed"
                   >
                     {submitting ? (
                       <>
                         <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                        <span>Membuat Pesanan...</span>
+                        <span>Memproses...</span>
                       </>
                     ) : (
                       <>
