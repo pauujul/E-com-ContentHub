@@ -43,6 +43,23 @@ a:active {
   box-shadow: none !important;
 }
 
+/* Sembunyikan Watermark / Pita TEST Kuning Midtrans Sandbox */
+#snap-midtrans,
+iframe[name^="popup_"],
+iframe[src*="midtrans.com"] {
+  clip-path: polygon(0 0, calc(100% - 150px) 0, 100% 150px, 100% 100%, 0 100%) !important;
+  -webkit-clip-path: polygon(0 0, calc(100% - 150px) 0, 100% 150px, 100% 100%, 0 100%) !important;
+}
+.test-notice,
+#snap-midtrans-watermark,
+.snap-watermark,
+.snap-ribbon {
+  display: none !important;
+  visibility: hidden !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+}
+
 body {
   font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   background-color: #f8fafc;

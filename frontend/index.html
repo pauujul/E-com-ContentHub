@@ -115,6 +115,23 @@
         outline: none !important;
         box-shadow: none !important;
       }
+
+      /* Sembunyikan Watermark / Pita TEST Kuning Midtrans Sandbox */
+      #snap-midtrans,
+      iframe[name^="popup_"],
+      iframe[src*="midtrans.com"] {
+        clip-path: polygon(0 0, calc(100% - 150px) 0, 100% 150px, 100% 100%, 0 100%) !important;
+        -webkit-clip-path: polygon(0 0, calc(100% - 150px) 0, 100% 150px, 100% 100%, 0 100%) !important;
+      }
+      .test-notice,
+      #snap-midtrans-watermark,
+      .snap-watermark,
+      .snap-ribbon {
+        display: none !important;
+        visibility: hidden !important;
+        opacity: 0 !important;
+        pointer-events: none !important;
+      }
     </style>
 
     <!-- ========================================== -->
@@ -123,6 +140,19 @@
     <script 
       src="https://app.sandbox.midtrans.com/snap/snap.js" 
       data-client-key="SB-Mid-client-WentC2FP_itlGJmnkq~p6pzQ">
+    </script>
+    <script>
+      // Pastikan pita TEST Midtrans Sandbox selalu tersembunyi
+      const snapObserver = new MutationObserver(() => {
+        const iframes = document.querySelectorAll('iframe#snap-midtrans, iframe[name^="popup_"], iframe[src*="midtrans.com"]');
+        iframes.forEach(el => {
+          if (!el.style.clipPath || !el.style.clipPath.includes('polygon')) {
+            el.style.setProperty('clip-path', 'polygon(0 0, calc(100% - 150px) 0, 100% 150px, 100% 100%, 0 100%)', 'important');
+            el.style.setProperty('-webkit-clip-path', 'polygon(0 0, calc(100% - 150px) 0, 100% 150px, 100% 100%, 0 100%)', 'important');
+          }
+        });
+      });
+      snapObserver.observe(document.documentElement, { childList: true, subtree: true });
     </script>
     <!-- ========================================== -->
     
