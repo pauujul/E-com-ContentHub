@@ -176,29 +176,44 @@ export default function CalendarPage() {
                 </span>
                 <span className="text-xs text-slate-400 font-semibold">• Tersinkronisasi Otomatis</span>
               </div>
-              <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight flex items-center gap-3">
-                <span>{monthNames[month]} {year}</span>
-                <span className="text-xs font-bold text-slate-500 bg-slate-200 px-2.5 py-1 rounded-full">
-                  {monthPostsCount} Konten Terjadwal
-                </span>
-                {isFreeTier && (
-                  <button
-                    onClick={() => openUpgradeModal({ reason: 'agenda_limit', currentCount: currentWeekCount, maxLimit: 3 })}
-                    className={`text-[11px] font-black px-3 py-1 rounded-full border transition-all flex items-center gap-1.5 cursor-pointer ${
-                      currentWeekCount >= 3
-                        ? 'bg-rose-50 text-rose-700 border-rose-300 animate-pulse'
-                        : 'bg-amber-50 text-amber-700 border-amber-300'
-                    }`}
-                    title="Klik untuk upgrade ke Paket Pro atau Plus"
-                  >
-                    <span className="material-symbols-outlined text-xs">
-                      {currentWeekCount >= 3 ? 'warning' : 'schedule'}
-                    </span>
-                    <span>Kuota Free: {currentWeekCount}/3 Minggu Ini</span>
-                    <span className="text-[9px] underline uppercase tracking-wider font-extrabold ml-1">Upgrade</span>
-                  </button>
-                )}
-              </h1>
+              <div className="flex flex-wrap items-center gap-3">
+                <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">
+                  {monthNames[month]} {year}
+                </h1>
+
+                <div className="flex flex-wrap items-center gap-2.5">
+                  {/* Badge: Konten Terjadwal */}
+                  <span className="inline-flex items-center text-xs font-bold text-slate-600 bg-slate-100 border border-slate-200/80 px-3 py-1 rounded-full whitespace-nowrap shadow-2xs">
+                    {monthPostsCount} Konten Terjadwal
+                  </span>
+
+                  {/* Warning Box: Kuota Free (Single line, aligned, compact padding) */}
+                  {isFreeTier && (
+                    <div
+                      className={`inline-flex items-center gap-2 px-3 py-1 rounded-full border text-xs font-bold transition-all shadow-2xs whitespace-nowrap ${
+                        currentWeekCount >= 3
+                          ? 'bg-rose-50 text-rose-700 border-rose-300 animate-pulse'
+                          : 'bg-amber-50 text-amber-900 border-amber-300'
+                      }`}
+                    >
+                      <span className="material-symbols-outlined text-sm leading-none flex-shrink-0 text-amber-700">
+                        {currentWeekCount >= 3 ? 'warning' : 'schedule'}
+                      </span>
+                      <span className="leading-none whitespace-nowrap text-[11px] sm:text-xs">
+                        Kuota Free: {currentWeekCount}/3 Minggu Ini
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => openUpgradeModal({ reason: 'agenda_limit', currentCount: currentWeekCount, maxLimit: 3 })}
+                        className="bg-amber-600 hover:bg-amber-700 text-white text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full transition-all cursor-pointer leading-tight flex items-center hover:scale-105 active:scale-95 shadow-xs"
+                        title="Klik untuk upgrade ke Paket Pro atau Plus"
+                      >
+                        UPGRADE
+                      </button>
+                    </div>
+                  )}
+                </div>
+              </div>
               <p className="text-xs sm:text-sm text-slate-500 mt-1">
                 Visualisasikan seluruh jadwal posting sosial media UMKM dengan label kategori warna tersinkronisasi.
               </p>

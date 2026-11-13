@@ -404,9 +404,9 @@ export default function DragDropContentPage() {
                 className="px-4 py-2.5 bg-gradient-primary text-white font-extrabold text-xs rounded-xl shadow-md shadow-primary/20 flex items-center gap-1.5 hover:scale-[1.02] active:scale-95 transition-all cursor-pointer"
               >
                 <span className="material-symbols-outlined text-base">
-                  {isFreeTier ? 'lock' : 'add_photo_alternate'}
+                  {isFreeTier ? 'lock' : 'add'}
                 </span>
-                <span>+ Buat Kartu Baru {isFreeTier ? '(Terkunci)' : '(Ada Gambar)'}</span>
+                <span>Buat Kartu Baru</span>
               </button>
             </div>
           </div>

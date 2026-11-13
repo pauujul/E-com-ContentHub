@@ -179,7 +179,7 @@ export default function SetTimePage() {
               onClick={handleContinue}
               className="flex-2 py-3.5 bg-gradient-primary text-white font-bold text-xs rounded-xl shadow-md shadow-primary/20 hover:scale-[1.02] active:scale-95 transition-all text-center flex items-center justify-center gap-1.5"
             >
-              <span>Lanjut: Konfirmasi Jadwal & Buat Konten</span>
+              <span>Lanjut: Konfirmasi Jadwal Konten</span>
               <span className="material-symbols-outlined text-sm">arrow_forward</span>
             </button>
           </div>

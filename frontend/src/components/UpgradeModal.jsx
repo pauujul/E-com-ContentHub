@@ -1,86 +1,23 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import api from '../services/api';
+import PricingSection from './PricingSection';
 
 export default function UpgradeModal({ isOpen, onClose, config, setStep }) {
   const { currentUser, refreshSubscription } = useAuth();
   const { step, reason, templateTitle, currentCount, maxLimit, selectedPlan } = config;
 
   const [activePlan, setActivePlan] = useState(selectedPlan || null);
-  const [plans, setPlans] = useState([]);
-  const [loadingPlans, setLoadingPlans] = useState(false);
 
   // Form Pembayaran Checkout di dalam Modal
   const [isProcessing, setIsProcessing] = useState(false);
   const [paymentError, setPaymentError] = useState('');
 
-  // Default fallback plans if API is loading
-  const defaultPlans = [
-    {
-      id: 2,
-      sku: 'CH-PRO-3M',
-      name: 'ContentHub Pro',
-      price: '199000.00',
-      billing_cycle: '3 Bulan',
-      badge: 'Paket Populer',
-      features: [
-        'Kalender Konten Tanpa Batas',
-        'Akses Penuh Drag & Drop Planner',
-        'Akses Seluruh Template (Basic & Premium)',
-        'Masa Aktif 3 Bulan Penuh',
-        'Integrasi Editor Canva Pro',
-        'Prioritas Dukungan Pelanggan',
-      ],
-    },
-    {
-      id: 3,
-      sku: 'CH-PLUS-1Y',
-      name: 'ContentHub Plus',
-      price: '699000.00',
-      billing_cycle: '1 Tahun',
-      badge: 'Fitur Terlengkap (Plus)',
-      is_hero: true,
-      features: [
-        'Semua Fitur Paket Pro',
-        'Notifikasi Otomatis via Gmail (Presisi Menit)',
-        'Push Notification Langsung di Smartphone',
-        'Masa Aktif 1 Tahun Penuh',
-        'Akses Update Template Desain Terkini',
-        'Dukungan VIP 24/7',
-      ],
-    },
-  ];
-
-  // Fetch plans from API
-  useEffect(() => {
-    let isMounted = true;
-    setLoadingPlans(true);
-    api.getProducts()
-      .then((res) => {
-        if (isMounted && res.success && Array.isArray(res.data)) {
-          const filtered = res.data.filter(
-            (p) => p.id !== 1 && !p.sku?.includes('FREE') && !p.name?.toLowerCase().includes('enterprise')
-          );
-          if (filtered.length >= 2) {
-            setPlans(filtered);
-          } else {
-            setPlans(defaultPlans);
-          }
-        }
-      })
-      .catch(() => {
-        if (isMounted) setPlans(defaultPlans);
-      })
-      .finally(() => {
-        if (isMounted) setLoadingPlans(false);
-      });
-
-    return () => {
-      isMounted = false;
-    };
-  }, []);
-
   const handleChoosePlan = (plan) => {
+    if (parseFloat(plan.price) === 0) {
+      alert('Anda saat ini sudah aktif pada Paket Free.');
+      return;
+    }
     setActivePlan(plan);
     setPaymentError('');
     setStep('checkout', { selectedPlan: plan });
@@ -130,7 +67,7 @@ export default function UpgradeModal({ isOpen, onClose, config, setStep }) {
         throw new Error('Script Midtrans Snap belum termuat. Pastikan koneksi internet aktif dan AdBlocker dinonaktifkan.');
       }
 
-      // 3. Tampilkan popup interaktif resmi Midtrans Snap (Gambar 2)
+      // 3. Tampilkan popup interaktif resmi Midtrans Snap
       window.snap.pay(midtransData.token, {
         onSuccess: async function (res) {
           try {
@@ -177,12 +114,15 @@ export default function UpgradeModal({ isOpen, onClose, config, setStep }) {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-900/60 backdrop-blur-md animate-in fade-in duration-200">
-      <div className="relative w-full max-w-xl bg-white rounded-2xl sm:rounded-3xl shadow-2xl border border-slate-200 overflow-hidden text-slate-800 transition-all duration-300 max-h-[92vh] flex flex-col">
-        
+      <div
+        className={`relative w-full ${
+          step === 'pricing' ? 'max-w-5xl' : 'max-w-xl'
+        } bg-white rounded-2xl sm:rounded-3xl shadow-2xl border border-slate-200 overflow-hidden text-slate-800 transition-all duration-300 max-h-[92vh] flex flex-col`}
+      >
         {/* Tombol Close */}
         <button
           onClick={onClose}
-          className="absolute top-4 right-4 z-10 w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-500 hover:text-slate-800 flex items-center justify-center transition-colors"
+          className="absolute top-4 right-4 z-20 w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-500 hover:text-slate-800 flex items-center justify-center transition-colors cursor-pointer"
           title="Tutup Modal"
         >
           <span className="material-symbols-outlined text-base">close</span>
@@ -271,111 +211,50 @@ export default function UpgradeModal({ isOpen, onClose, config, setStep }) {
               <button
                 type="button"
                 onClick={onClose}
-                className="flex-1 py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl font-bold text-xs transition-colors"
+                className="flex-1 py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl font-bold text-xs transition-colors cursor-pointer"
               >
                 Tetap di Paket Free
               </button>
               <button
                 type="button"
                 onClick={() => setStep('pricing')}
-                className="flex-2 py-3 bg-gradient-primary text-white rounded-xl font-black text-xs shadow-md shadow-primary/25 hover:scale-[1.02] active:scale-95 transition-all flex items-center justify-center gap-2"
+                className="flex-2 py-3 bg-gradient-primary text-white rounded-xl font-black text-xs shadow-md shadow-primary/25 hover:scale-[1.02] active:scale-95 transition-all flex items-center justify-center gap-2 cursor-pointer"
               >
-                <span>Upgrade Sekarang</span>
+                <span>Upgrade</span>
                 <span className="material-symbols-outlined text-sm">arrow_forward</span>
               </button>
             </div>
           </div>
         )}
 
-        {/* STEP 2: PRICING PLAN SELECTOR */}
+        {/* STEP 2: PRICING PLAN SELECTOR (3-Tier Layout Reusable Component) */}
         {step === 'pricing' && (
-          <div className="p-6 sm:p-8 space-y-6">
+          <div className="p-5 sm:p-6 space-y-4 overflow-y-auto">
             <div className="flex items-center justify-between pb-3 border-b border-slate-100">
               <div>
                 <span className="text-[10px] font-extrabold uppercase tracking-widest text-primary">Langkah 1 dari 2</span>
                 <h2 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">Pilih Paket Langganan</h2>
+                <p className="text-xs text-slate-500 mt-0.5">
+                  Katalog resmi tersinkronisasi langsung dari database PostgreSQL/Neon Cloud.
+                </p>
               </div>
               <button
                 type="button"
                 onClick={() => setStep('limit')}
-                className="text-xs font-bold text-slate-400 hover:text-slate-700 flex items-center gap-1 transition-colors"
+                className="text-xs font-bold text-slate-500 hover:text-slate-800 flex items-center gap-1 transition-colors px-3 py-1.5 rounded-xl hover:bg-slate-100 cursor-pointer"
               >
                 <span className="material-symbols-outlined text-sm">arrow_back</span>
                 Kembali
               </button>
             </div>
 
-            {loadingPlans ? (
-              <div className="text-center py-12">
-                <div className="inline-block animate-spin rounded-full h-8 w-8 border-4 border-primary border-t-transparent"></div>
-                <p className="mt-2 text-xs font-bold text-slate-400">Memuat paket dari database Neon...</p>
-              </div>
-            ) : (
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 items-stretch">
-                {(plans.length ? plans : defaultPlans).map((plan) => {
-                  const isPlus = plan.id === 3 || plan.sku?.includes('PLUS') || plan.name?.toLowerCase().includes('plus');
-                  const features = Array.isArray(plan.features) ? plan.features : JSON.parse(plan.features || '[]');
-                  const numPrice = parseFloat(plan.price);
-                  const priceStr = numPrice === 0 ? 'Gratis' : `Rp ${numPrice.toLocaleString('id-ID')}`;
-
-                  return (
-                    <div
-                      key={plan.id}
-                      className={`relative p-5 rounded-2xl flex flex-col justify-between border-2 transition-all ${
-                        isPlus
-                          ? 'border-primary bg-primary/5 shadow-md shadow-primary/10'
-                          : 'border-slate-200 bg-white hover:border-slate-300 shadow-xs'
-                      }`}
-                    >
-                      {isPlus && (
-                        <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-primary text-white text-[9px] font-black uppercase tracking-wider px-3 py-0.5 rounded-full shadow-xs">
-                          ⭐ Rekomendasi Terlengkap
-                        </div>
-                      )}
-
-                      <div className="space-y-3">
-                        <div className="flex items-center justify-between">
-                          <h3 className="font-black text-base text-slate-900">{plan.name}</h3>
-                          <span className="text-[10px] font-extrabold px-2 py-0.5 rounded-full bg-slate-200 text-slate-700">
-                            {plan.billing_cycle}
-                          </span>
-                        </div>
-
-                        <div>
-                          <div className="text-xl sm:text-2xl font-black text-slate-900">{priceStr}</div>
-                          <span className="text-[10px] text-slate-400 font-semibold">
-                            {isPlus ? 'Periode Aktif 1 Tahun Penuh' : 'Periode Aktif 3 Bulan'}
-                          </span>
-                        </div>
-
-                        <div className="space-y-1.5 pt-2 border-t border-slate-100 text-[11px] text-slate-600">
-                          {features.slice(0, 5).map((f, i) => (
-                            <div key={i} className="flex items-start gap-1.5 font-medium leading-snug">
-                              <span className="material-symbols-outlined text-xs text-emerald-600 flex-shrink-0 mt-0.5">
-                                check_circle
-                              </span>
-                              <span>{f}</span>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-
-                      <button
-                        type="button"
-                        onClick={() => handleChoosePlan(plan)}
-                        className={`mt-5 w-full py-2.5 rounded-xl text-xs font-black transition-all shadow-xs cursor-pointer ${
-                          isPlus
-                            ? 'bg-gradient-primary text-white hover:scale-[1.02] active:scale-95'
-                            : 'bg-slate-900 text-white hover:bg-slate-800 active:scale-95'
-                        }`}
-                      >
-                        Pilih {plan.name}
-                      </button>
-                    </div>
-                  );
-                })}
-              </div>
-            )}
+            {/* Reusable 3-Tier Pricing Component */}
+            <PricingSection
+              compact={true}
+              showHeader={false}
+              showSupportBanner={false}
+              onSelectPlan={handleChoosePlan}
+            />
           </div>
         )}
 
@@ -390,7 +269,7 @@ export default function UpgradeModal({ isOpen, onClose, config, setStep }) {
               <button
                 type="button"
                 onClick={() => setStep('pricing')}
-                className="text-xs font-bold text-slate-400 hover:text-slate-700 flex items-center gap-1 transition-colors"
+                className="text-xs font-bold text-slate-400 hover:text-slate-700 flex items-center gap-1 transition-colors cursor-pointer"
               >
                 <span className="material-symbols-outlined text-sm">arrow_back</span>
                 Ganti Paket
@@ -481,7 +360,7 @@ export default function UpgradeModal({ isOpen, onClose, config, setStep }) {
                 type="button"
                 onClick={() => setStep('pricing')}
                 disabled={isProcessing}
-                className="py-2.5 px-4 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl font-bold text-xs transition-colors"
+                className="py-2.5 px-4 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl font-bold text-xs transition-colors cursor-pointer"
               >
                 Batal
               </button>
@@ -539,7 +418,6 @@ export default function UpgradeModal({ isOpen, onClose, config, setStep }) {
             </div>
           </div>
         )}
-
       </div>
     </div>
   );

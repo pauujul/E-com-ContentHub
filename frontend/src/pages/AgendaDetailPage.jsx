@@ -101,7 +101,7 @@ export default function AgendaDetailPage() {
                 className="px-5 py-2 bg-gradient-primary text-white rounded-xl text-xs font-bold shadow-md flex items-center gap-1.5 hover:scale-105 active:scale-95 transition-all"
               >
                 <span className="material-symbols-outlined text-base">add</span>
-                + Buat Agenda Baru
+                Buat Agenda Baru
               </Link>
 
               <div className="flex gap-1.5 p-1 bg-surface-container-low rounded-2xl border border-outline-variant/15">
