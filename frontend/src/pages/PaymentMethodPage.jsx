@@ -270,28 +270,6 @@ export default function PaymentMethodPage() {
                     </div>
                   </div>
                 </div>
-
-                {/* Jaminan Kenyamanan */}
-                <div className="p-4 rounded-2xl bg-blue-50/70 border border-blue-100 text-xs text-blue-900 space-y-2">
-                  <div className="font-extrabold flex items-center gap-1.5 text-blue-800">
-                    <span className="material-symbols-outlined text-sm">security</span>
-                    Keuntungan Pembayaran Terintegrasi Midtrans:
-                  </div>
-                  <ul className="space-y-1.5 text-[11px] text-blue-800/80">
-                    <li className="flex items-center gap-2">
-                      <span className="material-symbols-outlined text-xs text-emerald-600">check_circle</span>
-                      <span><strong>Verifikasi Otomatis:</strong> Tidak perlu upload struk transfer atau konfirmasi manual via WhatsApp.</span>
-                    </li>
-                    <li className="flex items-center gap-2">
-                      <span className="material-symbols-outlined text-xs text-emerald-600">check_circle</span>
-                      <span><strong>Aktivasi Seketika:</strong> Paket langganan Anda langsung aktif begitu pembayaran terdeteksi.</span>
-                    </li>
-                    <li className="flex items-center gap-2">
-                      <span className="material-symbols-outlined text-xs text-emerald-600">check_circle</span>
-                      <span><strong>Aman & Resmi:</strong> Terenkripsi penuh oleh standar keamanan Bank Indonesia.</span>
-                    </li>
-                  </ul>
-                </div>
               </div>
             </div>
 
