@@ -166,8 +166,8 @@ export default function PaymentMethodPage() {
               <span className="material-symbols-outlined text-on-surface-variant">arrow_back</span>
             </Link>
             <div>
-              <h1 className="text-2xl md:text-3xl font-extrabold text-on-surface">Pilih Metode Pembayaran</h1>
-              <p className="text-xs text-on-surface-variant mt-0.5">Selesaikan langganan untuk mengaktifkan fitur otomatis.</p>
+              <h1 className="text-2xl md:text-3xl font-extrabold text-on-surface">Konfirmasi & Pembayaran</h1>
+              <p className="text-xs text-on-surface-variant mt-0.5">Selesaikan pembayaran untuk mengaktifkan paket Anda secara otomatis.</p>
             </div>
           </div>
           <div className="flex items-center gap-3">
@@ -198,7 +198,7 @@ export default function PaymentMethodPage() {
               <div className="bg-white rounded-3xl border-2 border-primary/30 p-6 sm:p-8 shadow-sm space-y-6 relative overflow-hidden">
                 <div className="absolute top-0 right-0 bg-primary/10 text-primary text-[10px] font-black uppercase tracking-widest px-4 py-1.5 rounded-bl-2xl border-b border-l border-primary/20 flex items-center gap-1.5">
                   <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-                  Otomatis 24/7 Terverifikasi
+                  VERIFIKASI OTOMATIS 24/7
                 </div>
 
                 <div className="flex items-start gap-4 pt-1">
@@ -213,7 +213,7 @@ export default function PaymentMethodPage() {
                       Midtrans Payment Gateway
                     </h2>
                     <p className="text-xs text-slate-500 mt-1 leading-relaxed">
-                      Satu gerbang pembayaran untuk semua metode. Anda dapat memilih metode pembayaran favorit langsung di jendela popup interaktif setelah menekan tombol bayar.
+                      Satu gerbang pembayaran untuk semua metode. Anda dapat memilih metode pembayaran favorit langsung di jendela pembayaran setelah menekan tombol lanjutkan pembayaran.
                     </p>
                   </div>
                 </div>
@@ -221,7 +221,7 @@ export default function PaymentMethodPage() {
                 {/* Grid Metode yang Didukung */}
                 <div className="space-y-3 pt-2 border-t border-slate-100">
                   <span className="text-[11px] font-extrabold uppercase tracking-wider text-slate-400 block">
-                    Metode Pembayaran Yang Didukung di Popup:
+                    METODE PEMBAYARAN YANG TERSEDIA:
                   </span>
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -299,7 +299,7 @@ export default function PaymentMethodPage() {
                     </span>
                   </div>
                   <div className="flex justify-between text-on-surface-variant">
-                    <span>Biaya Layanan Payment Gateway</span>
+                    <span>Biaya Layanan / Admin</span>
                     <span className="font-semibold text-green-600">Gratis (Rp 0)</span>
                   </div>
                   <div className="h-px bg-outline-variant/30 my-2"></div>
@@ -318,7 +318,7 @@ export default function PaymentMethodPage() {
                   <div className="flex gap-2.5 p-3.5 bg-primary/5 rounded-xl border border-primary/10 text-xs text-on-primary-fixed-variant">
                     <span className="material-symbols-outlined text-primary text-base flex-shrink-0">verified_user</span>
                     <p className="leading-relaxed">
-                      Transaksi terhubung langsung ke database PostgreSQL ContentHub.
+                      Transaksi aman & terenkripsi. Paket langsung aktif setelah pembayaran berhasil.
                     </p>
                   </div>
 
@@ -334,7 +334,7 @@ export default function PaymentMethodPage() {
                       </>
                     ) : (
                       <>
-                        <span>{isFree ? 'Aktivasi Paket Gratis' : 'Lanjutkan Pembayaran via Midtrans'}</span>
+                        <span>{isFree ? 'Aktivasi Paket Gratis' : 'Lanjutkan Pembayaran'}</span>
                         <span className="material-symbols-outlined text-base">arrow_forward</span>
                       </>
                     )}
