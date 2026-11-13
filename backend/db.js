@@ -537,9 +537,11 @@ function initPostgres() {
     pool = new Pool({
       connectionString: process.env.DATABASE_URL,
       ssl: { rejectUnauthorized: false },
-      max: 20,
+      max: 15,
       idleTimeoutMillis: 30000,
-      connectionTimeoutMillis: 5000,
+      connectionTimeoutMillis: 10000,
+      keepAlive: true,
+      keepAliveInitialDelayMillis: 10000,
     });
   } else if (process.env.DB_HOST) {
     pool = new Pool({
@@ -548,15 +550,17 @@ function initPostgres() {
       user: process.env.DB_USER || 'admin',
       password: process.env.DB_PASSWORD || 'password123',
       database: process.env.DB_NAME || 'ecommerce_db',
-      max: 20,
+      max: 15,
       idleTimeoutMillis: 30000,
-      connectionTimeoutMillis: 3000,
+      connectionTimeoutMillis: 5000,
+      keepAlive: true,
+      keepAliveInitialDelayMillis: 10000,
     });
   }
 
   if (pool) {
     // Default to true when pool is configured with DATABASE_URL
-    isPostgresConnected = !!process.env.DATABASE_URL;
+    isPostgresConnected = !!(process.env.DATABASE_URL || process.env.DB_HOST);
 
     pool.connect((err, client, release) => {
       if (err) {
@@ -566,13 +570,50 @@ function initPostgres() {
         isPostgresConnected = true;
         console.log('✅ Terhubung sukses ke PostgreSQL/Neon Cloud.');
         release();
+        syncLocalStoreFromPostgres();
       }
     });
 
     pool.on('error', (err) => {
-      console.warn('⚠️  Koneksi PostgreSQL terputus:', err.message);
-      isPostgresConnected = false;
+      // Idle client timeouts are standard behavior in Neon Cloud / serverless pg
+      // The pool automatically creates a fresh client for subsequent queries.
+      console.warn('ℹ️ Pool background idle connection reset (Neon Cloud timeout):', err.message);
     });
+  }
+}
+
+// Background keep-alive ping (setiap 25 detik) untuk mencegah Neon idle timeout
+// dan memastikan status isPostgresConnected otomatis pulih jika jaringan sempat terputus
+setInterval(async () => {
+  if (pool && (process.env.DATABASE_URL || process.env.DB_HOST)) {
+    try {
+      await pool.query('SELECT 1');
+      if (!isPostgresConnected) {
+        isPostgresConnected = true;
+        console.log('🔄 Koneksi PostgreSQL/Neon Cloud pulih dan kembali aktif.');
+        syncLocalStoreFromPostgres();
+      }
+    } catch (err) {
+      const isConnError = ['ECONNREFUSED', 'ENOTFOUND', 'ETIMEDOUT', '57P01'].includes(err.code) || (err.message && err.message.includes('Connection terminated'));
+      if (isConnError) {
+        isPostgresConnected = false;
+      }
+    }
+  }
+}, 25000);
+
+// Sinkronisasi data pengguna dari PostgreSQL Neon ke local_store.json
+async function syncLocalStoreFromPostgres() {
+  if (!pool) return;
+  try {
+    const resUsers = await pool.query('SELECT * FROM users ORDER BY id ASC');
+    if (resUsers && resUsers.rows && resUsers.rows.length > 0) {
+      localData.users = resUsers.rows;
+      saveLocalStore(localData);
+      console.log(`✅ Sinkronisasi local store: ${resUsers.rows.length} pengguna disinkronkan dari Neon Cloud.`);
+    }
+  } catch (err) {
+    // Abaikan jika query awal gagal
   }
 }
 
@@ -587,14 +628,18 @@ const db = {
   saveStore: () => (!isPostgresConnected ? saveLocalStore(localData) : null),
 
   query: async (text, params = []) => {
-    // 1. Jika terhubung ke Neon PostgreSQL, gunakan driver PG murni
-    if (pool && isPostgresConnected) {
+    // 1. Jika terhubung ke Neon PostgreSQL, prioritaskan driver PG murni
+    if (pool) {
       try {
-        return await pool.query(text, params);
+        const res = await pool.query(text, params);
+        if (!isPostgresConnected) {
+          isPostgresConnected = true;
+        }
+        return res;
       } catch (err) {
-        const isConnError = ['ECONNREFUSED', 'ENOTFOUND', 'ETIMEDOUT', '57P01'].includes(err.code) || err.message?.includes('Connection terminated');
+        const isConnError = ['ECONNREFUSED', 'ENOTFOUND', 'ETIMEDOUT', '57P01'].includes(err.code) || (err.message && (err.message.includes('Connection terminated') || err.message.includes('timeout')));
         if (isConnError) {
-          console.warn('⚠️  Postgres connection drop, beralih ke local storage:', err.message);
+          console.warn('⚠️  Postgres connection drop, fallback sementara ke local storage:', err.message);
           isPostgresConnected = false;
         } else {
           throw err;
@@ -609,8 +654,15 @@ const db = {
 
   pool: {
     connect: async () => {
-      if (isPostgresConnected && pool) {
-        return await pool.connect();
+      if (pool) {
+        try {
+          const client = await pool.connect();
+          isPostgresConnected = true;
+          return client;
+        } catch (err) {
+          console.warn('⚠️ Gagal pool.connect():', err.message);
+          isPostgresConnected = false;
+        }
       }
       // Mock client untuk transaksi jika offline
       return {
