@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import Navbar from '../components/Navbar';
 import Sidebar from '../components/Sidebar';
 import { useAuth } from '../context/AuthContext';
 import { useUpgradeModal } from '../context/UpgradeModalContext';
 import api from '../services/api';
+import InvoiceReceiptModal from '../components/InvoiceReceiptModal';
 
 export default function UserProfilePage() {
   const {
@@ -53,6 +54,7 @@ export default function UserProfilePage() {
   const [userOrders, setUserOrders] = useState([]);
   const [loadingOrders, setLoadingOrders] = useState(false);
   const [simulatingPaymentId, setSimulatingPaymentId] = useState(null);
+  const [selectedReceiptOrder, setSelectedReceiptOrder] = useState(null);
 
   const fetchUserOrders = async () => {
     if (!currentUser?.id) return;
@@ -902,64 +904,94 @@ export default function UserProfilePage() {
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-slate-100">
-                        {userOrders.map((ord) => (
-                          <tr key={ord.id} className="hover:bg-slate-50/80 transition-colors">
-                            <td className="py-3 px-3 font-mono font-bold text-slate-800">
-                              #{ord.order_number}
-                            </td>
-                            <td className="py-3 px-3 font-bold text-slate-800">
-                              {ord.plan_name} ({ord.billing_cycle || 'Bulanan'})
-                            </td>
-                            <td className="py-3 px-3 font-extrabold text-primary">
-                              {formatRupiah(ord.total_amount)}
-                            </td>
-                            <td className="py-3 px-3 text-slate-600">
-                              {ord.payment_channel || ord.payment_method || 'Virtual Account'}
-                            </td>
-                            <td className="py-3 px-3 text-slate-500">
-                              {new Date(ord.created_at).toLocaleDateString('id-ID', {
-                                day: 'numeric',
-                                month: 'short',
-                                year: 'numeric',
-                              })}
-                            </td>
-                            <td className="py-3 px-3">
-                              {ord.status === 'Paid' ? (
-                                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 font-extrabold text-[10px]">
-                                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-600"></span>
-                                  Lunas (Aktif)
-                                </span>
-                              ) : ord.status === 'Pending' ? (
-                                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-amber-100 text-amber-800 font-extrabold text-[10px]">
-                                  <span className="w-1.5 h-1.5 rounded-full bg-amber-600"></span>
-                                  Menunggu Bayar
-                                </span>
-                              ) : (
-                                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-slate-100 text-slate-600 font-bold text-[10px]">
-                                  {ord.status}
-                                </span>
-                              )}
-                            </td>
-                            <td className="py-3 px-3 text-right">
-                              {ord.status === 'Pending' ? (
-                                <button
-                                  type="button"
-                                  disabled={simulatingPaymentId === ord.id}
-                                  onClick={() => handleSimulatePayOrder(ord.id)}
-                                  className="px-3 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg font-bold text-[10px] shadow-xs transition-all cursor-pointer inline-flex items-center gap-1"
-                                >
-                                  <span className="material-symbols-outlined text-xs">check</span>
-                                  {simulatingPaymentId === ord.id ? 'Memproses...' : 'Simulasi Lunas'}
-                                </button>
-                              ) : (
-                                <span className="text-[11px] text-emerald-600 font-bold inline-flex items-center gap-1">
-                                  <span className="material-symbols-outlined text-xs">verified</span>
-                                  Terverifikasi
-                                </span>
-                              )}
-                            </td>
-                          </tr>
-                        ))}
+                        {userOrders.map((ord) => {
+                          const isPaid = ord.status === 'Paid' || ord.tracking_status === 'lunas';
+                          const isCancelled = ord.status === 'Cancelled' || ord.tracking_status === 'ditolak';
+
+                          return (
+                            <tr key={ord.id} className="hover:bg-slate-50/80 transition-colors">
+                              <td className="py-3 px-3 font-mono font-bold text-slate-800 whitespace-nowrap">
+                                #{ord.order_number}
+                              </td>
+                              <td className="py-3 px-3 font-bold text-slate-800 whitespace-nowrap">
+                                {ord.plan_name} <span className="text-[10px] text-slate-400 font-normal">({ord.billing_cycle || 'Bulanan'})</span>
+                              </td>
+                              <td className="py-3 px-3 font-extrabold text-primary whitespace-nowrap">
+                                {formatRupiah(ord.total_amount)}
+                              </td>
+                              <td className="py-3 px-3 text-slate-600 whitespace-nowrap">
+                                {ord.payment_channel || ord.payment_method || 'Virtual Account'}
+                              </td>
+                              <td className="py-3 px-3 text-slate-500 whitespace-nowrap">
+                                {new Date(ord.created_at).toLocaleDateString('id-ID', {
+                                  day: 'numeric',
+                                  month: 'short',
+                                  year: 'numeric',
+                                })}
+                              </td>
+                              <td className="py-3 px-3 whitespace-nowrap">
+                                {isPaid ? (
+                                  <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 font-extrabold text-[10px]">
+                                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-600"></span>
+                                    Lunas (Aktif)
+                                  </span>
+                                ) : isCancelled ? (
+                                  <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-red-100 text-red-800 font-extrabold text-[10px]">
+                                    <span className="w-1.5 h-1.5 rounded-full bg-red-600"></span>
+                                    Dibatalkan
+                                  </span>
+                                ) : (
+                                  <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-amber-100 text-amber-800 font-extrabold text-[10px]">
+                                    <span className="w-1.5 h-1.5 rounded-full bg-amber-600"></span>
+                                    Menunggu Bayar
+                                  </span>
+                                )}
+                              </td>
+                              <td className="py-3 px-3 text-right whitespace-nowrap">
+                                <div className="inline-flex items-center gap-1.5 justify-end">
+                                  {/* Tombol Lihat Struk Resmi */}
+                                  <button
+                                    type="button"
+                                    onClick={() => setSelectedReceiptOrder(ord)}
+                                    className={`px-2.5 py-1 rounded-xl text-[10px] font-bold transition-all shadow-2xs flex items-center gap-1 cursor-pointer ${
+                                      isPaid
+                                        ? 'bg-emerald-50 text-emerald-800 hover:bg-emerald-100 border border-emerald-200'
+                                        : 'bg-amber-50 text-amber-800 hover:bg-amber-100 border border-amber-200'
+                                    }`}
+                                    title="Lihat & Cetak Struk Digital"
+                                  >
+                                    <span className="material-symbols-outlined text-xs">receipt_long</span>
+                                    <span>{isPaid ? 'Struk Lunas' : 'Struk Tagihan'}</span>
+                                  </button>
+
+                                  {/* Tautan Tracking Detail */}
+                                  <Link
+                                    to={`/transactions/${ord.order_number}`}
+                                    className="px-2.5 py-1 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-[10px] font-bold inline-flex items-center gap-0.5 transition-colors"
+                                    title="Buka Rincian Pembayaran & Tracking"
+                                  >
+                                    <span>Detail</span>
+                                    <span className="material-symbols-outlined text-[11px]">arrow_forward</span>
+                                  </Link>
+
+                                  {/* Tombol Simulasi Pembayaran (Hanya jika masih Pending) */}
+                                  {!isPaid && !isCancelled && (
+                                    <button
+                                      type="button"
+                                      disabled={simulatingPaymentId === ord.id}
+                                      onClick={() => handleSimulatePayOrder(ord.id)}
+                                      className="px-2 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg font-bold text-[9px] shadow-xs transition-all cursor-pointer inline-flex items-center gap-0.5"
+                                      title="Simulasi pelunasan instan"
+                                    >
+                                      <span className="material-symbols-outlined text-[10px]">check</span>
+                                      {simulatingPaymentId === ord.id ? '...' : 'Bayar'}
+                                    </button>
+                                  )}
+                                </div>
+                              </td>
+                            </tr>
+                          );
+                        })}
                       </tbody>
                     </table>
                   </div>
@@ -970,6 +1002,15 @@ export default function UserProfilePage() {
         </div>
 
       </main>
+
+      {/* Modal Struk / Faktur Digital Resmi (Lunas / Belum Lunas) */}
+      {selectedReceiptOrder && (
+        <InvoiceReceiptModal
+          isOpen={Boolean(selectedReceiptOrder)}
+          onClose={() => setSelectedReceiptOrder(null)}
+          order={selectedReceiptOrder}
+        />
+      )}
     </div>
   );
 }

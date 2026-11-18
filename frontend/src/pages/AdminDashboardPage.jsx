@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import Navbar from '../components/Navbar';
 import api from '../services/api';
 import { useAuth } from '../context/AuthContext';
+import InvoiceReceiptModal from '../components/InvoiceReceiptModal';
 
 export default function AdminDashboardPage() {
   const { currentUser, logout } = useAuth();
@@ -21,6 +22,7 @@ export default function AdminDashboardPage() {
   const [orders, setOrders] = useState([]);
   const [updatingOrderId, setUpdatingOrderId] = useState(null);
   const [previewProofOrder, setPreviewProofOrder] = useState(null);
+  const [previewReceiptOrder, setPreviewReceiptOrder] = useState(null);
   const [verifyingOrderId, setVerifyingOrderId] = useState(null);
 
   // 2. Users Management State
@@ -704,85 +706,109 @@ export default function AdminDashboardPage() {
                   </span>
                 </div>
 
-                <div className="overflow-x-auto">
-                  <table className="w-full text-left border-collapse text-xs">
+                <div className="overflow-x-auto rounded-2xl border border-slate-200 shadow-xs">
+                  <table className="w-full text-left border-collapse text-xs min-w-[1120px]">
                     <thead>
-                      <tr className="border-b border-slate-200 bg-slate-50 text-slate-500 uppercase tracking-wider">
-                        <th className="py-3 px-4 font-bold">No. Order</th>
-                        <th className="py-3 px-4 font-bold">Pelanggan</th>
-                        <th className="py-3 px-4 font-bold">Paket Langganan</th>
-                        <th className="py-3 px-4 font-bold">Total (Rp)</th>
-                        <th className="py-3 px-4 font-bold">Metode / Kanal</th>
-                        <th className="py-3 px-4 font-bold text-center">Bukti Transfer</th>
-                        <th className="py-3 px-4 font-bold">Status Tracking</th>
-                        <th className="py-3 px-4 font-bold text-center">Aksi Verifikasi</th>
+                      <tr className="border-b border-slate-200 bg-slate-50/90 text-slate-500 uppercase tracking-wider font-extrabold text-[10px]">
+                        <th className="py-3.5 px-4 whitespace-nowrap">No. Order</th>
+                        <th className="py-3.5 px-4 whitespace-nowrap">Pelanggan</th>
+                        <th className="py-3.5 px-4 whitespace-nowrap">Paket Langganan</th>
+                        <th className="py-3.5 px-4 whitespace-nowrap">Total Tagihan</th>
+                        <th className="py-3.5 px-4 whitespace-nowrap">Metode / Kanal</th>
+                        <th className="py-3.5 px-4 whitespace-nowrap text-center">Bukti Transfer</th>
+                        <th className="py-3.5 px-4 whitespace-nowrap text-center">Status Tracking</th>
+                        <th className="py-3.5 px-4 whitespace-nowrap text-center">Struk Resmi</th>
+                        <th className="py-3.5 px-4 whitespace-nowrap text-center">Aksi Verifikasi</th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-slate-100">
+                    <tbody className="divide-y divide-slate-100 bg-white">
                       {orders.map((ord) => {
                         const tracking = ord.tracking_status || (ord.status === 'Paid' ? 'lunas' : 'menunggu_pembayaran');
+                        const isPaid = ord.status === 'Paid' || tracking === 'lunas';
                         const backendUrl = import.meta.env.VITE_API_URL 
                           ? import.meta.env.VITE_API_URL.replace(/\/api\/?$/, '') 
                           : 'http://localhost:5000';
                         const proofUrl = ord.payment_proof_url ? `${backendUrl}${ord.payment_proof_url}` : null;
 
                         return (
-                          <tr key={ord.id} className="hover:bg-slate-50/60 transition-colors">
-                            <td className="py-4 px-4 font-mono font-bold text-primary">{ord.order_number}</td>
-                            <td className="py-4 px-4">
-                              <p className="font-bold text-slate-800">{ord.customer_name}</p>
-                              <p className="text-[11px] text-slate-400">
-                                {ord.customer_email} (User #{ord.user_id})
+                          <tr key={ord.id} className="hover:bg-slate-50/80 transition-colors align-middle">
+                            {/* 1. No. Order (Satu baris rapi) */}
+                            <td className="py-3.5 px-4 whitespace-nowrap">
+                              <span className="font-mono text-xs font-bold text-slate-900 block">
+                                #{ord.order_number}
+                              </span>
+                              <span className="text-[10px] text-slate-400 font-medium block">
+                                {new Date(ord.created_at).toLocaleDateString('id-ID', {
+                                  day: 'numeric',
+                                  month: 'short',
+                                  year: 'numeric',
+                                })}
+                              </span>
+                            </td>
+
+                            {/* 2. Pelanggan */}
+                            <td className="py-3.5 px-4 whitespace-nowrap">
+                              <p className="font-extrabold text-slate-900 text-xs">{ord.customer_name}</p>
+                              <p className="text-[11px] text-slate-400 font-mono">
+                                {ord.customer_email} <span className="text-[10px] text-slate-300">(#{ord.user_id})</span>
                               </p>
                             </td>
-                            <td className="py-4 px-4">
-                              <span className="font-bold text-slate-800">{ord.plan_name}</span>
-                              <span className="text-[10px] text-slate-400 block">({ord.billing_cycle})</span>
+
+                            {/* 3. Paket Langganan */}
+                            <td className="py-3.5 px-4 whitespace-nowrap">
+                              <span className="font-extrabold text-slate-800 text-xs block">{ord.plan_name}</span>
+                              <span className="text-[10px] text-slate-400 font-semibold block">{ord.billing_cycle || 'Bulanan'}</span>
                             </td>
-                            <td className="py-4 px-4 font-extrabold text-slate-900">
-                              Rp {parseFloat(ord.total_amount).toLocaleString('id-ID')}
+
+                            {/* 4. Total Tagihan */}
+                            <td className="py-3.5 px-4 whitespace-nowrap">
+                              <span className="font-black text-slate-900 text-xs">
+                                Rp {parseFloat(ord.total_amount).toLocaleString('id-ID')}
+                              </span>
                             </td>
-                            <td className="py-4 px-4 text-slate-600">
-                              <div className="flex items-center gap-1.5 font-semibold text-slate-800">
+
+                            {/* 5. Kanal Pembayaran */}
+                            <td className="py-3.5 px-4 whitespace-nowrap">
+                              <div className="flex items-center gap-1.5 font-bold text-slate-800 text-xs">
                                 <span className="material-symbols-outlined text-sm text-primary">
                                   {ord.payment_method === 'qris_static' ? 'qr_code_scanner' : ord.payment_method === 'bank_transfer' ? 'account_balance' : 'account_balance_wallet'}
                                 </span>
                                 <span>{ord.payment_channel || ord.payment_method}</span>
                               </div>
-                              <span className="text-[10px] text-slate-400 block">
+                              <span className="text-[10px] text-slate-400 block mt-0.5 font-medium">
                                 {ord.payment_method === 'midtrans' ? 'Otomatis Gateway' : (ord.bank_provider ? `Bank ${ord.bank_provider}` : 'Verifikasi Manual')}
                               </span>
                             </td>
 
-                            {/* Kolom Bukti Pembayaran */}
-                            <td className="py-4 px-4 text-center">
+                            {/* 6. Kolom Bukti Pembayaran */}
+                            <td className="py-3.5 px-4 text-center whitespace-nowrap">
                               {proofUrl ? (
                                 <button
                                   type="button"
                                   onClick={() => setPreviewProofOrder(ord)}
-                                  className="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl bg-primary/10 hover:bg-primary/20 text-primary font-bold text-[11px] transition-colors shadow-2xs cursor-pointer"
-                                  title="Lihat Pratinjau Bukti Transfer"
+                                  className="inline-flex items-center gap-1 px-2.5 py-1 rounded-xl bg-blue-50 hover:bg-blue-100 text-blue-700 font-extrabold text-[11px] transition-colors border border-blue-200 shadow-2xs cursor-pointer"
+                                  title="Lihat Foto Struk Pembayaran"
                                 >
                                   <span className="material-symbols-outlined text-sm">visibility</span>
-                                  Lihat Bukti
+                                  <span>Lihat Bukti</span>
                                 </button>
                               ) : ord.payment_method === 'midtrans' ? (
                                 <span className="text-[10px] font-bold text-slate-500 bg-slate-100 px-2.5 py-1 rounded-lg">
                                   ⚡ Midtrans
                                 </span>
                               ) : (
-                                <span className="text-[10px] font-bold text-amber-600 bg-amber-50 border border-amber-200 px-2 py-0.5 rounded-lg">
+                                <span className="text-[10px] font-bold text-amber-700 bg-amber-50 border border-amber-200 px-2 py-0.5 rounded-lg">
                                   Belum Upload
                                 </span>
                               )}
                             </td>
 
-                            {/* Kolom Status Tracking */}
-                            <td className="py-4 px-4">
+                            {/* 7. Kolom Status Tracking */}
+                            <td className="py-3.5 px-4 text-center whitespace-nowrap">
                               <span
-                                className={`px-2.5 py-1 rounded-full text-[10px] font-extrabold uppercase tracking-wider inline-flex items-center gap-1 ${
+                                className={`px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider inline-flex items-center gap-1 ${
                                   tracking === 'lunas'
-                                    ? 'bg-green-100 text-green-800 border border-green-200'
+                                    ? 'bg-emerald-100 text-emerald-800 border border-emerald-200'
                                     : tracking === 'menunggu_verifikasi'
                                     ? 'bg-blue-100 text-blue-800 border border-blue-300 animate-pulse'
                                     : tracking === 'ditolak'
@@ -791,15 +817,32 @@ export default function AdminDashboardPage() {
                                 }`}
                               >
                                 {tracking === 'lunas' && '✓ Lunas'}
-                                {tracking === 'menunggu_verifikasi' && '⏳ Verifikasi Admin'}
+                                {tracking === 'menunggu_verifikasi' && '⏳ Verifikasi'}
                                 {tracking === 'menunggu_pembayaran' && 'Menunggu Bayar'}
                                 {tracking === 'ditolak' && '✕ Ditolak'}
                               </span>
                             </td>
 
-                            {/* Kolom Aksi Verifikasi */}
-                            <td className="py-4 px-4 text-center">
-                              <div className="inline-flex items-center gap-1.5">
+                            {/* 8. Kolom Struk Resmi (Invoice) */}
+                            <td className="py-3.5 px-4 text-center whitespace-nowrap">
+                              <button
+                                type="button"
+                                onClick={() => setPreviewReceiptOrder(ord)}
+                                className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-xl text-[11px] font-extrabold transition-all shadow-2xs cursor-pointer ${
+                                  isPaid
+                                    ? 'bg-emerald-50 text-emerald-800 hover:bg-emerald-100 border border-emerald-200'
+                                    : 'bg-slate-100 text-slate-700 hover:bg-slate-200 border border-slate-200'
+                                }`}
+                                title="Lihat & Cetak Struk Digital Resmi"
+                              >
+                                <span className="material-symbols-outlined text-sm">receipt_long</span>
+                                <span>{isPaid ? 'Struk Lunas' : 'Struk Tagihan'}</span>
+                              </button>
+                            </td>
+
+                            {/* 9. Kolom Aksi Verifikasi */}
+                            <td className="py-3.5 px-4 text-center whitespace-nowrap">
+                              <div className="inline-flex items-center gap-1.5 justify-center">
                                 {tracking !== 'lunas' && (
                                   <button
                                     type="button"
@@ -809,7 +852,7 @@ export default function AdminDashboardPage() {
                                     title="Setujui dan Aktifkan Paket Langganan User"
                                   >
                                     <span className="material-symbols-outlined text-xs">check_circle</span>
-                                    Terima (Set Lunas)
+                                    <span>Terima (Set Lunas)</span>
                                   </button>
                                 )}
                                 {tracking !== 'ditolak' && tracking !== 'lunas' && (
@@ -821,13 +864,13 @@ export default function AdminDashboardPage() {
                                     title="Tolak Bukti Pembayaran"
                                   >
                                     <span className="material-symbols-outlined text-xs">cancel</span>
-                                    Tolak
+                                    <span>Tolak</span>
                                   </button>
                                 )}
                                 {tracking === 'lunas' && (
-                                  <span className="text-[10px] font-bold text-emerald-700 flex items-center gap-1">
-                                    <span className="material-symbols-outlined text-xs">verified</span>
-                                    Aktif
+                                  <span className="text-[11px] font-black text-emerald-700 flex items-center gap-1">
+                                    <span className="material-symbols-outlined text-sm text-emerald-600">verified</span>
+                                    <span>Aktif</span>
                                   </span>
                                 )}
                               </div>
@@ -2440,6 +2483,7 @@ export default function AdminDashboardPage() {
                   >
                     <option value="customer">Customer (Pelaku UMKM)</option>
                     <option value="admin">Administrator</option>
+                    <option value="editor">Editor Konten</option>
                   </select>
                 </div>
 
@@ -2808,6 +2852,15 @@ export default function AdminDashboardPage() {
             </div>
           </div>
         </div>
+      )}
+
+      {/* Modal Struk Digital Resmi untuk Admin */}
+      {previewReceiptOrder && (
+        <InvoiceReceiptModal
+          isOpen={Boolean(previewReceiptOrder)}
+          onClose={() => setPreviewReceiptOrder(null)}
+          order={previewReceiptOrder}
+        />
       )}
     </div>
   );
