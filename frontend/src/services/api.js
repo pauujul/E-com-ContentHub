@@ -156,6 +156,20 @@ export const api = {
     return res.data;
   },
 
+  uploadPaymentProof: async (id, file) => {
+    const formData = new FormData();
+    formData.append('proof', file);
+    const res = await apiClient.post(`/orders/${id}/upload-proof`, formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    });
+    return res.data;
+  },
+
+  verifyOrder: async (id, action, notes = '') => {
+    const res = await apiClient.patch(`/orders/${id}/verify`, { action, notes });
+    return res.data;
+  },
+
   // ==========================================
   // 4. CONTENT POSTS (CALENDAR & KANBAN PLANNER)
   // Sinkronisasi permanen ke PostgreSQL / Neon

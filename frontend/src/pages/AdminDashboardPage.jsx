@@ -20,6 +20,8 @@ export default function AdminDashboardPage() {
   const [stats, setStats] = useState(null);
   const [orders, setOrders] = useState([]);
   const [updatingOrderId, setUpdatingOrderId] = useState(null);
+  const [previewProofOrder, setPreviewProofOrder] = useState(null);
+  const [verifyingOrderId, setVerifyingOrderId] = useState(null);
 
   // 2. Users Management State
   const [usersList, setUsersList] = useState([]);
@@ -196,6 +198,28 @@ export default function AdminDashboardPage() {
       console.error('Error updating order:', err);
     } finally {
       setUpdatingOrderId(null);
+    }
+  };
+
+  // 1b. Verifikasi Pembayaran Manual (Terima / Tolak)
+  const handleVerifyOrder = async (orderId, action) => {
+    setVerifyingOrderId(orderId);
+    try {
+      const res = await api.verifyOrder(orderId, action);
+      if (res.success) {
+        showToast(res.message);
+        // Refresh orders & stats
+        const ordersRes = await api.getOrders();
+        if (ordersRes.success) setOrders(ordersRes.data);
+        const statsRes = await api.getAdminStats();
+        if (statsRes.success) setStats(statsRes.data);
+        setPreviewProofOrder(null);
+      }
+    } catch (err) {
+      console.error('Error verifying order:', err);
+      alert('Gagal memproses verifikasi: ' + (err.response?.data?.message || err.message));
+    } finally {
+      setVerifyingOrderId(null);
     }
   };
 
@@ -685,82 +709,132 @@ export default function AdminDashboardPage() {
                     <thead>
                       <tr className="border-b border-slate-200 bg-slate-50 text-slate-500 uppercase tracking-wider">
                         <th className="py-3 px-4 font-bold">No. Order</th>
-                        <th className="py-3 px-4 font-bold">Pelanggan (User ID)</th>
+                        <th className="py-3 px-4 font-bold">Pelanggan</th>
                         <th className="py-3 px-4 font-bold">Paket Langganan</th>
                         <th className="py-3 px-4 font-bold">Total (Rp)</th>
-                        <th className="py-3 px-4 font-bold">Metode / Channel</th>
-                        <th className="py-3 px-4 font-bold">Status</th>
-                        <th className="py-3 px-4 font-bold text-center">Aksi Status</th>
+                        <th className="py-3 px-4 font-bold">Metode / Kanal</th>
+                        <th className="py-3 px-4 font-bold text-center">Bukti Transfer</th>
+                        <th className="py-3 px-4 font-bold">Status Tracking</th>
+                        <th className="py-3 px-4 font-bold text-center">Aksi Verifikasi</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-100">
-                      {orders.map((ord) => (
-                        <tr key={ord.id} className="hover:bg-slate-50/60 transition-colors">
-                          <td className="py-4 px-4 font-mono font-bold text-primary">{ord.order_number}</td>
-                          <td className="py-4 px-4">
-                            <p className="font-bold text-slate-800">{ord.customer_name}</p>
-                            <p className="text-[11px] text-slate-400">
-                              {ord.customer_email} (User #{ord.user_id})
-                            </p>
-                          </td>
-                          <td className="py-4 px-4">
-                            <span className="font-bold text-slate-800">{ord.plan_name}</span>
-                            <span className="text-[10px] text-slate-400 block">({ord.billing_cycle})</span>
-                          </td>
-                          <td className="py-4 px-4 font-extrabold text-slate-900">
-                            Rp {parseFloat(ord.total_amount).toLocaleString('id-ID')}
-                          </td>
-                          <td className="py-4 px-4 text-slate-600">
-                            <p className="font-semibold">{ord.payment_channel}</p>
-                            <p className="text-[10px] text-slate-400">{ord.payment_method}</p>
-                          </td>
-                          <td className="py-4 px-4">
-                            <span
-                              className={`px-2.5 py-1 rounded-full text-[10px] font-extrabold uppercase tracking-wider ${
-                                ord.status === 'Paid'
-                                  ? 'bg-green-100 text-green-800'
-                                  : ord.status === 'Pending'
-                                  ? 'bg-amber-100 text-amber-800'
-                                  : 'bg-red-100 text-red-800'
-                              }`}
-                            >
-                              {ord.status}
-                            </span>
-                          </td>
-                          <td className="py-4 px-4 text-center">
-                            <div className="inline-flex items-center gap-1">
-                              {ord.status !== 'Paid' && (
+                      {orders.map((ord) => {
+                        const tracking = ord.tracking_status || (ord.status === 'Paid' ? 'lunas' : 'menunggu_pembayaran');
+                        const backendUrl = import.meta.env.VITE_API_URL 
+                          ? import.meta.env.VITE_API_URL.replace(/\/api\/?$/, '') 
+                          : 'http://localhost:5000';
+                        const proofUrl = ord.payment_proof_url ? `${backendUrl}${ord.payment_proof_url}` : null;
+
+                        return (
+                          <tr key={ord.id} className="hover:bg-slate-50/60 transition-colors">
+                            <td className="py-4 px-4 font-mono font-bold text-primary">{ord.order_number}</td>
+                            <td className="py-4 px-4">
+                              <p className="font-bold text-slate-800">{ord.customer_name}</p>
+                              <p className="text-[11px] text-slate-400">
+                                {ord.customer_email} (User #{ord.user_id})
+                              </p>
+                            </td>
+                            <td className="py-4 px-4">
+                              <span className="font-bold text-slate-800">{ord.plan_name}</span>
+                              <span className="text-[10px] text-slate-400 block">({ord.billing_cycle})</span>
+                            </td>
+                            <td className="py-4 px-4 font-extrabold text-slate-900">
+                              Rp {parseFloat(ord.total_amount).toLocaleString('id-ID')}
+                            </td>
+                            <td className="py-4 px-4 text-slate-600">
+                              <div className="flex items-center gap-1.5 font-semibold text-slate-800">
+                                <span className="material-symbols-outlined text-sm text-primary">
+                                  {ord.payment_method === 'qris_static' ? 'qr_code_scanner' : ord.payment_method === 'bank_transfer' ? 'account_balance' : 'account_balance_wallet'}
+                                </span>
+                                <span>{ord.payment_channel || ord.payment_method}</span>
+                              </div>
+                              <span className="text-[10px] text-slate-400 block">
+                                {ord.payment_method === 'midtrans' ? 'Otomatis Gateway' : (ord.bank_provider ? `Bank ${ord.bank_provider}` : 'Verifikasi Manual')}
+                              </span>
+                            </td>
+
+                            {/* Kolom Bukti Pembayaran */}
+                            <td className="py-4 px-4 text-center">
+                              {proofUrl ? (
                                 <button
-                                  onClick={() => handleUpdateOrderStatus(ord.id, 'Paid')}
-                                  disabled={updatingOrderId === ord.id}
-                                  className="px-2.5 py-1 bg-green-600 hover:bg-green-700 text-white rounded-lg text-[10px] font-bold transition-colors"
-                                  title="Konfirmasi Pembayaran Selesai"
+                                  type="button"
+                                  onClick={() => setPreviewProofOrder(ord)}
+                                  className="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl bg-primary/10 hover:bg-primary/20 text-primary font-bold text-[11px] transition-colors shadow-2xs cursor-pointer"
+                                  title="Lihat Pratinjau Bukti Transfer"
                                 >
-                                  Set Paid
+                                  <span className="material-symbols-outlined text-sm">visibility</span>
+                                  Lihat Bukti
                                 </button>
+                              ) : ord.payment_method === 'midtrans' ? (
+                                <span className="text-[10px] font-bold text-slate-500 bg-slate-100 px-2.5 py-1 rounded-lg">
+                                  ⚡ Midtrans
+                                </span>
+                              ) : (
+                                <span className="text-[10px] font-bold text-amber-600 bg-amber-50 border border-amber-200 px-2 py-0.5 rounded-lg">
+                                  Belum Upload
+                                </span>
                               )}
-                              {ord.status !== 'Pending' && (
-                                <button
-                                  onClick={() => handleUpdateOrderStatus(ord.id, 'Pending')}
-                                  disabled={updatingOrderId === ord.id}
-                                  className="px-2.5 py-1 bg-amber-500 hover:bg-amber-600 text-white rounded-lg text-[10px] font-bold transition-colors"
-                                >
-                                  Set Pending
-                                </button>
-                              )}
-                              {ord.status !== 'Cancelled' && (
-                                <button
-                                  onClick={() => handleUpdateOrderStatus(ord.id, 'Cancelled')}
-                                  disabled={updatingOrderId === ord.id}
-                                  className="px-2.5 py-1 bg-red-100 hover:bg-red-200 text-red-700 rounded-lg text-[10px] font-bold transition-colors"
-                                >
-                                  Batal
-                                </button>
-                              )}
-                            </div>
-                          </td>
-                        </tr>
-                      ))}
+                            </td>
+
+                            {/* Kolom Status Tracking */}
+                            <td className="py-4 px-4">
+                              <span
+                                className={`px-2.5 py-1 rounded-full text-[10px] font-extrabold uppercase tracking-wider inline-flex items-center gap-1 ${
+                                  tracking === 'lunas'
+                                    ? 'bg-green-100 text-green-800 border border-green-200'
+                                    : tracking === 'menunggu_verifikasi'
+                                    ? 'bg-blue-100 text-blue-800 border border-blue-300 animate-pulse'
+                                    : tracking === 'ditolak'
+                                    ? 'bg-red-100 text-red-800 border border-red-200'
+                                    : 'bg-amber-100 text-amber-800 border border-amber-200'
+                                }`}
+                              >
+                                {tracking === 'lunas' && '✓ Lunas'}
+                                {tracking === 'menunggu_verifikasi' && '⏳ Verifikasi Admin'}
+                                {tracking === 'menunggu_pembayaran' && 'Menunggu Bayar'}
+                                {tracking === 'ditolak' && '✕ Ditolak'}
+                              </span>
+                            </td>
+
+                            {/* Kolom Aksi Verifikasi */}
+                            <td className="py-4 px-4 text-center">
+                              <div className="inline-flex items-center gap-1.5">
+                                {tracking !== 'lunas' && (
+                                  <button
+                                    type="button"
+                                    onClick={() => handleVerifyOrder(ord.id, 'approve')}
+                                    disabled={verifyingOrderId === ord.id}
+                                    className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-[10px] font-black transition-all shadow-xs flex items-center gap-1 cursor-pointer disabled:opacity-50"
+                                    title="Setujui dan Aktifkan Paket Langganan User"
+                                  >
+                                    <span className="material-symbols-outlined text-xs">check_circle</span>
+                                    Terima (Set Lunas)
+                                  </button>
+                                )}
+                                {tracking !== 'ditolak' && tracking !== 'lunas' && (
+                                  <button
+                                    type="button"
+                                    onClick={() => handleVerifyOrder(ord.id, 'reject')}
+                                    disabled={verifyingOrderId === ord.id}
+                                    className="px-2.5 py-1.5 bg-red-50 hover:bg-red-100 text-red-700 border border-red-200 rounded-xl text-[10px] font-bold transition-all shadow-xs flex items-center gap-1 cursor-pointer disabled:opacity-50"
+                                    title="Tolak Bukti Pembayaran"
+                                  >
+                                    <span className="material-symbols-outlined text-xs">cancel</span>
+                                    Tolak
+                                  </button>
+                                )}
+                                {tracking === 'lunas' && (
+                                  <span className="text-[10px] font-bold text-emerald-700 flex items-center gap-1">
+                                    <span className="material-symbols-outlined text-xs">verified</span>
+                                    Aktif
+                                  </span>
+                                )}
+                              </div>
+                            </td>
+                          </tr>
+                        );
+                      })}
                     </tbody>
                   </table>
                 </div>
@@ -2657,6 +2731,81 @@ export default function AdminDashboardPage() {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Modal Preview Bukti Transfer untuk Admin */}
+      {previewProofOrder && (
+        <div 
+          onClick={() => setPreviewProofOrder(null)}
+          className="fixed inset-0 z-50 bg-black/80 backdrop-blur-xs flex items-center justify-center p-4 animate-in fade-in"
+        >
+          <div 
+            onClick={e => e.stopPropagation()}
+            className="bg-white rounded-3xl max-w-xl w-full p-6 shadow-2xl border border-slate-200 space-y-4 max-h-[92vh] flex flex-col"
+          >
+            <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+              <div>
+                <span className="text-[10px] font-extrabold text-primary uppercase tracking-wider block">Verifikasi Bukti Transfer</span>
+                <h3 className="text-base font-extrabold text-slate-900">
+                  Pesanan #{previewProofOrder.order_number}
+                </h3>
+              </div>
+              <button
+                type="button"
+                onClick={() => setPreviewProofOrder(null)}
+                className="w-8 h-8 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-600 flex items-center justify-center text-sm font-bold"
+              >
+                ✕
+              </button>
+            </div>
+
+            {/* Info Pesanan Ringkas */}
+            <div className="grid grid-cols-2 gap-3 p-3.5 bg-slate-50 rounded-2xl border border-slate-200/80 text-xs">
+              <div>
+                <span className="text-slate-400 text-[10px] font-bold block uppercase">Pelanggan:</span>
+                <span className="font-extrabold text-slate-900 block">{previewProofOrder.customer_name}</span>
+                <span className="text-[11px] text-slate-500">{previewProofOrder.customer_email}</span>
+              </div>
+              <div className="text-right">
+                <span className="text-slate-400 text-[10px] font-bold block uppercase">Paket &amp; Total:</span>
+                <span className="font-extrabold text-primary block">{previewProofOrder.plan_name}</span>
+                <span className="font-black text-slate-900">Rp {parseFloat(previewProofOrder.total_amount).toLocaleString('id-ID')}</span>
+              </div>
+            </div>
+
+            {/* Gambar Bukti */}
+            <div className="flex-1 overflow-y-auto rounded-2xl border border-slate-200 bg-slate-900 flex items-center justify-center min-h-[220px]">
+              <img
+                src={`${import.meta.env.VITE_API_URL ? import.meta.env.VITE_API_URL.replace(/\/api\/?$/, '') : 'http://localhost:5000'}${previewProofOrder.payment_proof_url}`}
+                alt="Bukti Transfer Pelanggan"
+                className="max-h-[50vh] w-auto object-contain mx-auto rounded-xl"
+              />
+            </div>
+
+            {/* Tombol Aksi Verifikasi di dalam Modal */}
+            <div className="pt-2 flex items-center justify-between gap-3 border-t border-slate-100">
+              <button
+                type="button"
+                onClick={() => handleVerifyOrder(previewProofOrder.id, 'reject')}
+                disabled={verifyingOrderId === previewProofOrder.id}
+                className="px-4 py-2.5 rounded-xl bg-red-50 hover:bg-red-100 text-red-700 font-extrabold text-xs transition-colors flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
+              >
+                <span className="material-symbols-outlined text-sm">cancel</span>
+                Tolak Bukti
+              </button>
+
+              <button
+                type="button"
+                onClick={() => handleVerifyOrder(previewProofOrder.id, 'approve')}
+                disabled={verifyingOrderId === previewProofOrder.id}
+                className="flex-1 py-2.5 px-4 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-black text-xs shadow-md shadow-emerald-600/20 transition-all flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-50"
+              >
+                <span className="material-symbols-outlined text-sm">verified</span>
+                Terima &amp; Aktifkan Paket Pelanggan
+              </button>
+            </div>
           </div>
         </div>
       )}

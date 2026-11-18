@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import axios from 'axios';
 
 export default function OrderHistory({ refreshKey, currentUser, onOpenLogin }) {
@@ -241,11 +242,39 @@ export default function OrderHistory({ refreshKey, currentUser, onOpenLogin }) {
                       <span style={{ fontSize: '12px', color: '#64748b' }}>({ord.billing_cycle})</span>
                     </td>
                     <td style={{ fontWeight: 700 }}>{formatRupiah(ord.total_amount)}</td>
-                    <td>{ord.payment_channel || ord.payment_method}</td>
                     <td>
-                      <span className={`badge-status ${ord.status ? ord.status.toLowerCase() : 'pending'}`}>{ord.status === 'Paid' ? '✓ LUNAS' : ord.status === 'Pending' ? '⏳ PENDING' : '✕ BATAL'}</span>
+                      <div>{ord.payment_channel || ord.payment_method}</div>
+                      {ord.payment_proof_url && (
+                        <span style={{ fontSize: '11px', color: '#2563eb', fontWeight: 600 }}>📎 Bukti Terlampir</span>
+                      )}
                     </td>
-                    <td style={{ fontSize: '13px', color: '#64748b' }}>{new Date(ord.created_at).toLocaleString('id-ID')}</td>
+                    <td>
+                      <span className={`badge-status ${ord.status ? ord.status.toLowerCase() : 'pending'}`}>
+                        {ord.tracking_status === 'lunas' || ord.status === 'Paid'
+                          ? '✓ LUNAS'
+                          : ord.tracking_status === 'menunggu_verifikasi'
+                          ? '⏳ VERIFIKASI ADMIN'
+                          : ord.tracking_status === 'ditolak' || ord.status === 'Cancelled'
+                          ? '✕ DITOLAK'
+                          : '⏳ MENUNGGU BAYAR'}
+                      </span>
+                    </td>
+                    <td style={{ fontSize: '13px', color: '#64748b' }}>
+                      <div>{new Date(ord.created_at).toLocaleString('id-ID')}</div>
+                      <Link
+                        to={`/transactions/${ord.order_number}`}
+                        style={{
+                          fontSize: '11px',
+                          color: '#4f46e5',
+                          fontWeight: 700,
+                          textDecoration: 'none',
+                          display: 'inline-block',
+                          marginTop: '4px',
+                        }}
+                      >
+                        Detail &amp; Tracking →
+                      </Link>
+                    </td>
                     {isAdmin && (
                       <td>
                         {ord.status === 'Pending' ? (

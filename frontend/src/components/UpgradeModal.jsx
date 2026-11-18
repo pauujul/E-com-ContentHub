@@ -1,15 +1,19 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import api from '../services/api';
 import PricingSection from './PricingSection';
 
 export default function UpgradeModal({ isOpen, onClose, config, setStep }) {
+  const navigate = useNavigate();
   const { currentUser, refreshSubscription } = useAuth();
   const { step, reason, templateTitle, currentCount, maxLimit, selectedPlan } = config;
 
   const [activePlan, setActivePlan] = useState(selectedPlan || null);
 
   // Form Pembayaran Checkout di dalam Modal
+  const [selectedChannel, setSelectedChannel] = useState('midtrans'); // 'midtrans' | 'qris_static' | 'bank_transfer'
+  const [selectedBank, setSelectedBank] = useState('BCA'); // 'BCA' | 'BRI'
   const [isProcessing, setIsProcessing] = useState(false);
   const [paymentError, setPaymentError] = useState('');
 
@@ -29,13 +33,18 @@ export default function UpgradeModal({ isOpen, onClose, config, setStep }) {
     setPaymentError('');
 
     try {
+      const channelLabel = selectedChannel === 'midtrans' 
+        ? 'Midtrans Payment Gateway' 
+        : (selectedChannel === 'qris_static' ? 'QRIS Static ContentHub' : `Transfer Bank ${selectedBank}`);
+
       const orderPayload = {
         user_id: currentUser?.id || 1,
         plan_id: activePlan.id,
         customer_name: currentUser?.name || 'Pelanggan ContentHub',
         customer_email: currentUser?.email || 'customer@contenthub.id',
-        payment_method: 'Midtrans Gateway',
-        payment_channel: 'Midtrans Snap',
+        payment_method: selectedChannel,
+        payment_channel: channelLabel,
+        bank_provider: selectedChannel === 'bank_transfer' ? selectedBank : null,
       };
 
       // 1. Buat order di database Neon
@@ -46,7 +55,14 @@ export default function UpgradeModal({ isOpen, onClose, config, setStep }) {
 
       const orderNumber = createRes.data.order?.order_number || createRes.data.order?.id || createRes.data.id;
 
-      // 2. Dapatkan token Snap dari Midtrans backend
+      // KANAL 2 & 3 (MANUAL): Navigasi ke halaman detail tagihan & upload bukti transfer
+      if (selectedChannel === 'qris_static' || selectedChannel === 'bank_transfer') {
+        onClose();
+        navigate(`/transactions/${orderNumber}`);
+        return;
+      }
+
+      // 2. Dapatkan token Snap dari Midtrans backend (KANAL 1 OTOMATIS)
       const backendUrl = import.meta.env.VITE_API_URL
         ? import.meta.env.VITE_API_URL.replace(/\/api\/?$/, '')
         : 'http://localhost:5000';
@@ -304,60 +320,141 @@ export default function UpgradeModal({ isOpen, onClose, config, setStep }) {
               </div>
             </div>
 
-            {/* Kartu Gerbang Pembayaran Resmi Midtrans */}
-            <div className="p-3.5 rounded-xl border border-primary/20 bg-gradient-to-br from-blue-50/40 via-white to-indigo-50/30 space-y-2.5">
-              <div className="flex items-center justify-between gap-3">
-                <div className="flex items-center gap-2.5">
-                  <div className="w-8 h-8 rounded-lg bg-primary/10 text-primary flex items-center justify-center flex-shrink-0">
-                    <span className="material-symbols-outlined text-xl">account_balance_wallet</span>
+            {/* Pilihan 3 Kanal Pembayaran */}
+            <div className="space-y-2 pt-1">
+              <span className="text-[10px] font-extrabold uppercase tracking-wider text-slate-500 block">
+                Pilih Kanal Pembayaran:
+              </span>
+
+              {/* 1. Midtrans Gateway */}
+              <div
+                onClick={() => setSelectedChannel('midtrans')}
+                className={`p-3 rounded-xl border-2 transition-all cursor-pointer ${
+                  selectedChannel === 'midtrans'
+                    ? 'border-primary bg-primary/[0.03] shadow-xs'
+                    : 'border-slate-200 bg-white hover:border-slate-300'
+                }`}
+              >
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2.5">
+                    <div className="w-7 h-7 rounded-lg bg-primary/10 text-primary flex items-center justify-center flex-shrink-0">
+                      <span className="material-symbols-outlined text-base">account_balance_wallet</span>
+                    </div>
+                    <div>
+                      <div className="flex items-center gap-1.5">
+                        <span className="text-xs font-black text-slate-900">Midtrans Gateway</span>
+                        <span className="text-[8px] font-extrabold text-emerald-600 bg-emerald-50 px-1.5 py-0.2 rounded-full border border-emerald-200">
+                          Otomatis Instan
+                        </span>
+                      </div>
+                      <span className="text-[10px] text-slate-400 block">VA, E-Wallet QRIS, &amp; Kartu Kredit via Popup</span>
+                    </div>
                   </div>
-                  <div>
-                    <h3 className="text-xs sm:text-sm font-black text-slate-900 leading-tight">
-                      Midtrans Payment Gateway
-                    </h3>
-                    <p className="text-[10px] text-slate-400 font-medium">Gerbang Pembayaran Resmi</p>
+                  <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center ${
+                    selectedChannel === 'midtrans' ? 'border-primary bg-primary' : 'border-slate-300'
+                  }`}>
+                    {selectedChannel === 'midtrans' && <div className="w-1.5 h-1.5 rounded-full bg-white"></div>}
                   </div>
                 </div>
-                <span className="text-[9px] font-extrabold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200 flex items-center gap-1">
-                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
-                  Verifikasi Otomatis 24/7
-                </span>
               </div>
 
-              <p className="text-[11px] text-slate-500 leading-relaxed">
-                Pilih metode pembayaran (QRIS, VA BCA/Mandiri/BRI/BNI, GoPay, Kartu Kredit) langsung di jendela pembayaran aman Midtrans.
-              </p>
-
-              {/* Supported methods preview */}
-              <div className="pt-2 border-t border-slate-100">
-                <span className="text-[9px] font-extrabold uppercase tracking-wider text-slate-400 block mb-1.5">
-                  Metode Pembayaran yang Tersedia:
-                </span>
-                <div className="grid grid-cols-2 gap-1.5 text-[10px] text-slate-600 font-semibold">
-                  <div className="flex items-center gap-1.5 p-1.5 rounded-lg bg-white border border-slate-100 shadow-2xs">
-                    <span className="material-symbols-outlined text-xs text-primary">account_balance</span>
-                    <span className="truncate">Virtual Account (BCA, Mandiri, BRI, BNI)</span>
+              {/* 2. QRIS Static */}
+              <div
+                onClick={() => setSelectedChannel('qris_static')}
+                className={`p-3 rounded-xl border-2 transition-all cursor-pointer ${
+                  selectedChannel === 'qris_static'
+                    ? 'border-primary bg-primary/[0.03] shadow-xs'
+                    : 'border-slate-200 bg-white hover:border-slate-300'
+                }`}
+              >
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2.5">
+                    <div className="w-7 h-7 rounded-lg bg-primary/10 text-primary flex items-center justify-center flex-shrink-0">
+                      <span className="material-symbols-outlined text-base">qr_code_scanner</span>
+                    </div>
+                    <div>
+                      <div className="flex items-center gap-1.5">
+                        <span className="text-xs font-black text-slate-900">QRIS Static ContentHub</span>
+                        <span className="text-[8px] font-extrabold text-blue-600 bg-blue-50 px-1.5 py-0.2 rounded-full border border-blue-200">
+                          Upload Struk
+                        </span>
+                      </div>
+                      <span className="text-[10px] text-slate-400 block">Scan dengan m-Banking / E-Wallet &amp; verifikasi</span>
+                    </div>
                   </div>
-                  <div className="flex items-center gap-1.5 p-1.5 rounded-lg bg-white border border-slate-100 shadow-2xs">
-                    <span className="material-symbols-outlined text-xs text-emerald-600">qr_code_2</span>
-                    <span className="truncate">QRIS & E-Wallet (GoPay, dll.)</span>
-                  </div>
-                  <div className="flex items-center gap-1.5 p-1.5 rounded-lg bg-white border border-slate-100 shadow-2xs">
-                    <span className="material-symbols-outlined text-xs text-indigo-600">credit_card</span>
-                    <span className="truncate">Kartu Kredit / Debit</span>
-                  </div>
-                  <div className="flex items-center gap-1.5 p-1.5 rounded-lg bg-white border border-slate-100 shadow-2xs">
-                    <span className="material-symbols-outlined text-xs text-amber-600">storefront</span>
-                    <span className="truncate">Gerai Ritel (Indomaret, Alfamart)</span>
+                  <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center ${
+                    selectedChannel === 'qris_static' ? 'border-primary bg-primary' : 'border-slate-300'
+                  }`}>
+                    {selectedChannel === 'qris_static' && <div className="w-1.5 h-1.5 rounded-full bg-white"></div>}
                   </div>
                 </div>
+              </div>
+
+              {/* 3. Transfer Manual Bank */}
+              <div
+                onClick={() => setSelectedChannel('bank_transfer')}
+                className={`p-3 rounded-xl border-2 transition-all cursor-pointer ${
+                  selectedChannel === 'bank_transfer'
+                    ? 'border-primary bg-primary/[0.03] shadow-xs'
+                    : 'border-slate-200 bg-white hover:border-slate-300'
+                }`}
+              >
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2.5">
+                    <div className="w-7 h-7 rounded-lg bg-primary/10 text-primary flex items-center justify-center flex-shrink-0">
+                      <span className="material-symbols-outlined text-base">account_balance</span>
+                    </div>
+                    <div>
+                      <div className="flex items-center gap-1.5">
+                        <span className="text-xs font-black text-slate-900">Transfer Manual Bank</span>
+                        <span className="text-[8px] font-extrabold text-indigo-600 bg-indigo-50 px-1.5 py-0.2 rounded-full border border-indigo-200">
+                          BCA &amp; BRI
+                        </span>
+                      </div>
+                      <span className="text-[10px] text-slate-400 block">Transfer ke rekening resmi perusahaan</span>
+                    </div>
+                  </div>
+                  <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center ${
+                    selectedChannel === 'bank_transfer' ? 'border-primary bg-primary' : 'border-slate-300'
+                  }`}>
+                    {selectedChannel === 'bank_transfer' && <div className="w-1.5 h-1.5 rounded-full bg-white"></div>}
+                  </div>
+                </div>
+
+                {/* Sub-selector bank */}
+                {selectedChannel === 'bank_transfer' && (
+                  <div className="mt-2 pt-2 border-t border-slate-100 flex items-center gap-2" onClick={e => e.stopPropagation()}>
+                    <button
+                      type="button"
+                      onClick={() => setSelectedBank('BCA')}
+                      className={`flex-1 py-1.5 px-2 rounded-lg text-[10px] font-bold border transition-all ${
+                        selectedBank === 'BCA' ? 'bg-blue-600 text-white border-blue-600' : 'bg-slate-50 text-slate-700 border-slate-200'
+                      }`}
+                    >
+                      BCA (8271 9028 11)
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setSelectedBank('BRI')}
+                      className={`flex-1 py-1.5 px-2 rounded-lg text-[10px] font-bold border transition-all ${
+                        selectedBank === 'BRI' ? 'bg-blue-600 text-white border-blue-600' : 'bg-slate-50 text-slate-700 border-slate-200'
+                      }`}
+                    >
+                      BRI (0341 0100 2381 502)
+                    </button>
+                  </div>
+                )}
               </div>
             </div>
 
             {/* Info Keamanan */}
             <div className="flex items-center gap-2 text-[10px] text-slate-500 bg-emerald-50/70 py-2 px-3 rounded-xl border border-emerald-100">
               <span className="material-symbols-outlined text-xs text-emerald-600">verified_user</span>
-              <span>Transaksi aman & terenkripsi. Paket langsung aktif setelah pembayaran berhasil.</span>
+              <span>
+                {selectedChannel === 'midtrans' && 'Transaksi aman & terenkripsi. Paket langsung aktif otomatis.'}
+                {selectedChannel === 'qris_static' && 'Scan barcode QRIS dan unggah struk. Paket aktif setelah verifikasi admin.'}
+                {selectedChannel === 'bank_transfer' && `Transfer ke rekening resmi ${selectedBank} dan unggah struk.`}
+              </span>
             </div>
 
             {/* Tombol Eksekusi Bayar */}
@@ -379,11 +476,15 @@ export default function UpgradeModal({ isOpen, onClose, config, setStep }) {
                 {isProcessing ? (
                   <>
                     <div className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                    <span>Membuka Jendela Midtrans...</span>
+                    <span>Memproses Transaksi...</span>
                   </>
                 ) : (
                   <>
-                    <span>Lanjutkan Pembayaran via Midtrans →</span>
+                    <span>
+                      {selectedChannel === 'midtrans' && 'Lanjutkan Pembayaran via Midtrans →'}
+                      {selectedChannel === 'qris_static' && 'Lanjutkan Pembayaran via QRIS →'}
+                      {selectedChannel === 'bank_transfer' && `Lanjutkan Transfer Bank (${selectedBank}) →`}
+                    </span>
                   </>
                 )}
               </button>

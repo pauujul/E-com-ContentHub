@@ -1181,7 +1181,15 @@ app.delete('/api/products/:id', async (req, res) => {
 // POST /api/orders (Buat Pesanan Baru)
 app.post('/api/orders', async (req, res) => {
   try {
-    const { user_id = 1, plan_id, payment_method = 'Virtual Account', payment_channel = 'BCA Virtual Account', customer_name, customer_email } = req.body;
+    const { 
+      user_id = 1, 
+      plan_id, 
+      payment_method = 'midtrans', 
+      payment_channel, 
+      customer_name, 
+      customer_email,
+      bank_provider = null 
+    } = req.body;
 
     if (!plan_id) {
       return res.status(400).json({ success: false, message: 'Parameter plan_id wajib disertakan.' });
@@ -1227,7 +1235,51 @@ app.post('/api/orders', async (req, res) => {
     const totalAmount = parseFloat(plan.price);
     const orderNumber = `ORD-${Date.now()}-${Math.floor(1000 + Math.random() * 9000)}`;
     const initialStatus = totalAmount === 0 ? 'Paid' : 'Pending';
+    const initialTrackingStatus = totalAmount === 0 ? 'lunas' : 'menunggu_pembayaran';
     const paidAt = totalAmount === 0 ? new Date().toISOString() : null;
+
+    // Format deskripsi kanal pembayaran
+    let resolvedChannel = payment_channel;
+    if (!resolvedChannel) {
+      if (payment_method === 'qris_static') resolvedChannel = 'QRIS Static ContentHub';
+      else if (payment_method === 'bank_transfer') resolvedChannel = `Transfer Bank ${bank_provider || 'BCA'}`;
+      else resolvedChannel = 'Midtrans Payment Gateway';
+    }
+
+    // Bangun petunjuk pembayaran sesuai kanal
+    let paymentInstructions = null;
+    if (totalAmount > 0) {
+      if (payment_method === 'qris_static') {
+        paymentInstructions = {
+          method: 'qris_static',
+          channel: 'QRIS Static ContentHub',
+          nmid: 'ID1020261198301',
+          merchant_name: 'ContentHub Indonesia',
+          qris_image_url: '/qris-contenthub.svg',
+          instructions: 'Scan barcode QRIS di atas melalui m-Banking (BCA, BRI, Mandiri, dll.) atau E-Wallet (GoPay, OVO, DANA, ShopeePay), lalu upload bukti transfer.',
+          expired_in: '24 Jam'
+        };
+      } else if (payment_method === 'bank_transfer') {
+        const bank = bank_provider === 'BRI' ? 'BRI' : 'BCA';
+        const accountNo = bank === 'BRI' ? '0341 0100 2381 502' : '8271 9028 11';
+        paymentInstructions = {
+          method: 'bank_transfer',
+          bank: bank,
+          account_number: accountNo,
+          account_holder: 'PT ContentHub Media Indonesia',
+          instructions: `Transfer tepat sebesar Rp ${totalAmount.toLocaleString('id-ID')} ke rekening ${bank} di atas, lalu foto/tangkapan layar struk transfer dan upload bukti pada halaman pesanan.`,
+          expired_in: '24 Jam'
+        };
+      } else {
+        paymentInstructions = {
+          method: 'midtrans',
+          channel: resolvedChannel,
+          type: 'automated',
+          instructions: 'Selesaikan pembayaran pada popup resmi Midtrans. Transaksi akan terverifikasi secara otomatis.',
+          expired_in: '24 Jam'
+        };
+      }
+    }
 
     if (store) {
       const newOrderId = store.orders.length ? Math.max(...store.orders.map((o) => o.id)) + 1 : 1;
@@ -1241,7 +1293,10 @@ app.post('/api/orders', async (req, res) => {
         total_amount: totalAmount.toFixed(2),
         status: initialStatus,
         payment_method,
-        payment_channel,
+        payment_channel: resolvedChannel,
+        bank_provider: bank_provider || null,
+        payment_proof_url: null,
+        tracking_status: initialTrackingStatus,
         paid_at: paidAt,
         created_at: new Date().toISOString(),
       };
@@ -1263,7 +1318,7 @@ app.post('/api/orders', async (req, res) => {
 
       // Send invoice email notification
       const invoiceSubject = `Invoice Pemesanan #${orderNumber} - Paket ${plan.name}`;
-      const invoiceBody = `Halo ${finalCustomerName},\n\nPesanan langganan Anda telah berhasil dibuat!\n\nNo. Pesanan: #${orderNumber}\nPaket: ${plan.name} (${plan.billing_cycle})\nTotal Pembayaran: Rp ${totalAmount.toLocaleString('id-ID')}\nMetode: ${payment_channel}\nStatus: ${initialStatus}\n\nTerima kasih telah menggunakan ContentHub!\nTim Keuangan ContentHub`;
+      const invoiceBody = `Halo ${finalCustomerName},\n\nPesanan langganan Anda telah berhasil dibuat!\n\nNo. Pesanan: #${orderNumber}\nPaket: ${plan.name} (${plan.billing_cycle})\nTotal Pembayaran: Rp ${totalAmount.toLocaleString('id-ID')}\nMetode: ${resolvedChannel}\nStatus Tracking: ${initialTrackingStatus}\n\nTerima kasih telah menggunakan ContentHub!\nTim Keuangan ContentHub`;
       sendEmailNotification(finalCustomerEmail, invoiceSubject, invoiceBody, 'invoice');
 
       return res.status(201).json({
@@ -1272,22 +1327,14 @@ app.post('/api/orders', async (req, res) => {
         data: {
           order: orderObj,
           items: [itemObj],
-          payment_instructions:
-            totalAmount === 0
-              ? null
-              : {
-                  method: payment_method,
-                  channel: payment_channel,
-                  virtual_account_number: '8801' + Math.floor(1000000000 + Math.random() * 9000000000),
-                  expired_in: '24 Jam',
-                },
+          payment_instructions: paymentInstructions,
         },
       });
     }
 
     const insertOrderQuery = `
-      INSERT INTO orders (order_number, user_id, customer_name, customer_email, plan_id, total_amount, status, payment_method, payment_channel, paid_at)
-      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+      INSERT INTO orders (order_number, user_id, customer_name, customer_email, plan_id, total_amount, status, payment_method, payment_channel, bank_provider, payment_proof_url, tracking_status, paid_at)
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
       RETURNING *;
     `;
     const orderRes = await db.query(insertOrderQuery, [
@@ -1299,7 +1346,10 @@ app.post('/api/orders', async (req, res) => {
       totalAmount,
       initialStatus,
       payment_method,
-      payment_channel,
+      resolvedChannel,
+      bank_provider || null,
+      null,
+      initialTrackingStatus,
       paidAt,
     ]);
     const createdOrder = orderRes.rows[0];
@@ -1317,15 +1367,7 @@ app.post('/api/orders', async (req, res) => {
       data: {
         order: createdOrder,
         items: itemRes.rows,
-        payment_instructions:
-          totalAmount === 0
-            ? null
-            : {
-                method: payment_method,
-                channel: payment_channel,
-                virtual_account_number: '8801' + Math.floor(1000000000 + Math.random() * 9000000000),
-                expired_in: '24 Jam',
-              },
+        payment_instructions: paymentInstructions,
       },
     });
   } catch (error) {
@@ -1550,6 +1592,7 @@ app.patch('/api/orders/:id/status', async (req, res) => {
     }
 
     const paidAt = status === 'Paid' ? new Date().toISOString() : null;
+    const trackingStatus = status === 'Paid' ? 'lunas' : (status === 'Cancelled' ? 'ditolak' : 'menunggu_pembayaran');
     const store = db.getStore ? db.getStore() : null;
 
     if (store) {
@@ -1558,6 +1601,7 @@ app.patch('/api/orders/:id/status', async (req, res) => {
         return res.status(404).json({ success: false, message: 'Pesanan tidak ditemukan' });
       }
       store.orders[oIndex].status = status;
+      store.orders[oIndex].tracking_status = trackingStatus;
       store.orders[oIndex].paid_at = paidAt;
       db.saveStore();
 
@@ -1573,11 +1617,11 @@ app.patch('/api/orders/:id/status', async (req, res) => {
 
     const query = `
       UPDATE orders 
-      SET status = $1, paid_at = $2
-      WHERE id = $3 OR order_number = $4
+      SET status = $1, paid_at = $2, tracking_status = $3
+      WHERE id = $4 OR order_number = $5
       RETURNING *;
     `;
-    const result = await db.query(query, [status, paidAt, orderIdNum, orderIdStr]);
+    const result = await db.query(query, [status, paidAt, trackingStatus, orderIdNum, orderIdStr]);
     if (result.rows.length === 0) {
       return res.status(404).json({ success: false, message: 'Order tidak ditemukan' });
     }
@@ -1589,6 +1633,124 @@ app.patch('/api/orders/:id/status', async (req, res) => {
     });
   } catch (error) {
     res.status(500).json({ success: false, message: 'Gagal mengubah status pesanan', error: error.message });
+  }
+});
+
+// POST /api/orders/:id/upload-proof (Unggah Bukti Transfer QRIS / Bank)
+app.post('/api/orders/:id/upload-proof', upload.single('proof'), async (req, res) => {
+  try {
+    const { id } = req.params;
+    if (!req.file) {
+      return res.status(400).json({ success: false, message: 'File gambar bukti transfer wajib diunggah.' });
+    }
+
+    const proofUrl = `/uploads/${req.file.filename}`;
+    const store = db.getStore ? db.getStore() : null;
+    const orderIdNum = !isNaN(parseInt(id, 10)) ? parseInt(id, 10) : -1;
+    const orderIdStr = String(id);
+
+    if (store) {
+      const oIndex = store.orders.findIndex((o) => o.id === orderIdNum || o.order_number === orderIdStr);
+      if (oIndex === -1) {
+        return res.status(404).json({ success: false, message: 'Pesanan tidak ditemukan.' });
+      }
+      store.orders[oIndex].payment_proof_url = proofUrl;
+      store.orders[oIndex].tracking_status = 'menunggu_verifikasi';
+      db.saveStore();
+      return res.json({
+        success: true,
+        message: 'Bukti transfer berhasil diunggah! Status pesanan kini menunggu verifikasi admin.',
+        data: store.orders[oIndex],
+      });
+    }
+
+    const query = `
+      UPDATE orders
+      SET payment_proof_url = $1, tracking_status = 'menunggu_verifikasi'
+      WHERE id = $2 OR order_number = $3
+      RETURNING *;
+    `;
+    const result = await db.query(query, [proofUrl, orderIdNum, orderIdStr]);
+    if (result.rows.length === 0) {
+      return res.status(404).json({ success: false, message: 'Pesanan tidak ditemukan.' });
+    }
+
+    res.json({
+      success: true,
+      message: 'Bukti transfer berhasil diunggah! Status pesanan kini menunggu verifikasi admin.',
+      data: result.rows[0],
+    });
+  } catch (err) {
+    console.error('Upload proof error:', err);
+    res.status(500).json({ success: false, message: 'Gagal mengunggah bukti transfer.', error: err.message });
+  }
+});
+
+// PATCH /api/orders/:id/verify (Panel Verifikasi Admin: Terima / Tolak)
+app.patch('/api/orders/:id/verify', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { action, notes = '' } = req.body; // action: 'approve' | 'reject'
+    if (!['approve', 'reject'].includes(action)) {
+      return res.status(400).json({ success: false, message: 'Aksi tidak valid. Pilih "approve" atau "reject".' });
+    }
+
+    const isApprove = action === 'approve';
+    const newTrackingStatus = isApprove ? 'lunas' : 'ditolak';
+    const newStatus = isApprove ? 'Paid' : 'Cancelled';
+    const paidAt = isApprove ? new Date().toISOString() : null;
+
+    const store = db.getStore ? db.getStore() : null;
+    const orderIdNum = !isNaN(parseInt(id, 10)) ? parseInt(id, 10) : -1;
+    const orderIdStr = String(id);
+
+    let updatedOrder = null;
+    if (store) {
+      const oIndex = store.orders.findIndex((o) => o.id === orderIdNum || o.order_number === orderIdStr);
+      if (oIndex === -1) {
+        return res.status(404).json({ success: false, message: 'Pesanan tidak ditemukan.' });
+      }
+      store.orders[oIndex].tracking_status = newTrackingStatus;
+      store.orders[oIndex].status = newStatus;
+      store.orders[oIndex].paid_at = paidAt;
+      if (notes) store.orders[oIndex].admin_notes = notes;
+      db.saveStore();
+      updatedOrder = store.orders[oIndex];
+    } else {
+      const query = `
+        UPDATE orders
+        SET tracking_status = $1, status = $2, paid_at = $3
+        WHERE id = $4 OR order_number = $5
+        RETURNING *;
+      `;
+      const result = await db.query(query, [newTrackingStatus, newStatus, paidAt, orderIdNum, orderIdStr]);
+      if (result.rows.length === 0) {
+        return res.status(404).json({ success: false, message: 'Pesanan tidak ditemukan.' });
+      }
+      updatedOrder = result.rows[0];
+    }
+
+    // Kirim notifikasi jika disetujui
+    if (isApprove && updatedOrder) {
+      try {
+        const invoiceSubject = `Pembayaran Dikonfirmasi #${updatedOrder.order_number} - Paket Anda Telah Aktif`;
+        const invoiceBody = `Halo ${updatedOrder.customer_name},\n\nPembayaran Anda untuk pesanan #${updatedOrder.order_number} sebesar Rp ${parseFloat(updatedOrder.total_amount).toLocaleString('id-ID')} telah BERHASIL DIVERIFIKASI oleh Admin ContentHub!\n\nStatus: Lunas\nMetode: ${updatedOrder.payment_channel || updatedOrder.payment_method}\n\nSeluruh hak akses fitur paket langganan Anda telah aktif di workspace.\n\nTerima kasih,\nTim Keuangan ContentHub`;
+        sendEmailNotification(updatedOrder.customer_email, invoiceSubject, invoiceBody, 'invoice');
+      } catch (e) {
+        console.warn('Gagal kirim email verifikasi:', e);
+      }
+    }
+
+    res.json({
+      success: true,
+      message: isApprove
+        ? `Pesanan #${updatedOrder.order_number} berhasil disetujui (Lunas)! Paket pengguna langsung aktif.`
+        : `Pesanan #${updatedOrder.order_number} telah ditolak.`,
+      data: updatedOrder,
+    });
+  } catch (err) {
+    console.error('Order verify error:', err);
+    res.status(500).json({ success: false, message: 'Gagal memproses verifikasi pesanan.', error: err.message });
   }
 });
 
