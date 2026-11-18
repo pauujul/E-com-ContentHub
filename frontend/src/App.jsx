@@ -5,6 +5,7 @@ import { CartProvider } from './context/CartContext';
 import { UpgradeModalProvider } from './context/UpgradeModalContext';
 import { ScheduleProvider } from './context/ScheduleContext';
 import CartDrawer from './components/CartDrawer';
+import ErrorBoundary from './components/ErrorBoundary';
 
 // Pages
 import HomePage from './pages/HomePage';
@@ -67,13 +68,14 @@ function AdminRoute({ children }) {
 
 export default function App() {
   return (
-    <BrowserRouter>
-      <AuthProvider>
-        <UpgradeModalProvider>
-          <ScheduleProvider>
-            <CartProvider>
-              <CartDrawer />
-              <Routes>
+    <ErrorBoundary>
+      <BrowserRouter>
+        <AuthProvider>
+          <UpgradeModalProvider>
+            <ScheduleProvider>
+              <CartProvider>
+                <CartDrawer />
+                <Routes>
                 {/* 1. Public Marketing Pages */}
                 <Route path="/" element={<HomePage />} />
                 <Route path="/home" element={<HomePage />} />
@@ -266,5 +268,6 @@ export default function App() {
         </UpgradeModalProvider>
       </AuthProvider>
     </BrowserRouter>
+  </ErrorBoundary>
   );
 }

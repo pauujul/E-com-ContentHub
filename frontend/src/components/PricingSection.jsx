@@ -83,13 +83,7 @@ export default function PricingSection({
   const [error, setError] = useState(null);
   const { currentUser } = useAuth();
 
-  // Safe navigation hook in case router context is missing
-  let navigate = null;
-  try {
-    navigate = useNavigate();
-  } catch (e) {
-    navigate = null;
-  }
+  const navigate = useNavigate();
 
   const fetchPlans = () => {
     setLoading(true);
