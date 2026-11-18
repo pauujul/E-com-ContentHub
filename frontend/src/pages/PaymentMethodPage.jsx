@@ -419,8 +419,8 @@ export default function PaymentMethodPage() {
                           BRI
                         </div>
                         <div>
-                          <span className="text-xs font-bold block">Bank Rakyat Indonesia</span>
-                          <span className="text-[11px] font-mono text-slate-500">0341 0100 2381 502</span>
+                          <span className="text-xs font-bold block">Bank BRI (BritAmaX)</span>
+                          <span className="text-[11px] font-mono text-slate-500">7077 0100 3149 506</span>
                         </div>
                       </div>
                       <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center ${
@@ -432,7 +432,7 @@ export default function PaymentMethodPage() {
 
                   </div>
                   <p className="text-[11px] text-slate-500 italic">
-                    a.n. PT ContentHub Media Indonesia
+                    {selectedBank === 'BRI' ? 'a.n. FIRMAN SYAH' : 'a.n. PT ContentHub Media Indonesia'}
                   </p>
                 </div>
               )}

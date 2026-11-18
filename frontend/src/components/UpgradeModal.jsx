@@ -440,7 +440,7 @@ export default function UpgradeModal({ isOpen, onClose, config, setStep }) {
                         selectedBank === 'BRI' ? 'bg-blue-600 text-white border-blue-600' : 'bg-slate-50 text-slate-700 border-slate-200'
                       }`}
                     >
-                      BRI (0341 0100 2381 502)
+                      BRI (7077 0100 3149 506 - Firman Syah)
                     </button>
                   </div>
                 )}

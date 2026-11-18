@@ -1019,7 +1019,6 @@ app.delete('/api/auth/users/:id', async (req, res) => {
 // GET /api/products
 app.get('/api/products', async (req, res) => {
   try {
-    res.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
     const activeOnly = req.query.all !== 'true';
     const store = db.getStore ? db.getStore() : null;
     if (store) {
@@ -1252,22 +1251,22 @@ app.post('/api/orders', async (req, res) => {
       if (payment_method === 'qris_static') {
         paymentInstructions = {
           method: 'qris_static',
-          channel: 'QRIS Static ContentHub',
+          channel: 'QRIS BRImo - Firman Syah',
           nmid: 'ID1020261198301',
-          merchant_name: 'ContentHub Indonesia',
-          qris_image_url: '/qris-contenthub.svg',
-          instructions: 'Scan barcode QRIS di atas melalui m-Banking (BCA, BRI, Mandiri, dll.) atau E-Wallet (GoPay, OVO, DANA, ShopeePay), lalu upload bukti transfer.',
+          merchant_name: 'FIRMAN SYAH (ContentHub)',
+          qris_image_url: '/qris-bri-firman.jpg',
+          instructions: 'Scan barcode QRIS BRImo di atas melalui m-Banking (BRImo, BCA, Mandiri, dll.) atau E-Wallet (GoPay, OVO, DANA, ShopeePay), lalu upload bukti transfer.',
           expired_in: '24 Jam'
         };
       } else if (payment_method === 'bank_transfer') {
         const bank = bank_provider === 'BRI' ? 'BRI' : 'BCA';
-        const accountNo = bank === 'BRI' ? '0341 0100 2381 502' : '8271 9028 11';
+        const accountNo = bank === 'BRI' ? '7077 0100 3149 506' : '8271 9028 11';
         paymentInstructions = {
           method: 'bank_transfer',
           bank: bank,
           account_number: accountNo,
-          account_holder: 'PT ContentHub Media Indonesia',
-          instructions: `Transfer tepat sebesar Rp ${totalAmount.toLocaleString('id-ID')} ke rekening ${bank} di atas, lalu foto/tangkapan layar struk transfer dan upload bukti pada halaman pesanan.`,
+          account_holder: bank === 'BRI' ? 'FIRMAN SYAH' : 'PT ContentHub Media Indonesia',
+          instructions: `Transfer tepat sebesar Rp ${totalAmount.toLocaleString('id-ID')} ke rekening ${bank} di atas a.n. ${bank === 'BRI' ? 'FIRMAN SYAH' : 'PT ContentHub Media Indonesia'}, lalu foto/tangkapan layar struk transfer dan upload bukti pada halaman pesanan.`,
           expired_in: '24 Jam'
         };
       } else {

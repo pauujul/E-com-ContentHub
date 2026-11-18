@@ -111,7 +111,8 @@ export default function TransactionDetailPage() {
   const isQrisStatic = order?.payment_method === 'qris_static';
   const isBankTransfer = order?.payment_method === 'bank_transfer';
   const bankProvider = order?.bank_provider || (order?.payment_channel?.includes('BRI') ? 'BRI' : 'BCA');
-  const bankAccountNo = bankProvider === 'BRI' ? '0341 0100 2381 502' : '8271 9028 11';
+  const bankAccountNo = bankProvider === 'BRI' ? '7077 0100 3149 506' : '8271 9028 11';
+  const bankAccountHolder = bankProvider === 'BRI' ? 'FIRMAN SYAH' : 'PT ContentHub Media Indonesia';
 
   // Base backend URL untuk menampilkan gambar bukti transfer
   const backendBaseUrl = import.meta.env.VITE_API_URL 
@@ -330,28 +331,28 @@ export default function TransactionDetailPage() {
               {/* 1. KONTEN KHUSUS QRIS STATIC */}
               {isQrisStatic && (
                 <div className="text-center space-y-4">
-                  <div className="p-4 bg-slate-50 rounded-2xl border border-slate-200/80 inline-block shadow-xs">
+                  <div className="p-3 bg-white rounded-2xl border border-slate-200 inline-block shadow-md">
                     <img 
-                      src="/qris-contenthub.svg" 
-                      alt="QRIS Static ContentHub" 
-                      className="w-56 h-auto mx-auto rounded-xl shadow-xs"
+                      src="/qris-bri-firman.jpg" 
+                      alt="QRIS Terima Transfer BRImo Firman Syah" 
+                      className="w-64 max-w-full h-auto mx-auto rounded-xl"
                     />
                   </div>
 
                   <div className="space-y-1">
-                    <p className="text-xs font-bold text-slate-700">
-                      Pindai QRIS di atas dengan Aplikasi M-Banking atau E-Wallet:
+                    <p className="text-xs font-black text-slate-800">
+                      Penerima: <span className="text-primary font-bold">FIRMAN SYAH (Bank BRI)</span>
                     </p>
                     <p className="text-[11px] text-slate-500">
-                      BCA Mobile, BRImo, Livin' Mandiri, BNI, GoPay, OVO, DANA, ShopeePay, LinkAja.
+                      Pindai QR di atas menggunakan aplikasi BRImo, BCA Mobile, Livin' Mandiri, GoPay, OVO, DANA, atau ShopeePay.
                     </p>
                   </div>
 
                   <div className="pt-2 flex items-center justify-center gap-3">
                     <a
-                      href="/qris-contenthub.svg"
-                      download="QRIS-ContentHub.svg"
-                      className="py-2 px-4 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold inline-flex items-center gap-1.5 transition-colors"
+                      href="/qris-bri-firman.jpg"
+                      download="QRIS-BRI-FirmanSyah.jpg"
+                      className="py-2 px-4 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold inline-flex items-center gap-1.5 transition-colors cursor-pointer"
                     >
                       <span className="material-symbols-outlined text-sm">download</span>
                       Unduh Gambar QRIS
@@ -383,7 +384,7 @@ export default function TransactionDetailPage() {
                           {bankAccountNo}
                         </span>
                         <span className="text-[11px] text-slate-500 block font-semibold mt-0.5">
-                          a.n. PT ContentHub Media Indonesia
+                          a.n. {bankAccountHolder}
                         </span>
                       </div>
 
