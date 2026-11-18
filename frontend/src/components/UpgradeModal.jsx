@@ -223,18 +223,18 @@ export default function UpgradeModal({ isOpen, onClose, config, setStep }) {
             </div>
 
             {/* Tombol Aksi */}
-            <div className="flex items-center gap-3 pt-2">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 sm:gap-3 pt-2">
               <button
                 type="button"
                 onClick={onClose}
-                className="flex-1 py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl font-bold text-xs transition-colors cursor-pointer"
+                className="w-full h-11 sm:h-12 px-4 flex items-center justify-center bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl font-bold text-xs sm:text-sm whitespace-nowrap transition-colors cursor-pointer"
               >
                 Tetap di Paket Free
               </button>
               <button
                 type="button"
                 onClick={() => setStep('pricing')}
-                className="flex-2 py-3 bg-gradient-primary text-white rounded-xl font-black text-xs shadow-md shadow-primary/25 hover:scale-[1.02] active:scale-95 transition-all flex items-center justify-center gap-2 cursor-pointer"
+                className="w-full h-11 sm:h-12 px-4 flex items-center justify-center gap-2 bg-gradient-primary text-white rounded-xl font-black text-xs sm:text-sm shadow-md shadow-primary/25 hover:scale-[1.02] active:scale-95 transition-all whitespace-nowrap cursor-pointer"
               >
                 <span>Upgrade</span>
                 <span className="material-symbols-outlined text-sm">arrow_forward</span>

@@ -27,7 +27,7 @@
       "avatar_url": "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=200&h=200&fit=crop",
       "email_verified": true,
       "created_at": "2026-11-04T04:38:29.436Z",
-      "updated_at": "2026-11-13T06:28:59.999Z",
+      "updated_at": "2026-11-18T08:36:01.295Z",
       "email_notifications_enabled": true
     },
     {
@@ -162,7 +162,7 @@
       "avatar_url": "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=200&h=200&fit=crop",
       "email_verified": true,
       "created_at": "2026-11-06T06:49:32.648Z",
-      "updated_at": "2026-11-18T05:27:05.955Z",
+      "updated_at": "2026-11-18T08:06:05.734Z",
       "email_notifications_enabled": true
     },
     {
@@ -238,6 +238,21 @@
       "email_verified": true,
       "created_at": "2026-11-16T05:17:25.569Z",
       "updated_at": "2026-11-18T06:52:34.478Z",
+      "email_notifications_enabled": true
+    },
+    {
+      "id": 19,
+      "name": "Pluim",
+      "email": "pluim@psm.com",
+      "password": "8d969eef6ecad3c29a3a629280e686cf0c3f5d5a86aff3ca12020c923adc6c92",
+      "role": "customer",
+      "phone": "0812345678901",
+      "business_name": "psm",
+      "industry": "Jasa",
+      "avatar_url": "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=200&h=200&fit=crop",
+      "email_verified": true,
+      "created_at": "2026-11-18T08:07:53.543Z",
+      "updated_at": "2026-11-18T08:11:43.400Z",
       "email_notifications_enabled": true
     }
   ],
