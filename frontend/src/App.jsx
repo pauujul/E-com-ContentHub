@@ -35,6 +35,7 @@ import CanvaTransitionPage from './pages/CanvaTransitionPage';
 import PaymentMethodPage from './pages/PaymentMethodPage';
 import PaymentConfirmationPage from './pages/PaymentConfirmationPage';
 import TransactionDetailPage from './pages/TransactionDetailPage';
+import InvoiceReceiptPage from './pages/InvoiceReceiptPage';
 import UserProfilePage from './pages/UserProfilePage';
 import SwitchAccountPage from './pages/SwitchAccountPage';
 import AdminDashboardPage from './pages/AdminDashboardPage';
@@ -249,6 +250,8 @@ export default function App() {
                 <Route path="/payment-confirmation/:orderNumber" element={<PaymentConfirmationPage />} />
                 <Route path="/transactions" element={<TransactionDetailPage />} />
                 <Route path="/transactions/:orderNumber" element={<TransactionDetailPage />} />
+                <Route path="/receipt/:orderNumber" element={<InvoiceReceiptPage />} />
+                <Route path="/invoice/:orderNumber" element={<InvoiceReceiptPage />} />
 
                 {/* 6. Admin Panel (Role-Protected) */}
                 <Route

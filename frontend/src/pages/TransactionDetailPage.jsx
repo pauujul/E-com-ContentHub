@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import api from '../services/api';
 import { useAuth } from '../context/AuthContext';
+import InvoiceReceiptModal from '../components/InvoiceReceiptModal';
 
 export default function TransactionDetailPage() {
   const { orderNumber } = useParams();
@@ -19,8 +20,9 @@ export default function TransactionDetailPage() {
   const [uploadSuccess, setUploadSuccess] = useState(false);
   const [copiedText, setCopiedText] = useState(false);
 
-  // State Modal Preview Gambar Bukti
+  // State Modal Preview Gambar Bukti & Struk
   const [showImageModal, setShowImageModal] = useState(false);
+  const [showReceiptModal, setShowReceiptModal] = useState(false);
 
   const fetchOrderData = () => {
     if (!orderNumber) return;
@@ -139,7 +141,15 @@ export default function TransactionDetailPage() {
             </span>
           </div>
 
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-3">
+            <button
+              type="button"
+              onClick={() => setShowReceiptModal(true)}
+              className="py-1.5 px-3 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold flex items-center gap-1.5 shadow-xs transition-all hover:scale-105 active:scale-95 cursor-pointer"
+            >
+              <span className="material-symbols-outlined text-sm">receipt_long</span>
+              <span>{trackingStatus === 'lunas' ? 'Lihat Struk Lunas' : 'Lihat Struk Tagihan'}</span>
+            </button>
             <Link
               to="/dashboard"
               className="text-xs font-bold text-slate-500 hover:text-primary transition-colors flex items-center gap-1"
@@ -593,9 +603,19 @@ export default function TransactionDetailPage() {
 
             {/* Ringkasan Item Pesanan */}
             <div className="bg-white rounded-3xl p-6 border border-slate-200 shadow-xs space-y-3">
-              <h4 className="text-xs font-extrabold uppercase tracking-wider text-slate-400">
-                Ringkasan Tagihan
-              </h4>
+              <div className="flex justify-between items-center pb-2 border-b border-slate-100">
+                <h4 className="text-xs font-extrabold uppercase tracking-wider text-slate-400">
+                  Ringkasan Tagihan
+                </h4>
+                <button
+                  type="button"
+                  onClick={() => setShowReceiptModal(true)}
+                  className="text-[11px] font-bold text-primary hover:underline flex items-center gap-1 cursor-pointer"
+                >
+                  <span className="material-symbols-outlined text-sm">receipt_long</span>
+                  <span>Lihat Struk</span>
+                </button>
+              </div>
               <div className="flex justify-between items-center text-xs">
                 <span className="font-bold text-slate-800">{order?.plan_name || 'Paket Langganan'}</span>
                 <span className="font-semibold text-slate-600">Rp {amountNum.toLocaleString('id-ID')}</span>
@@ -607,6 +627,22 @@ export default function TransactionDetailPage() {
               <div className="pt-2 border-t border-slate-100 flex justify-between items-center text-xs">
                 <span className="font-bold text-slate-900">Total Pembayaran</span>
                 <span className="font-black text-primary text-sm">Rp {amountNum.toLocaleString('id-ID')}</span>
+              </div>
+
+              {/* Tombol Cetak Struk Cepat */}
+              <div className="pt-2">
+                <button
+                  type="button"
+                  onClick={() => setShowReceiptModal(true)}
+                  className={`w-full py-2.5 px-4 rounded-xl border text-xs font-extrabold flex items-center justify-center gap-2 transition-all cursor-pointer shadow-xs ${
+                    trackingStatus === 'lunas'
+                      ? 'bg-emerald-50 border-emerald-200 text-emerald-800 hover:bg-emerald-100'
+                      : 'bg-amber-50 border-amber-200 text-amber-800 hover:bg-amber-100'
+                  }`}
+                >
+                  <span className="material-symbols-outlined text-sm">print</span>
+                  <span>Cetak Struk ({trackingStatus === 'lunas' ? 'Lunas' : 'Belum Lunas'})</span>
+                </button>
               </div>
             </div>
 
@@ -638,6 +674,15 @@ export default function TransactionDetailPage() {
             />
           </div>
         </div>
+      )}
+
+      {/* Modal Struk / Faktur Tagihan Digital Resmi (Lunas / Belum Lunas) */}
+      {showReceiptModal && order && (
+        <InvoiceReceiptModal
+          isOpen={showReceiptModal}
+          onClose={() => setShowReceiptModal(false)}
+          order={order}
+        />
       )}
 
     </div>

@@ -261,19 +261,31 @@ export default function OrderHistory({ refreshKey, currentUser, onOpenLogin }) {
                     </td>
                     <td style={{ fontSize: '13px', color: '#64748b' }}>
                       <div>{new Date(ord.created_at).toLocaleString('id-ID')}</div>
-                      <Link
-                        to={`/transactions/${ord.order_number}`}
-                        style={{
-                          fontSize: '11px',
-                          color: '#4f46e5',
-                          fontWeight: 700,
-                          textDecoration: 'none',
-                          display: 'inline-block',
-                          marginTop: '4px',
-                        }}
-                      >
-                        Detail &amp; Tracking →
-                      </Link>
+                      <div style={{ display: 'flex', gap: '8px', alignItems: 'center', marginTop: '4px', flexWrap: 'wrap' }}>
+                        <Link
+                          to={`/transactions/${ord.order_number}`}
+                          style={{
+                            fontSize: '11px',
+                            color: '#4f46e5',
+                            fontWeight: 700,
+                            textDecoration: 'none',
+                          }}
+                        >
+                          Detail &amp; Tracking →
+                        </Link>
+                        <span style={{ color: '#cbd5e1' }}>•</span>
+                        <Link
+                          to={`/receipt/${ord.order_number}`}
+                          style={{
+                            fontSize: '11px',
+                            color: ord.status === 'Paid' || ord.tracking_status === 'lunas' ? '#059669' : '#d97706',
+                            fontWeight: 700,
+                            textDecoration: 'none',
+                          }}
+                        >
+                          📄 Struk {ord.status === 'Paid' || ord.tracking_status === 'lunas' ? 'Lunas' : 'Tagihan'}
+                        </Link>
+                      </div>
                     </td>
                     {isAdmin && (
                       <td>

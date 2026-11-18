@@ -2,12 +2,14 @@ import React, { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import api from '../services/api';
 import { useAuth } from '../context/AuthContext';
+import InvoiceReceiptModal from '../components/InvoiceReceiptModal';
 
 export default function PaymentConfirmationPage() {
   const { orderNumber } = useParams();
   const navigate = useNavigate();
   const { refreshSubscription } = useAuth();
   const [order, setOrder] = useState(null);
+  const [showReceipt, setShowReceipt] = useState(false);
 
   useEffect(() => {
     try {
@@ -118,6 +120,15 @@ export default function PaymentConfirmationPage() {
 
               {/* Action Buttons */}
               <div className="space-y-3 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setShowReceipt(true)}
+                  className="w-full py-3.5 bg-white border border-slate-200 hover:bg-slate-50 font-bold rounded-2xl text-xs text-slate-800 transition-all flex items-center justify-center gap-2 cursor-pointer shadow-xs"
+                >
+                  <span className="material-symbols-outlined text-sm">receipt_long</span>
+                  <span>Cetak / Unduh Struk Resmi (Lunas)</span>
+                </button>
+
                 <Link
                   to="/dashboard"
                   className="w-full py-4 bg-gradient-primary text-white font-bold rounded-2xl text-sm shadow-lg shadow-primary/25 hover:scale-[1.01] active:scale-95 transition-all text-center flex items-center justify-center gap-2"
@@ -137,6 +148,15 @@ export default function PaymentConfirmationPage() {
           </div>
         </div>
       </main>
+
+      {/* Modal Struk Lunas */}
+      {showReceipt && order && (
+        <InvoiceReceiptModal
+          isOpen={showReceipt}
+          onClose={() => setShowReceipt(false)}
+          order={order}
+        />
+      )}
     </div>
   );
 }
