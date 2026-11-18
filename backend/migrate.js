@@ -56,6 +56,7 @@ async function runMigration() {
     console.log('   - articles (Blog & Edukasi)');
     console.log('   - about_content (Profil Perusahaan & Tim)');
     console.log('   - web_settings (General, Email SMTP, Payment Gateway)');
+    console.log('   - hero_slides (Landing Page Carousel Banner)');
     console.log('   - support_tickets');
 
     client.release();

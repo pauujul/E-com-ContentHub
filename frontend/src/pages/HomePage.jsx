@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import PricingSection from '../components/PricingSection';
+import HeroCarousel from '../components/HeroCarousel';
 
 export default function HomePage() {
   return (
@@ -10,71 +11,8 @@ export default function HomePage() {
       <Navbar />
 
       <main className="pt-16">
-        {/* Hero Section */}
-        <section className="relative overflow-hidden pt-20 pb-32 px-8">
-          <div className="max-w-7xl mx-auto grid lg:grid-cols-2 gap-16 items-center">
-            <div className="space-y-8">
-              <div className="inline-flex items-center gap-2 px-3.5 py-1.5 bg-primary/10 text-primary rounded-full text-xs font-bold uppercase tracking-wider">
-                <span className="material-symbols-outlined text-sm">calendar_month</span>
-                Platform Manajemen Konten Terpadu
-              </div>
-
-              <h1 className="text-5xl lg:text-6xl font-extrabold tracking-tight text-on-background leading-[1.1]">
-                Buat Konten <span className="bg-gradient-to-r from-primary to-primary-container bg-clip-text text-transparent">Konsisten</span> Tanpa Stres
-              </h1>
-
-              <p className="text-xl text-on-surface-variant leading-relaxed max-w-xl">
-                Ubah cara Anda mengelola media sosial. Dari ide, perancangan kalender interaktif, hingga template siap pakai Canva untuk mengelola semuanya dalam satu platform terpadu.
-              </p>
-
-              <div className="flex flex-wrap gap-4 pt-4">
-                <a
-                  href="#pricing"
-                  className="px-8 py-4 bg-gradient-to-br from-primary to-primary-container text-white rounded-2xl font-bold shadow-lg shadow-primary/20 hover:scale-105 active:scale-95 transition-all text-center"
-                >
-                  Pilih Paket Langganan
-                </a>
-                <Link
-                  to="/calendar"
-                  className="px-8 py-4 bg-surface-container-highest text-primary rounded-2xl font-bold hover:bg-surface-container-high transition-all flex items-center gap-2 justify-center"
-                >
-                  <span className="material-symbols-outlined">calendar_month</span>
-                  Coba Kalender Demo
-                </Link>
-              </div>
-
-              <div className="flex items-center gap-4 text-xs font-semibold text-on-surface-variant pt-2">
-                <span className="flex items-center gap-1 text-green-600">
-                  <span className="material-symbols-outlined text-sm">check_circle</span>
-                  Akses Instan
-                </span>
-                <span className="flex items-center gap-1 text-green-600">
-                  <span className="material-symbols-outlined text-sm">check_circle</span>
-                  BCA VA & E-Wallet
-                </span>
-                <span className="flex items-center gap-1 text-green-600">
-                  <span className="material-symbols-outlined text-sm">check_circle</span>
-                  Support Prioritas UMKM
-                </span>
-              </div>
-            </div>
-
-            <div className="relative">
-              <div className="absolute -inset-4 bg-primary/10 rounded-[2rem] blur-3xl"></div>
-              <div className="relative bg-surface-container-lowest rounded-2xl shadow-2xl p-4 transform lg:rotate-2 border border-outline-variant/15">
-                <img
-                  alt="ContentHub Dashboard Preview"
-                  className="rounded-xl w-full h-auto object-cover"
-                  src="https://lh3.googleusercontent.com/aida-public/AB6AXuBfoPAIgrso-NHEurkslE8-Op6KOwjQNK9T8qX-bFyGghhi2re3u8gsYyaqTZ7-Sq6ZPAJa2rOHSFHKDFiDj4ETYiaex6GPSVPJ9f1hibtDf_YGfrciy7D6DObnB5QdZHBf8VS_wZtv3fXb1Yp9ktjVuGWRYuRmQqwQ_gBnWNXB7NHIEmKCMtJqRvzovJHP-Ej7t9UQp8b1B4XIKODUJP2RVfgzJ-wcSDDaPpgMAkQI4N0Ulef1FxKgVOckBGIDwzPW5AyAX2yW8w"
-                />
-                <div className="absolute -bottom-6 -left-6 bg-secondary text-white p-6 rounded-2xl shadow-xl max-w-[200px]">
-                  <p className="text-3xl font-extrabold">10x</p>
-                  <p className="text-xs opacity-90 font-medium">Lebih cepat merencanakan jadwal konten bulanan</p>
-                </div>
-              </div>
-            </div>
-          </div>
-        </section>
+        {/* Dynamic Hero Carousel CMS Section */}
+        <HeroCarousel />
 
         {/* Stats Bento Section */}
         <section className="py-20 px-8 bg-surface-container-low">

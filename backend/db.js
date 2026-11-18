@@ -834,6 +834,16 @@ function executeLocalQuery(text, params = []) {
     return { rows: mapped.sort((a, b) => new Date(b.created_at) - new Date(a.created_at)) };
   }
 
+  // HERO SLIDES
+  if (upper.includes('FROM HERO_SLIDES')) {
+    if (!localData.hero_slides) localData.hero_slides = [];
+    if (upper.includes('WHERE IS_ACTIVE = TRUE')) {
+      const active = localData.hero_slides.filter((s) => s.is_active === true);
+      return { rows: active.sort((a, b) => (a.order_index || 0) - (b.order_index || 0) || a.id - b.id) };
+    }
+    return { rows: localData.hero_slides.sort((a, b) => (a.order_index || 0) - (b.order_index || 0) || a.id - b.id) };
+  }
+
   // ORDER ITEMS
   if (upper.includes('FROM ORDER_ITEMS')) {
     if (trimmed.includes('WHERE order_id = $1')) {

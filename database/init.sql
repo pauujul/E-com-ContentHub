@@ -5,6 +5,7 @@
 -- ============================================================
 
 -- 1. Bersihkan tabel lama jika ada (idempotent dengan cascading)
+DROP TABLE IF EXISTS hero_slides CASCADE;
 DROP TABLE IF EXISTS web_settings CASCADE;
 DROP TABLE IF EXISTS about_content CASCADE;
 DROP TABLE IF EXISTS articles CASCADE;
@@ -237,6 +238,23 @@ CREATE TABLE web_settings (
 -- ============================================================
 -- 10. TABEL SUPPORT TICKETS
 -- ============================================================
+
+-- ============================================================
+-- 11. TABEL HERO SLIDES (SLIDER / CAROUSEL DINAMIS LANDING PAGE)
+-- ============================================================
+CREATE TABLE hero_slides (
+    id SERIAL PRIMARY KEY,
+    title VARCHAR(255) NOT NULL,
+    subtitle TEXT,
+    image_url TEXT NOT NULL,
+    cta_text VARCHAR(100),
+    cta_link VARCHAR(255),
+    order_index INT DEFAULT 0,
+    is_active BOOLEAN DEFAULT TRUE,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
 CREATE TABLE support_tickets (
     id SERIAL PRIMARY KEY,
     user_id INT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
@@ -549,4 +567,35 @@ INSERT INTO web_settings (key, value) VALUES
         "merchant_id": "M10928374",
         "supported_channels": ["BCA Virtual Account", "Mandiri Virtual Account", "BRI Virtual Account", "GoPay QRIS", "OVO", "DANA"]
     }'::jsonb
+);
+
+
+-- 12. Seed Data Hero Slides
+INSERT INTO hero_slides (title, subtitle, image_url, cta_text, cta_link, order_index, is_active) VALUES
+(
+    'Buat Konten Konsisten Tanpa Stres',
+    'Ubah cara Anda mengelola media sosial. Dari ide, perancangan kalender interaktif, hingga template siap pakai Canva untuk mengelola semuanya dalam satu platform terpadu.',
+    'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=1200&auto=format&fit=crop&q=80',
+    'Pilih Paket Langganan',
+    '#pricing',
+    1,
+    TRUE
+),
+(
+    'Rancang Strategi Visual Bersama Canva',
+    'Integrasi langsung ke ekosistem Canva Pro dengan 200+ template terkurasi khusus persona UMKM Indonesia. Desain cepat, rapi, dan langsung tersinkron ke kalender.',
+    'https://images.unsplash.com/photo-1557804506-669a67965ba0?w=1200&auto=format&fit=crop&q=80',
+    'Jelajahi Template',
+    '/templates',
+    2,
+    TRUE
+),
+(
+    'Otomasi Jadwal & Notifikasi Jam Emas',
+    'Maksimalkan jangkauan audiens dengan penjadwalan tepat waktu. Notifikasi email otomatis mengingatkan jadwal posting Instagram & TikTok Anda.',
+    'https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=1200&auto=format&fit=crop&q=80',
+    'Coba Kalender Demo',
+    '/calendar',
+    3,
+    TRUE
 );

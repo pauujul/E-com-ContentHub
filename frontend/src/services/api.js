@@ -332,6 +332,34 @@ export const api = {
     const res = await apiClient.get('/article-logs');
     return res.data;
   },
+
+  // ==========================================
+  // 9. HERO SLIDES (CMS CAROUSEL DINAMIS)
+  // ==========================================
+  getHeroSlides: async () => {
+    const res = await apiClient.get('/hero-slides');
+    return res.data;
+  },
+
+  getAdminHeroSlides: async () => {
+    const res = await apiClient.get('/admin/hero-slides');
+    return res.data;
+  },
+
+  createHeroSlide: async (slideData) => {
+    const res = await apiClient.post('/admin/hero-slides', slideData);
+    return res.data;
+  },
+
+  updateHeroSlide: async (id, slideData) => {
+    const res = await apiClient.put(`/admin/hero-slides/${id}`, slideData);
+    return res.data;
+  },
+
+  deleteHeroSlide: async (id) => {
+    const res = await apiClient.delete(`/admin/hero-slides/${id}`);
+    return res.data;
+  },
 };
 
 export default api;
