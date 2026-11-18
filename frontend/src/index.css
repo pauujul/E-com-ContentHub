@@ -866,3 +866,88 @@ body {
 .text-primary {
   color: #4338ca !important;
 }
+
+/* ==========================================================================
+   ATURAN CETAK DOKUMEN STRUK DIGITAL RESMI (PRINT & EXPORT PDF)
+   Memastikan HANYA lembar struk yang dicetak (1 Halaman Bersih)
+   dan menyembunyikan SELURUH halaman aplikasi, navbar, sidebar, dan tabel lain.
+   ========================================================================== */
+@media print {
+  @page {
+    size: A4 portrait;
+    margin: 10mm 12mm;
+  }
+
+  /* Reset body saat pencetakan */
+  body.receipt-modal-open {
+    background: #ffffff !important;
+    color: #0f172a !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    height: auto !important;
+    min-height: auto !important;
+    overflow: visible !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  /* KUNCI UTAMA: Sembunyikan SELURUH halaman aplikasi di dalam #root */
+  body.receipt-modal-open > #root {
+    display: none !important;
+    visibility: hidden !important;
+    height: 0 !important;
+    max-height: 0 !important;
+    overflow: hidden !important;
+  }
+
+  /* Jadikan container modal menjadi dokumen lembar kertas normal */
+  body.receipt-modal-open .receipt-modal-overlay {
+    position: static !important;
+    background: transparent !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    display: block !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    height: auto !important;
+    min-height: auto !important;
+    overflow: visible !important;
+  }
+
+  body.receipt-modal-open .receipt-modal-card {
+    position: static !important;
+    width: 100% !important;
+    max-width: 620px !important;
+    margin: 0 auto !important;
+    padding: 0 !important;
+    box-shadow: none !important;
+    border: 1px solid #cbd5e1 !important;
+    border-radius: 14px !important;
+    max-height: none !important;
+    overflow: visible !important;
+    break-inside: avoid !important;
+    page-break-inside: avoid !important;
+  }
+
+  body.receipt-modal-open #printable-receipt {
+    overflow: visible !important;
+    max-height: none !important;
+    padding: 20px 24px !important;
+    background: #ffffff !important;
+    break-inside: avoid !important;
+    page-break-inside: avoid !important;
+  }
+
+  /* Sembunyikan tombol-tombol aksi cetak/tutup dan scroll bar */
+  body.receipt-modal-open .print\:hidden,
+  .print\:hidden {
+    display: none !important;
+    visibility: hidden !important;
+    height: 0 !important;
+    padding: 0 !important;
+    margin: 0 !important;
+  }
+}
+
