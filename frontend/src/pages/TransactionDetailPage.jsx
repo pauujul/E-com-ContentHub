@@ -331,31 +331,55 @@ export default function TransactionDetailPage() {
               {/* 1. KONTEN KHUSUS QRIS STATIC */}
               {isQrisStatic && (
                 <div className="text-center space-y-4">
-                  <div className="p-3 bg-white rounded-2xl border border-slate-200 inline-block shadow-md">
-                    <img 
-                      src="/qris-bri-firman.jpg" 
-                      alt="QRIS Terima Transfer BRImo Firman Syah" 
-                      className="w-64 max-w-full h-auto mx-auto rounded-xl"
-                    />
+                  {/* Kartu Frame Barcode QRIS Bersih */}
+                  <div className="inline-block p-4 sm:p-5 bg-white rounded-3xl border-2 border-slate-200 shadow-xl max-w-xs mx-auto text-center">
+                    <div className="border-b border-slate-100 pb-2.5 mb-3">
+                      <div className="flex items-center justify-center gap-1.5 mb-0.5">
+                        <span className="font-black text-sm tracking-wider text-slate-900">QRIS</span>
+                        <span className="text-[9px] bg-red-600 text-white font-extrabold px-1.5 py-0.5 rounded">GPN</span>
+                      </div>
+                      <p className="text-[9px] font-extrabold uppercase tracking-widest text-slate-400">
+                        QR Standar Pembayaran Nasional
+                      </p>
+                      <h4 className="text-xs font-black text-slate-800 mt-1">FIRMAN SYAH</h4>
+                      <p className="text-[10px] font-mono text-slate-400">NMID: ID1020261198301</p>
+                    </div>
+
+                    <div className="p-2 bg-white rounded-2xl border border-slate-100 shadow-inner flex items-center justify-center">
+                      <img 
+                        src="/qris-bri-firman.jpg" 
+                        alt="Barcode QRIS BRImo Firman Syah" 
+                        className="w-56 h-auto mx-auto rounded-lg object-contain"
+                      />
+                    </div>
+
+                    <div className="pt-3 border-t border-slate-100 mt-3 text-center">
+                      <span className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 block">
+                        Total Tagihan
+                      </span>
+                      <span className="text-lg font-black text-primary">
+                        Rp {amountNum.toLocaleString('id-ID')}
+                      </span>
+                    </div>
                   </div>
 
-                  <div className="space-y-1">
-                    <p className="text-xs font-black text-slate-800">
-                      Penerima: <span className="text-primary font-bold">FIRMAN SYAH (Bank BRI)</span>
+                  <div className="space-y-1 max-w-sm mx-auto">
+                    <p className="text-xs font-bold text-slate-700">
+                      Pindai barcode di atas menggunakan aplikasi:
                     </p>
                     <p className="text-[11px] text-slate-500">
-                      Pindai QR di atas menggunakan aplikasi BRImo, BCA Mobile, Livin' Mandiri, GoPay, OVO, DANA, atau ShopeePay.
+                      BRImo, BCA Mobile, Livin' Mandiri, BNI Mobile, GoPay, OVO, DANA, ShopeePay, atau LinkAja.
                     </p>
                   </div>
 
-                  <div className="pt-2 flex items-center justify-center gap-3">
+                  <div className="pt-1 flex items-center justify-center gap-3">
                     <a
                       href="/qris-bri-firman.jpg"
-                      download="QRIS-BRI-FirmanSyah.jpg"
-                      className="py-2 px-4 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold inline-flex items-center gap-1.5 transition-colors cursor-pointer"
+                      download="Barcode-QRIS-FirmanSyah.jpg"
+                      className="py-2.5 px-5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs font-extrabold inline-flex items-center gap-2 transition-all shadow-md cursor-pointer hover:scale-105 active:scale-95"
                     >
                       <span className="material-symbols-outlined text-sm">download</span>
-                      Unduh Gambar QRIS
+                      Unduh Barcode QRIS
                     </a>
                   </div>
                 </div>
