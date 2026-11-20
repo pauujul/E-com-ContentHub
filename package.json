@@ -2,6 +2,7 @@
   "name": "contenthub-saas",
   "version": "2.0.0",
   "scripts": {
+    "build": "cd frontend && npm install && npm run build",
     "start": "cd backend && npm start",
     "dev": "cd backend && npm run dev",
     "start:backend": "cd backend && npm start",
