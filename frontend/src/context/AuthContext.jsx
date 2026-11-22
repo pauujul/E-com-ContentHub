@@ -4,10 +4,23 @@ import api from '../services/api';
 const AuthContext = createContext();
 
 export function AuthProvider({ children }) {
+  const [token, setToken] = useState(() => {
+    try {
+      return localStorage.getItem('contenthub_token') || null;
+    } catch (e) {
+      return null;
+    }
+  });
+
   const [currentUser, setCurrentUser] = useState(() => {
     try {
       const isExplicitlyLoggedOut = localStorage.getItem('contenthub_logged_out');
       if (isExplicitlyLoggedOut === 'true') {
+        return null;
+      }
+      // Wajib memiliki token login yang valid agar sesi dianggap aktif
+      const savedToken = localStorage.getItem('contenthub_token');
+      if (!savedToken) {
         return null;
       }
       const saved = localStorage.getItem('contenthub_user');
@@ -17,14 +30,6 @@ export function AuthProvider({ children }) {
     }
     // Pengunjung belum login default-nya null
     return null;
-  });
-
-  const [token, setToken] = useState(() => {
-    try {
-      return localStorage.getItem('contenthub_token') || null;
-    } catch (e) {
-      return null;
-    }
   });
 
   const [allUsers, setAllUsers] = useState([]);
@@ -185,6 +190,9 @@ export function AuthProvider({ children }) {
 
   const switchUser = (user) => {
     localStorage.removeItem('contenthub_logged_out');
+    const switchToken = `switch_session_${user.id}_${Date.now()}`;
+    localStorage.setItem('contenthub_token', switchToken);
+    setToken(switchToken);
     setCurrentUser(user);
     localStorage.setItem('contenthub_user', JSON.stringify(user));
   };
@@ -192,6 +200,7 @@ export function AuthProvider({ children }) {
   const logout = () => {
     localStorage.removeItem('contenthub_user');
     localStorage.removeItem('contenthub_token');
+    localStorage.removeItem('contenthub_cart');
     localStorage.setItem('contenthub_logged_out', 'true');
     setCurrentUser(null);
     setToken(null);

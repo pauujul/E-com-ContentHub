@@ -5,7 +5,7 @@ import { useAuth } from '../context/AuthContext';
 import { useCart } from '../context/CartContext';
 
 export default function Navbar({ publicMode = false }) {
-  const { currentUser } = useAuth();
+  const { currentUser, logout } = useAuth();
   const activeUser = publicMode ? null : currentUser;
 
   const { cartCount, setIsCartOpen } = useCart();
@@ -72,15 +72,26 @@ export default function Navbar({ publicMode = false }) {
 
         <div className="flex items-center gap-2.5 sm:gap-3 flex-shrink-0">
           {activeUser ? (
-            <Link
-              to="/dashboard"
-              className="px-4 py-2 text-xs font-bold bg-primary-fixed text-primary hover:bg-primary hover:text-white rounded-xl transition-all flex items-center gap-1.5"
-            >
-              <span className="material-symbols-outlined text-sm">
-                space_dashboard
-              </span>
-              <span>Workspace</span>
-            </Link>
+            <div className="flex items-center gap-2">
+              <Link
+                to="/dashboard"
+                className="px-4 py-2 text-xs font-bold bg-primary-fixed text-primary hover:bg-primary hover:text-white rounded-xl transition-all flex items-center gap-1.5 shadow-xs"
+              >
+                <span className="material-symbols-outlined text-sm">
+                  space_dashboard
+                </span>
+                <span>Workspace</span>
+              </Link>
+              <button
+                type="button"
+                onClick={logout}
+                title="Keluar dari akun ini"
+                className="px-2.5 py-1.5 text-xs font-bold text-slate-500 hover:text-red-600 hover:bg-red-50 rounded-xl transition-colors flex items-center gap-1 border border-slate-200/80"
+              >
+                <span className="material-symbols-outlined text-sm">logout</span>
+                <span className="hidden sm:inline">Keluar</span>
+              </button>
+            </div>
           ) : (
             <>
               <Link
@@ -129,7 +140,7 @@ export default function Navbar({ publicMode = false }) {
           </Link>
 
           <div className="pt-3 border-t border-slate-100 flex flex-col gap-2">
-            {!activeUser && (
+            {!activeUser ? (
               <>
                 <Link
                   to="/login"
@@ -147,6 +158,18 @@ export default function Navbar({ publicMode = false }) {
                   Buat Akun Sekarang
                 </Link>
               </>
+            ) : (
+              <button
+                type="button"
+                onClick={() => {
+                  setMobileMenuOpen(false);
+                  logout();
+                }}
+                className="w-full py-2.5 bg-red-50 text-red-600 text-xs font-bold rounded-xl flex items-center justify-center gap-1.5"
+              >
+                <span className="material-symbols-outlined text-sm">logout</span>
+                Keluar Akun
+              </button>
             )}
           </div>
         </div>
