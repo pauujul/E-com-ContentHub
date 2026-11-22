@@ -268,6 +268,8 @@ app.get('/', (req, res) => {
       '/api/content/partnerships',
       '/api/content/articles',
       '/api/content/about',
+      '/api/hero-slides',
+      '/api/admin/hero-slides',
       '/api/settings',
       '/api/admin/stats',
       '/api/upload',
@@ -3177,6 +3179,181 @@ app.put('/api/settings/payment-gateway', async (req, res) => {
     res.json({ success: true, message: 'Kredensial Payment Gateway & Transaksi berhasil disimpan.', data: payload });
   } catch (error) {
     res.status(500).json({ success: false, message: 'Gagal menyimpan kredensial payment gateway', error: error.message });
+  }
+});
+
+// ==========================================
+// 7B. HERO SLIDES (CMS CAROUSEL DINAMIS)
+// ==========================================
+
+// GET /api/hero-slides (Publik: hanya slide aktif)
+app.get('/api/hero-slides', async (req, res) => {
+  try {
+    const store = db.getStore ? db.getStore() : null;
+    if (store && store.hero_slides) {
+      const activeSlides = store.hero_slides
+        .filter((s) => s.is_active === true)
+        .sort((a, b) => (a.order_index || 0) - (b.order_index || 0) || a.id - b.id);
+      return res.json({ success: true, count: activeSlides.length, data: activeSlides });
+    }
+
+    const result = await db.query(
+      'SELECT * FROM hero_slides WHERE is_active = TRUE ORDER BY order_index ASC, id ASC'
+    );
+    res.json({ success: true, count: result.rows.length, data: result.rows });
+  } catch (error) {
+    res.status(500).json({ success: false, message: 'Gagal memuat hero slides', error: error.message });
+  }
+});
+
+// GET /api/admin/hero-slides (Admin: semua slide termasuk nonaktif)
+app.get('/api/admin/hero-slides', async (req, res) => {
+  try {
+    const store = db.getStore ? db.getStore() : null;
+    if (store && store.hero_slides) {
+      const allSlides = [...store.hero_slides].sort(
+        (a, b) => (a.order_index || 0) - (b.order_index || 0) || a.id - b.id
+      );
+      return res.json({ success: true, count: allSlides.length, data: allSlides });
+    }
+
+    const result = await db.query(
+      'SELECT * FROM hero_slides ORDER BY order_index ASC, id ASC'
+    );
+    res.json({ success: true, count: result.rows.length, data: result.rows });
+  } catch (error) {
+    res.status(500).json({ success: false, message: 'Gagal memuat daftar hero slides untuk admin', error: error.message });
+  }
+});
+
+// POST /api/admin/hero-slides (Admin: Tambah slide baru)
+app.post('/api/admin/hero-slides', async (req, res) => {
+  try {
+    const { title, subtitle, image_url, cta_text, cta_link, order_index, is_active } = req.body;
+
+    if (!title || !title.trim()) {
+      return res.status(400).json({ success: false, message: 'Judul banner (title) wajib diisi' });
+    }
+    if (!image_url || !image_url.trim()) {
+      return res.status(400).json({ success: false, message: 'URL gambar banner (image_url) wajib diisi' });
+    }
+
+    const parsedOrder = order_index !== undefined ? parseInt(order_index, 10) || 0 : 0;
+    const parsedActive = is_active !== undefined ? Boolean(is_active) : true;
+
+    if (db.isPostgres && db.isPostgres()) {
+      const result = await db.query(
+        `INSERT INTO hero_slides (title, subtitle, image_url, cta_text, cta_link, order_index, is_active, created_at, updated_at)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, NOW(), NOW())
+         RETURNING *`,
+        [title.trim(), subtitle ? subtitle.trim() : '', image_url.trim(), cta_text ? cta_text.trim() : '', cta_link ? cta_link.trim() : '', parsedOrder, parsedActive]
+      );
+      return res.status(201).json({ success: true, message: 'Hero slide berhasil ditambahkan', data: result.rows[0] });
+    }
+
+    const store = db.getStore ? db.getStore() : null;
+    if (store) {
+      if (!store.hero_slides) store.hero_slides = [];
+      const newId = store.hero_slides.length > 0 ? Math.max(...store.hero_slides.map((s) => s.id)) + 1 : 1;
+      const newSlide = {
+        id: newId,
+        title: title.trim(),
+        subtitle: subtitle ? subtitle.trim() : '',
+        image_url: image_url.trim(),
+        cta_text: cta_text ? cta_text.trim() : '',
+        cta_link: cta_link ? cta_link.trim() : '',
+        order_index: parsedOrder,
+        is_active: parsedActive,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      };
+      store.hero_slides.push(newSlide);
+      db.saveStore();
+      return res.status(201).json({ success: true, message: 'Hero slide berhasil ditambahkan', data: newSlide });
+    }
+  } catch (error) {
+    res.status(500).json({ success: false, message: 'Gagal menambahkan hero slide', error: error.message });
+  }
+});
+
+// PUT /api/admin/hero-slides/:id (Admin: Perbarui slide)
+app.put('/api/admin/hero-slides/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { title, subtitle, image_url, cta_text, cta_link, order_index, is_active } = req.body;
+
+    if (db.isPostgres && db.isPostgres()) {
+      const check = await db.query('SELECT * FROM hero_slides WHERE id = $1', [id]);
+      if (check.rows.length === 0) {
+        return res.status(404).json({ success: false, message: 'Hero slide tidak ditemukan' });
+      }
+
+      const current = check.rows[0];
+      const updatedTitle = title !== undefined ? title.trim() : current.title;
+      const updatedSubtitle = subtitle !== undefined ? subtitle.trim() : current.subtitle;
+      const updatedImageUrl = image_url !== undefined ? image_url.trim() : current.image_url;
+      const updatedCtaText = cta_text !== undefined ? cta_text.trim() : current.cta_text;
+      const updatedCtaLink = cta_link !== undefined ? cta_link.trim() : current.cta_link;
+      const updatedOrder = order_index !== undefined ? parseInt(order_index, 10) || 0 : current.order_index;
+      const updatedActive = is_active !== undefined ? Boolean(is_active) : current.is_active;
+
+      const result = await db.query(
+        `UPDATE hero_slides
+         SET title = $1, subtitle = $2, image_url = $3, cta_text = $4, cta_link = $5, order_index = $6, is_active = $7, updated_at = NOW()
+         WHERE id = $8
+         RETURNING *`,
+        [updatedTitle, updatedSubtitle, updatedImageUrl, updatedCtaText, updatedCtaLink, updatedOrder, updatedActive, id]
+      );
+
+      return res.json({ success: true, message: 'Hero slide berhasil diperbarui', data: result.rows[0] });
+    }
+
+    const store = db.getStore ? db.getStore() : null;
+    if (store && store.hero_slides) {
+      const idx = store.hero_slides.findIndex((s) => s.id === parseInt(id, 10));
+      if (idx === -1) return res.status(404).json({ success: false, message: 'Hero slide tidak ditemukan' });
+
+      if (title !== undefined) store.hero_slides[idx].title = title.trim();
+      if (subtitle !== undefined) store.hero_slides[idx].subtitle = subtitle.trim();
+      if (image_url !== undefined) store.hero_slides[idx].image_url = image_url.trim();
+      if (cta_text !== undefined) store.hero_slides[idx].cta_text = cta_text.trim();
+      if (cta_link !== undefined) store.hero_slides[idx].cta_link = cta_link.trim();
+      if (order_index !== undefined) store.hero_slides[idx].order_index = parseInt(order_index, 10) || 0;
+      if (is_active !== undefined) store.hero_slides[idx].is_active = Boolean(is_active);
+      store.hero_slides[idx].updated_at = new Date().toISOString();
+
+      db.saveStore();
+      return res.json({ success: true, message: 'Hero slide berhasil diperbarui', data: store.hero_slides[idx] });
+    }
+  } catch (error) {
+    res.status(500).json({ success: false, message: 'Gagal memperbarui hero slide', error: error.message });
+  }
+});
+
+// DELETE /api/admin/hero-slides/:id (Admin: Hapus slide)
+app.delete('/api/admin/hero-slides/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    if (db.isPostgres && db.isPostgres()) {
+      const result = await db.query('DELETE FROM hero_slides WHERE id = $1 RETURNING id, title', [id]);
+      if (result.rows.length === 0) {
+        return res.status(404).json({ success: false, message: 'Hero slide tidak ditemukan' });
+      }
+      return res.json({ success: true, message: `Hero slide '${result.rows[0].title}' berhasil dihapus` });
+    }
+
+    const store = db.getStore ? db.getStore() : null;
+    if (store && store.hero_slides) {
+      const idx = store.hero_slides.findIndex((s) => s.id === parseInt(id, 10));
+      if (idx === -1) return res.status(404).json({ success: false, message: 'Hero slide tidak ditemukan' });
+
+      const deleted = store.hero_slides.splice(idx, 1)[0];
+      db.saveStore();
+      return res.json({ success: true, message: `Hero slide '${deleted.title}' berhasil dihapus` });
+    }
+  } catch (error) {
+    res.status(500).json({ success: false, message: 'Gagal menghapus hero slide', error: error.message });
   }
 });
 

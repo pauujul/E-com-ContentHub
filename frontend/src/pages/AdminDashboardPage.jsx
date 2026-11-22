@@ -4,6 +4,7 @@ import Navbar from '../components/Navbar';
 import api from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import InvoiceReceiptModal from '../components/InvoiceReceiptModal';
+import { formatWitaDateTime } from '../utils/dateHelper';
 
 export default function AdminDashboardPage() {
   const { currentUser, logout } = useAuth();
@@ -24,6 +25,9 @@ export default function AdminDashboardPage() {
   const [previewProofOrder, setPreviewProofOrder] = useState(null);
   const [previewReceiptOrder, setPreviewReceiptOrder] = useState(null);
   const [verifyingOrderId, setVerifyingOrderId] = useState(null);
+  // Multi-Filtering & Real-Time Search Orders State
+  const [orderSearchQuery, setOrderSearchQuery] = useState('');
+  const [orderStatusFilter, setOrderStatusFilter] = useState('all'); // 'all' | 'paid' | 'pending'
 
   // 2. Users Management State
   const [usersList, setUsersList] = useState([]);
@@ -61,6 +65,21 @@ export default function AdminDashboardPage() {
     is_hero: false,
     is_active: true,
   });
+
+  // 3B. Hero Slides CMS State
+  const [heroSlides, setHeroSlides] = useState([]);
+  const [heroModalOpen, setHeroModalOpen] = useState(false);
+  const [editingHeroSlide, setEditingHeroSlide] = useState(null);
+  const [heroSlideForm, setHeroSlideForm] = useState({
+    title: '',
+    subtitle: '',
+    image_url: '',
+    cta_text: 'Pilih Paket Langganan',
+    cta_link: '#pricing',
+    order_index: 0,
+    is_active: true,
+  });
+  const [savingHeroSlide, setSavingHeroSlide] = useState(false);
 
   // 4 & 5. Legal State & Sub-tab
   const [legalSubTab, setLegalSubTab] = useState('terms'); // 'terms' | 'privacy'
@@ -136,6 +155,7 @@ export default function AdminDashboardPage() {
         aboutRes,
         settingsRes,
         postsRes,
+        heroSlidesRes,
       ] = await Promise.all([
         api.getAdminStats().catch((e) => { console.warn('stats err:', e); return { success: false, data: null }; }),
         api.getOrders().catch((e) => { console.warn('orders err:', e); return { success: false, data: [] }; }),
@@ -148,6 +168,7 @@ export default function AdminDashboardPage() {
         api.getContent('about').catch((e) => { console.warn('about err:', e); return { success: false, data: [] }; }),
         api.getSettings().catch((e) => { console.warn('settings err:', e); return { success: false, data: null }; }),
         api.getPosts().catch((e) => { console.warn('posts err:', e); return { success: false, data: [] }; }),
+        api.getAdminHeroSlides().catch((e) => { console.warn('hero slides err:', e); return { success: false, data: [] }; }),
       ]);
 
       if (statsRes.success) setStats(statsRes.data);
@@ -155,6 +176,7 @@ export default function AdminDashboardPage() {
       if (usersRes.success) setUsersList(usersRes.data);
       if (productsRes.success) setPlans(productsRes.data);
       if (postsRes && postsRes.success) setAllUserPosts(postsRes.data);
+      if (heroSlidesRes && heroSlidesRes.success) setHeroSlides(heroSlidesRes.data);
       if (termsRes.success && termsRes.data?.length > 0) setTermsData(termsRes.data[0]);
       if (privacyRes.success && privacyRes.data?.length > 0) setPrivacyData(privacyRes.data[0]);
       if (partnershipsRes.success && partnershipsRes.data?.length > 0) setPartnershipData(partnershipsRes.data[0]);
@@ -362,6 +384,110 @@ export default function AdminDashboardPage() {
     }
   };
 
+  // 3B. Hero Slides Actions
+  const handleOpenAddHeroModal = () => {
+    setEditingHeroSlide(null);
+    const nextOrder = heroSlides.length > 0 ? Math.max(...heroSlides.map((s) => s.order_index || 0)) + 1 : 1;
+    setHeroSlideForm({
+      title: '',
+      subtitle: '',
+      image_url: '',
+      cta_text: 'Pilih Paket Langganan',
+      cta_link: '#pricing',
+      order_index: nextOrder,
+      is_active: true,
+    });
+    setHeroModalOpen(true);
+  };
+
+  const handleOpenEditHeroModal = (slide) => {
+    setEditingHeroSlide(slide);
+    setHeroSlideForm({
+      title: slide.title || '',
+      subtitle: slide.subtitle || '',
+      image_url: slide.image_url || '',
+      cta_text: slide.cta_text || '',
+      cta_link: slide.cta_link || '',
+      order_index: slide.order_index !== undefined ? slide.order_index : 0,
+      is_active: slide.is_active !== undefined ? slide.is_active : true,
+    });
+    setHeroModalOpen(true);
+  };
+
+  const handleSaveHeroSlide = async (e) => {
+    e.preventDefault();
+    if (!heroSlideForm.title.trim()) {
+      alert('Judul banner slide wajib diisi');
+      return;
+    }
+    if (!heroSlideForm.image_url.trim()) {
+      alert('URL gambar banner slide wajib diisi');
+      return;
+    }
+
+    setSavingHeroSlide(true);
+    try {
+      if (editingHeroSlide) {
+        const res = await api.updateHeroSlide(editingHeroSlide.id, heroSlideForm);
+        if (res.success) {
+          showToast('Hero slide berhasil diperbarui.');
+          setHeroModalOpen(false);
+          const refreshed = await api.getAdminHeroSlides();
+          if (refreshed.success) setHeroSlides(refreshed.data);
+        }
+      } else {
+        const res = await api.createHeroSlide(heroSlideForm);
+        if (res.success) {
+          showToast('Hero slide baru berhasil ditambahkan.');
+          setHeroModalOpen(false);
+          const refreshed = await api.getAdminHeroSlides();
+          if (refreshed.success) setHeroSlides(refreshed.data);
+        }
+      }
+    } catch (err) {
+      console.error('Error saving hero slide:', err);
+      alert(err.response?.data?.message || err.message || 'Gagal menyimpan hero slide');
+    } finally {
+      setSavingHeroSlide(false);
+    }
+  };
+
+  const handleToggleHeroSlideActive = async (slide) => {
+    try {
+      const newStatus = !slide.is_active;
+      setHeroSlides((prev) =>
+        prev.map((s) => (s.id === slide.id ? { ...s, is_active: newStatus } : s))
+      );
+      const res = await api.updateHeroSlide(slide.id, { is_active: newStatus });
+      if (res.success) {
+        showToast(`Status slide '${slide.title}' diubah ke ${newStatus ? 'Aktif' : 'Nonaktif'}.`);
+      } else {
+        const refreshed = await api.getAdminHeroSlides();
+        if (refreshed.success) setHeroSlides(refreshed.data);
+      }
+    } catch (err) {
+      console.error('Error toggling hero slide active:', err);
+      const refreshed = await api.getAdminHeroSlides();
+      if (refreshed.success) setHeroSlides(refreshed.data);
+      alert('Gagal mengubah status penayangan slide');
+    }
+  };
+
+  const handleDeleteHeroSlide = async (id, title) => {
+    if (!window.confirm(`Hapus hero slide '${title}'?`)) return;
+    try {
+      const res = await api.deleteHeroSlide(id);
+      if (res.success) {
+        showToast(`Hero slide '${title}' berhasil dihapus.`);
+        const refreshed = await api.getAdminHeroSlides();
+        if (refreshed.success) setHeroSlides(refreshed.data);
+      }
+    } catch (err) {
+      console.error('Error deleting hero slide:', err);
+      alert(err.response?.data?.message || err.message || 'Gagal menghapus hero slide');
+    }
+  };
+
   // 4-6. Content Saves (Terms, Privacy, Partnerships, About)
   const handleSaveTerms = async (e) => {
     e.preventDefault();
@@ -516,6 +642,7 @@ export default function AdminDashboardPage() {
     { key: 'users', label: 'Kelola Pengguna', icon: 'group' },
     { key: 'user_posts', label: 'Jadwal Konten Pengguna', icon: 'event_note' },
     { key: 'catalog', label: 'Katalog Paket Langganan', icon: 'loyalty' },
+    { key: 'hero_slides', label: 'Kelola Hero Slide', icon: 'view_carousel' },
     { key: 'legal', label: 'S&K & Kebijakan Privasi', icon: 'policy' },
     { key: 'partnerships', label: 'Kerja Sama (Canva)', icon: 'handshake' },
     { key: 'blog', label: 'Kelola Artikel Blog', icon: 'menu_book' },
@@ -691,197 +818,369 @@ export default function AdminDashboardPage() {
               )}
 
               {/* Tabel Daftar Transaksi Pembelian Subscription (`orders`) */}
-              <section className="bg-white rounded-3xl border border-slate-200/80 shadow-xs overflow-hidden p-6 space-y-4">
-                <div className="flex justify-between items-center">
-                  <div>
-                    <h2 className="text-lg font-extrabold text-slate-900">
-                      Daftar Transaksi Pembelian Subscription (Tabel Orders)
-                    </h2>
-                    <p className="text-xs text-slate-500">
-                      Terhubung langsung ke tabel PostgreSQL `orders` dengan relasi `user_id` dan informasi pembeli eksplisit.
-                    </p>
-                  </div>
-                  <span className="text-xs font-extrabold bg-primary-fixed text-primary px-3 py-1 rounded-full">
-                    {orders.length} Transaksi Terdata
-                  </span>
-                </div>
+              {(() => {
+                const orderStats = {
+                  all: orders.length,
+                  paid: orders.filter((o) => {
+                    const st = (o.status || '').toLowerCase();
+                    const trk = (o.tracking_status || '').toLowerCase();
+                    return st === 'paid' || trk === 'lunas';
+                  }).length,
+                  pending: orders.filter((o) => {
+                    const st = (o.status || '').toLowerCase();
+                    const trk = (o.tracking_status || '').toLowerCase();
+                    return (
+                      st === 'pending' ||
+                      st === 'unpaid' ||
+                      trk === 'menunggu_verifikasi' ||
+                      trk === 'menunggu_pembayaran' ||
+                      trk === 'pending'
+                    );
+                  }).length,
+                };
 
-                <div className="overflow-x-auto rounded-2xl border border-slate-200 shadow-xs">
-                  <table className="w-full text-left border-collapse text-xs min-w-[1120px]">
-                    <thead>
-                      <tr className="border-b border-slate-200 bg-slate-50/90 text-slate-500 uppercase tracking-wider font-extrabold text-[10px]">
-                        <th className="py-3.5 px-4 whitespace-nowrap">No. Order</th>
-                        <th className="py-3.5 px-4 whitespace-nowrap">Pelanggan</th>
-                        <th className="py-3.5 px-4 whitespace-nowrap">Paket Langganan</th>
-                        <th className="py-3.5 px-4 whitespace-nowrap">Total Tagihan</th>
-                        <th className="py-3.5 px-4 whitespace-nowrap">Metode / Kanal</th>
-                        <th className="py-3.5 px-4 whitespace-nowrap text-center">Bukti Transfer</th>
-                        <th className="py-3.5 px-4 whitespace-nowrap text-center">Status Tracking</th>
-                        <th className="py-3.5 px-4 whitespace-nowrap text-center">Struk Resmi</th>
-                        <th className="py-3.5 px-4 whitespace-nowrap text-center">Aksi Verifikasi</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-slate-100 bg-white">
-                      {orders.map((ord) => {
-                        const tracking = ord.tracking_status || (ord.status === 'Paid' ? 'lunas' : 'menunggu_pembayaran');
-                        const isPaid = ord.status === 'Paid' || tracking === 'lunas';
-                        const backendUrl = import.meta.env.VITE_API_URL 
-                          ? import.meta.env.VITE_API_URL.replace(/\/api\/?$/, '') 
-                          : 'http://localhost:5000';
-                        const proofUrl = ord.payment_proof_url ? `${backendUrl}${ord.payment_proof_url}` : null;
+                const filteredOrders = orders.filter((ord) => {
+                  const st = (ord.status || '').toLowerCase();
+                  const trk = (ord.tracking_status || '').toLowerCase();
+                  const isPaid = st === 'paid' || trk === 'lunas';
+                  const isPending =
+                    st === 'pending' ||
+                    st === 'unpaid' ||
+                    trk === 'menunggu_verifikasi' ||
+                    trk === 'menunggu_pembayaran' ||
+                    trk === 'pending';
 
-                        return (
-                          <tr key={ord.id} className="hover:bg-slate-50/80 transition-colors align-middle">
-                            {/* 1. No. Order (Satu baris rapi) */}
-                            <td className="py-3.5 px-4 whitespace-nowrap">
-                              <span className="font-mono text-xs font-bold text-slate-900 block">
-                                #{ord.order_number}
-                              </span>
-                              <span className="text-[10px] text-slate-400 font-medium block">
-                                {new Date(ord.created_at).toLocaleDateString('id-ID', {
-                                  day: 'numeric',
-                                  month: 'short',
-                                  year: 'numeric',
-                                })}
-                              </span>
-                            </td>
+                  if (orderStatusFilter === 'paid' && !isPaid) return false;
+                  if (orderStatusFilter === 'pending' && !isPending) return false;
 
-                            {/* 2. Pelanggan */}
-                            <td className="py-3.5 px-4 whitespace-nowrap">
-                              <p className="font-extrabold text-slate-900 text-xs">{ord.customer_name}</p>
-                              <p className="text-[11px] text-slate-400 font-mono">
-                                {ord.customer_email} <span className="text-[10px] text-slate-300">(#{ord.user_id})</span>
-                              </p>
-                            </td>
+                  if (orderSearchQuery.trim()) {
+                    const q = orderSearchQuery.toLowerCase().trim();
+                    const matchName = (ord.customer_name || '').toLowerCase().includes(q);
+                    const matchEmail = (ord.customer_email || '').toLowerCase().includes(q);
+                    const matchOrderNo = (ord.order_number || '').toLowerCase().includes(q);
+                    if (!matchName && !matchEmail && !matchOrderNo) return false;
+                  }
 
-                            {/* 3. Paket Langganan */}
-                            <td className="py-3.5 px-4 whitespace-nowrap">
-                              <span className="font-extrabold text-slate-800 text-xs block">{ord.plan_name}</span>
-                              <span className="text-[10px] text-slate-400 font-semibold block">{ord.billing_cycle || 'Bulanan'}</span>
-                            </td>
+                  return true;
+                });
 
-                            {/* 4. Total Tagihan */}
-                            <td className="py-3.5 px-4 whitespace-nowrap">
-                              <span className="font-black text-slate-900 text-xs">
-                                Rp {parseFloat(ord.total_amount).toLocaleString('id-ID')}
-                              </span>
-                            </td>
+                return (
+                  <section className="bg-white rounded-3xl border border-slate-200/80 shadow-xs overflow-hidden p-6 space-y-5">
+                    {/* Header Tabel Orders */}
+                    <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+                      <div>
+                        <h2 className="text-lg font-extrabold text-slate-900 flex items-center gap-2">
+                          <span className="material-symbols-outlined text-primary">receipt_long</span>
+                          Daftar Transaksi Pembelian Subscription (Tabel Orders)
+                        </h2>
+                        <p className="text-xs text-slate-500 mt-0.5">
+                          Terhubung langsung ke tabel PostgreSQL <code className="text-primary font-mono font-bold">orders</code> Neon Cloud dengan timestamp presisi zona waktu WITA.
+                        </p>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs font-extrabold bg-primary/10 text-primary px-3 py-1 rounded-full">
+                          {filteredOrders.length} dari {orders.length} Transaksi Ditampilkan
+                        </span>
+                      </div>
+                    </div>
 
-                            {/* 5. Kanal Pembayaran */}
-                            <td className="py-3.5 px-4 whitespace-nowrap">
-                              <div className="flex items-center gap-1.5 font-bold text-slate-800 text-xs">
-                                <span className="material-symbols-outlined text-sm text-primary">
-                                  {ord.payment_method === 'qris_static' ? 'qr_code_scanner' : ord.payment_method === 'bank_transfer' ? 'account_balance' : 'account_balance_wallet'}
-                                </span>
-                                <span>{ord.payment_channel || ord.payment_method}</span>
-                              </div>
-                              <span className="text-[10px] text-slate-400 block mt-0.5 font-medium">
-                                {ord.payment_method === 'midtrans' ? 'Otomatis Gateway' : (ord.bank_provider ? `Bank ${ord.bank_provider}` : 'Verifikasi Manual')}
-                              </span>
-                            </td>
+                    {/* Bar Kontrol Multi-Filtering & Pencarian Real-Time */}
+                    <div className="flex flex-col md:flex-row gap-4 items-stretch md:items-center justify-between pt-1">
+                      {/* Tab Filter Status Cepat dengan Badge Counter */}
+                      <div className="inline-flex p-1 bg-slate-100 rounded-2xl border border-slate-200/80 gap-1 overflow-x-auto">
+                        <button
+                          type="button"
+                          onClick={() => setOrderStatusFilter('all')}
+                          className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all inline-flex items-center gap-2 cursor-pointer whitespace-nowrap ${
+                            orderStatusFilter === 'all'
+                              ? 'bg-white text-slate-900 shadow-xs'
+                              : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200/50'
+                          }`}
+                        >
+                          <span>Semua</span>
+                          <span
+                            className={`px-2 py-0.5 rounded-full text-[10px] font-extrabold ${
+                              orderStatusFilter === 'all'
+                                ? 'bg-primary/10 text-primary'
+                                : 'bg-slate-200 text-slate-600'
+                            }`}
+                          >
+                            {orderStats.all}
+                          </span>
+                        </button>
 
-                            {/* 6. Kolom Bukti Pembayaran */}
-                            <td className="py-3.5 px-4 text-center whitespace-nowrap">
-                              {proofUrl ? (
-                                <button
-                                  type="button"
-                                  onClick={() => setPreviewProofOrder(ord)}
-                                  className="inline-flex items-center gap-1 px-2.5 py-1 rounded-xl bg-blue-50 hover:bg-blue-100 text-blue-700 font-extrabold text-[11px] transition-colors border border-blue-200 shadow-2xs cursor-pointer"
-                                  title="Lihat Foto Struk Pembayaran"
-                                >
-                                  <span className="material-symbols-outlined text-sm">visibility</span>
-                                  <span>Lihat Bukti</span>
-                                </button>
-                              ) : ord.payment_method === 'midtrans' ? (
-                                <span className="text-[10px] font-bold text-slate-500 bg-slate-100 px-2.5 py-1 rounded-lg">
-                                  ⚡ Midtrans
-                                </span>
-                              ) : (
-                                <span className="text-[10px] font-bold text-amber-700 bg-amber-50 border border-amber-200 px-2 py-0.5 rounded-lg">
-                                  Belum Upload
-                                </span>
-                              )}
-                            </td>
+                        <button
+                          type="button"
+                          onClick={() => setOrderStatusFilter('paid')}
+                          className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all inline-flex items-center gap-2 cursor-pointer whitespace-nowrap ${
+                            orderStatusFilter === 'paid'
+                              ? 'bg-emerald-600 text-white shadow-xs'
+                              : 'text-slate-600 hover:text-emerald-700 hover:bg-slate-200/50'
+                          }`}
+                        >
+                          <span>Lunas</span>
+                          <span
+                            className={`px-2 py-0.5 rounded-full text-[10px] font-extrabold ${
+                              orderStatusFilter === 'paid'
+                                ? 'bg-white/20 text-white'
+                                : 'bg-emerald-100 text-emerald-800'
+                            }`}
+                          >
+                            {orderStats.paid}
+                          </span>
+                        </button>
 
-                            {/* 7. Kolom Status Tracking */}
-                            <td className="py-3.5 px-4 text-center whitespace-nowrap">
-                              <span
-                                className={`px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider inline-flex items-center gap-1 ${
-                                  tracking === 'lunas'
-                                    ? 'bg-emerald-100 text-emerald-800 border border-emerald-200'
-                                    : tracking === 'menunggu_verifikasi'
-                                    ? 'bg-blue-100 text-blue-800 border border-blue-300 animate-pulse'
-                                    : tracking === 'ditolak'
-                                    ? 'bg-red-100 text-red-800 border border-red-200'
-                                    : 'bg-amber-100 text-amber-800 border border-amber-200'
-                                }`}
-                              >
-                                {tracking === 'lunas' && '✓ Lunas'}
-                                {tracking === 'menunggu_verifikasi' && '⏳ Verifikasi'}
-                                {tracking === 'menunggu_pembayaran' && 'Menunggu Bayar'}
-                                {tracking === 'ditolak' && '✕ Ditolak'}
-                              </span>
-                            </td>
+                        <button
+                          type="button"
+                          onClick={() => setOrderStatusFilter('pending')}
+                          className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all inline-flex items-center gap-2 cursor-pointer whitespace-nowrap ${
+                            orderStatusFilter === 'pending'
+                              ? 'bg-amber-500 text-white shadow-xs'
+                              : 'text-slate-600 hover:text-amber-700 hover:bg-slate-200/50'
+                          }`}
+                        >
+                          <span>Tunggu Bayar</span>
+                          <span
+                            className={`px-2 py-0.5 rounded-full text-[10px] font-extrabold ${
+                              orderStatusFilter === 'pending'
+                                ? 'bg-white/20 text-white'
+                                : 'bg-amber-100 text-amber-800'
+                            }`}
+                          >
+                            {orderStats.pending}
+                          </span>
+                        </button>
+                      </div>
 
-                            {/* 8. Kolom Struk Resmi (Invoice) */}
-                            <td className="py-3.5 px-4 text-center whitespace-nowrap">
-                              <button
-                                type="button"
-                                onClick={() => setPreviewReceiptOrder(ord)}
-                                className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-xl text-[11px] font-extrabold transition-all shadow-2xs cursor-pointer ${
-                                  isPaid
-                                    ? 'bg-emerald-50 text-emerald-800 hover:bg-emerald-100 border border-emerald-200'
-                                    : 'bg-slate-100 text-slate-700 hover:bg-slate-200 border border-slate-200'
-                                }`}
-                                title="Lihat & Cetak Struk Digital Resmi"
-                              >
-                                <span className="material-symbols-outlined text-sm">receipt_long</span>
-                                <span>{isPaid ? 'Struk Lunas' : 'Struk Tagihan'}</span>
-                              </button>
-                            </td>
+                      {/* Search Bar Real-Time */}
+                      <div className="relative flex-1 max-w-md">
+                        <span className="material-symbols-outlined absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-lg pointer-events-none">
+                          search
+                        </span>
+                        <input
+                          type="text"
+                          value={orderSearchQuery}
+                          onChange={(e) => setOrderSearchQuery(e.target.value)}
+                          placeholder="Cari nama pelanggan atau nomor order..."
+                          className="w-full pl-10 pr-9 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
+                        />
+                        {orderSearchQuery && (
+                          <button
+                            type="button"
+                            onClick={() => setOrderSearchQuery('')}
+                            className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 cursor-pointer p-0.5 rounded-full"
+                            title="Hapus kata kunci pencarian"
+                          >
+                            <span className="material-symbols-outlined text-sm block">close</span>
+                          </button>
+                        )}
+                      </div>
+                    </div>
 
-                            {/* 9. Kolom Aksi Verifikasi */}
-                            <td className="py-3.5 px-4 text-center whitespace-nowrap">
-                              <div className="inline-flex items-center gap-1.5 justify-center">
-                                {tracking !== 'lunas' && (
-                                  <button
-                                    type="button"
-                                    onClick={() => handleVerifyOrder(ord.id, 'approve')}
-                                    disabled={verifyingOrderId === ord.id}
-                                    className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-[10px] font-black transition-all shadow-xs flex items-center gap-1 cursor-pointer disabled:opacity-50"
-                                    title="Setujui dan Aktifkan Paket Langganan User"
-                                  >
-                                    <span className="material-symbols-outlined text-xs">check_circle</span>
-                                    <span>Terima (Set Lunas)</span>
-                                  </button>
-                                )}
-                                {tracking !== 'ditolak' && tracking !== 'lunas' && (
-                                  <button
-                                    type="button"
-                                    onClick={() => handleVerifyOrder(ord.id, 'reject')}
-                                    disabled={verifyingOrderId === ord.id}
-                                    className="px-2.5 py-1.5 bg-red-50 hover:bg-red-100 text-red-700 border border-red-200 rounded-xl text-[10px] font-bold transition-all shadow-xs flex items-center gap-1 cursor-pointer disabled:opacity-50"
-                                    title="Tolak Bukti Pembayaran"
-                                  >
-                                    <span className="material-symbols-outlined text-xs">cancel</span>
-                                    <span>Tolak</span>
-                                  </button>
-                                )}
-                                {tracking === 'lunas' && (
-                                  <span className="text-[11px] font-black text-emerald-700 flex items-center gap-1">
-                                    <span className="material-symbols-outlined text-sm text-emerald-600">verified</span>
-                                    <span>Aktif</span>
-                                  </span>
-                                )}
-                              </div>
-                            </td>
+                    <div className="overflow-x-auto rounded-2xl border border-slate-200 shadow-xs">
+                      <table className="w-full text-left border-collapse text-xs min-w-[1120px]">
+                        <thead>
+                          <tr className="border-b border-slate-200 bg-slate-50/90 text-slate-500 uppercase tracking-wider font-extrabold text-[10px]">
+                            <th className="py-3.5 px-4 whitespace-nowrap">No. Order &amp; Waktu (WITA)</th>
+                            <th className="py-3.5 px-4 whitespace-nowrap">Pelanggan</th>
+                            <th className="py-3.5 px-4 whitespace-nowrap">Paket Langganan</th>
+                            <th className="py-3.5 px-4 whitespace-nowrap">Total Tagihan</th>
+                            <th className="py-3.5 px-4 whitespace-nowrap">Metode / Kanal</th>
+                            <th className="py-3.5 px-4 whitespace-nowrap text-center">Bukti Transfer</th>
+                            <th className="py-3.5 px-4 whitespace-nowrap text-center">Status Tracking</th>
+                            <th className="py-3.5 px-4 whitespace-nowrap text-center">Struk Resmi</th>
+                            <th className="py-3.5 px-4 whitespace-nowrap text-center">Aksi Verifikasi</th>
                           </tr>
-                        );
-                      })}
-                    </tbody>
-                  </table>
-                </div>
-              </section>
+                        </thead>
+                        <tbody className="divide-y divide-slate-100 bg-white">
+                          {filteredOrders.length === 0 ? (
+                            <tr>
+                              <td colSpan={9} className="py-12 text-center">
+                                <div className="max-w-sm mx-auto space-y-3">
+                                  <div className="w-12 h-12 mx-auto rounded-full bg-slate-100 flex items-center justify-center text-slate-400">
+                                    <span className="material-symbols-outlined text-2xl">search_off</span>
+                                  </div>
+                                  <p className="text-sm font-bold text-slate-800">
+                                    Tidak ada transaksi yang cocok
+                                  </p>
+                                  <p className="text-xs text-slate-500">
+                                    Tidak ditemukan transaksi yang cocok dengan kriteria filter status atau kata kunci "{orderSearchQuery}".
+                                  </p>
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      setOrderSearchQuery('');
+                                      setOrderStatusFilter('all');
+                                    }}
+                                    className="px-4 py-2 bg-primary/10 hover:bg-primary/20 text-primary rounded-xl text-xs font-bold transition-colors cursor-pointer inline-flex items-center gap-1.5"
+                                  >
+                                    <span className="material-symbols-outlined text-sm">restart_alt</span>
+                                    Reset Pencarian &amp; Filter
+                                  </button>
+                                </div>
+                              </td>
+                            </tr>
+                          ) : (
+                            filteredOrders.map((ord) => {
+                              const tracking = ord.tracking_status || (ord.status === 'Paid' ? 'lunas' : 'menunggu_pembayaran');
+                              const isPaid = ord.status === 'Paid' || tracking === 'lunas';
+                              const backendUrl = import.meta.env.VITE_API_URL 
+                                ? import.meta.env.VITE_API_URL.replace(/\/api\/?$/, '') 
+                                : 'http://localhost:5000';
+                              const proofUrl = ord.payment_proof_url ? `${backendUrl}${ord.payment_proof_url}` : null;
+
+                              return (
+                                <tr key={ord.id} className="hover:bg-slate-50/80 transition-colors align-middle">
+                                  {/* 1. No. Order & Waktu Lengkap WITA */}
+                                  <td className="py-3.5 px-4 whitespace-nowrap">
+                                    <span className="font-mono text-xs font-bold text-slate-900 block">
+                                      #{ord.order_number}
+                                    </span>
+                                    <span className="text-[10px] text-slate-500 font-semibold block mt-1 inline-flex items-center gap-1">
+                                      <span className="material-symbols-outlined text-xs text-primary">schedule</span>
+                                      {formatWitaDateTime(ord.created_at)}
+                                    </span>
+                                  </td>
+
+                                  {/* 2. Pelanggan */}
+                                  <td className="py-3.5 px-4 whitespace-nowrap">
+                                    <p className="font-extrabold text-slate-900 text-xs">{ord.customer_name}</p>
+                                    <p className="text-[11px] text-slate-400 font-mono">
+                                      {ord.customer_email} <span className="text-[10px] text-slate-300">(#{ord.user_id})</span>
+                                    </p>
+                                  </td>
+
+                                  {/* 3. Paket Langganan */}
+                                  <td className="py-3.5 px-4 whitespace-nowrap">
+                                    <span className="font-extrabold text-slate-800 text-xs block">{ord.plan_name}</span>
+                                    <span className="text-[10px] text-slate-400 font-semibold block">{ord.billing_cycle || 'Bulanan'}</span>
+                                  </td>
+
+                                  {/* 4. Total Tagihan */}
+                                  <td className="py-3.5 px-4 whitespace-nowrap">
+                                    <span className="font-black text-slate-900 text-xs">
+                                      Rp {parseFloat(ord.total_amount).toLocaleString('id-ID')}
+                                    </span>
+                                  </td>
+
+                                  {/* 5. Kanal Pembayaran */}
+                                  <td className="py-3.5 px-4 whitespace-nowrap">
+                                    <div className="flex items-center gap-1.5 font-bold text-slate-800 text-xs">
+                                      <span className="material-symbols-outlined text-sm text-primary">
+                                        {ord.payment_method === 'qris_static' ? 'qr_code_scanner' : ord.payment_method === 'bank_transfer' ? 'account_balance' : 'account_balance_wallet'}
+                                      </span>
+                                      <span>{ord.payment_channel || ord.payment_method}</span>
+                                    </div>
+                                    <span className="text-[10px] text-slate-400 block mt-0.5 font-medium">
+                                      {ord.payment_method === 'midtrans' ? 'Otomatis Gateway' : (ord.bank_provider ? `Bank ${ord.bank_provider}` : 'Verifikasi Manual')}
+                                    </span>
+                                  </td>
+
+                                  {/* 6. Kolom Bukti Pembayaran */}
+                                  <td className="py-3.5 px-4 text-center whitespace-nowrap">
+                                    {proofUrl ? (
+                                      <button
+                                        type="button"
+                                        onClick={() => setPreviewProofOrder(ord)}
+                                        className="inline-flex items-center gap-1 px-2.5 py-1 rounded-xl bg-blue-50 hover:bg-blue-100 text-blue-700 font-extrabold text-[11px] transition-colors border border-blue-200 shadow-2xs cursor-pointer"
+                                        title="Lihat Foto Struk Pembayaran"
+                                      >
+                                        <span className="material-symbols-outlined text-sm">visibility</span>
+                                        <span>Lihat Bukti</span>
+                                      </button>
+                                    ) : ord.payment_method === 'midtrans' ? (
+                                      <span className="text-[10px] font-bold text-slate-500 bg-slate-100 px-2.5 py-1 rounded-lg">
+                                        ⚡ Midtrans
+                                      </span>
+                                    ) : (
+                                      <span className="text-[10px] font-bold text-amber-700 bg-amber-50 border border-amber-200 px-2 py-0.5 rounded-lg">
+                                        Belum Upload
+                                      </span>
+                                    )}
+                                  </td>
+
+                                  {/* 7. Kolom Status Tracking */}
+                                  <td className="py-3.5 px-4 text-center whitespace-nowrap">
+                                    <span
+                                      className={`px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider inline-flex items-center gap-1 ${
+                                        tracking === 'lunas'
+                                          ? 'bg-emerald-100 text-emerald-800 border border-emerald-200'
+                                          : tracking === 'menunggu_verifikasi'
+                                          ? 'bg-blue-100 text-blue-800 border border-blue-300 animate-pulse'
+                                          : tracking === 'ditolak'
+                                          ? 'bg-red-100 text-red-800 border border-red-200'
+                                          : 'bg-amber-100 text-amber-800 border border-amber-200'
+                                      }`}
+                                    >
+                                      {tracking === 'lunas' && '✓ Lunas'}
+                                      {tracking === 'menunggu_verifikasi' && '⏳ Verifikasi'}
+                                      {tracking === 'menunggu_pembayaran' && 'Menunggu Bayar'}
+                                      {tracking === 'ditolak' && '✕ Ditolak'}
+                                    </span>
+                                  </td>
+
+                                  {/* 8. Kolom Struk Resmi (Invoice) */}
+                                  <td className="py-3.5 px-4 text-center whitespace-nowrap">
+                                    <button
+                                      type="button"
+                                      onClick={() => setPreviewReceiptOrder(ord)}
+                                      className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-xl text-[11px] font-extrabold transition-all shadow-2xs cursor-pointer ${
+                                        isPaid
+                                          ? 'bg-emerald-50 text-emerald-800 hover:bg-emerald-100 border border-emerald-200'
+                                          : 'bg-slate-100 text-slate-700 hover:bg-slate-200 border border-slate-200'
+                                      }`}
+                                      title="Lihat & Cetak Struk Digital Resmi"
+                                    >
+                                      <span className="material-symbols-outlined text-sm">receipt_long</span>
+                                      <span>{isPaid ? 'Struk Lunas' : 'Struk Tagihan'}</span>
+                                    </button>
+                                  </td>
+
+                                  {/* 9. Kolom Aksi Verifikasi */}
+                                  <td className="py-3.5 px-4 text-center whitespace-nowrap">
+                                    <div className="inline-flex items-center gap-1.5 justify-center">
+                                      {tracking !== 'lunas' && (
+                                        <button
+                                          type="button"
+                                          onClick={() => handleVerifyOrder(ord.id, 'approve')}
+                                          disabled={verifyingOrderId === ord.id}
+                                          className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-[10px] font-black transition-all shadow-xs flex items-center gap-1 cursor-pointer disabled:opacity-50"
+                                          title="Setujui dan Aktifkan Paket Langganan User"
+                                        >
+                                          <span className="material-symbols-outlined text-xs">check_circle</span>
+                                          <span>Terima (Set Lunas)</span>
+                                        </button>
+                                      )}
+                                      {tracking !== 'ditolak' && tracking !== 'lunas' && (
+                                        <button
+                                          type="button"
+                                          onClick={() => handleVerifyOrder(ord.id, 'reject')}
+                                          disabled={verifyingOrderId === ord.id}
+                                          className="px-2.5 py-1.5 bg-red-50 hover:bg-red-100 text-red-700 border border-red-200 rounded-xl text-[10px] font-bold transition-all shadow-xs flex items-center gap-1 cursor-pointer disabled:opacity-50"
+                                          title="Tolak Bukti Pembayaran"
+                                        >
+                                          <span className="material-symbols-outlined text-xs">cancel</span>
+                                          <span>Tolak</span>
+                                        </button>
+                                      )}
+                                      {tracking === 'lunas' && (
+                                        <span className="text-[11px] font-black text-emerald-700 flex items-center gap-1">
+                                          <span className="material-symbols-outlined text-sm text-emerald-600">verified</span>
+                                          <span>Aktif</span>
+                                        </span>
+                                      )}
+                                    </div>
+                                  </td>
+                                </tr>
+                              );
+                            })
+                          )}
+                        </tbody>
+                      </table>
+                    </div>
+                  </section>
+                );
+              })()}
             </div>
           )}
 
@@ -1384,6 +1683,195 @@ export default function AdminDashboardPage() {
                     </div>
                   );
                 })}
+              </div>
+            </div>
+          )}
+
+          {/* ======================================================== */}
+          {/* 3B. MENU: KELOLA HERO SLIDE (CMS CAROUSEL DINAMIS) */}
+          {/* ======================================================== */}
+          {activeMenu === 'hero_slides' && (
+            <div className="bg-white rounded-3xl border border-slate-200/80 shadow-xs p-6 space-y-6 animate-in fade-in duration-200">
+              {/* Header Kelola Hero Slide */}
+              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                <div>
+                  <h2 className="text-lg font-extrabold text-slate-900 flex items-center gap-2">
+                    <span className="material-symbols-outlined text-primary text-2xl">view_carousel</span>
+                    Kelola Hero Slide (Landing Page Carousel)
+                  </h2>
+                  <p className="text-xs text-slate-500 mt-1">
+                    Atur konten banner carousel utama pada Landing Page Home secara dinamis, urutan tayang, link tombol aksi (CTA), dan status penayangan.
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={handleOpenAddHeroModal}
+                  className="px-4 py-2.5 bg-gradient-primary text-white rounded-xl text-xs font-bold shadow-md shadow-primary/20 hover:scale-[1.02] active:scale-95 transition-all flex items-center gap-1.5 cursor-pointer flex-shrink-0"
+                >
+                  <span className="material-symbols-outlined text-sm">add</span>
+                  + Tambah Slide Baru
+                </button>
+              </div>
+
+              {/* Ringkasan Statistik Slide */}
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200/80 flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-blue-100 text-blue-700 flex items-center justify-center font-bold">
+                    <span className="material-symbols-outlined text-xl">collections</span>
+                  </div>
+                  <div>
+                    <p className="text-xs font-bold text-slate-500">Total Slide</p>
+                    <p className="text-lg font-extrabold text-slate-800">{heroSlides.length} Slide</p>
+                  </div>
+                </div>
+
+                <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200/80 flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-emerald-100 text-emerald-700 flex items-center justify-center font-bold">
+                    <span className="material-symbols-outlined text-xl">visibility</span>
+                  </div>
+                  <div>
+                    <p className="text-xs font-bold text-slate-500">Slide Aktif (Tayang)</p>
+                    <p className="text-lg font-extrabold text-emerald-700">
+                      {heroSlides.filter((s) => s.is_active).length} Aktif
+                    </p>
+                  </div>
+                </div>
+
+                <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200/80 flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-slate-200 text-slate-600 flex items-center justify-center font-bold">
+                    <span className="material-symbols-outlined text-xl">visibility_off</span>
+                  </div>
+                  <div>
+                    <p className="text-xs font-bold text-slate-500">Slide Disembunyikan</p>
+                    <p className="text-lg font-extrabold text-slate-600">
+                      {heroSlides.filter((s) => !s.is_active).length} Nonaktif
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Tabel Daftar Slide */}
+              <div className="overflow-x-auto rounded-2xl border border-slate-200 shadow-xs">
+                <table className="w-full text-left border-collapse text-xs min-w-[900px]">
+                  <thead>
+                    <tr className="border-b border-slate-200 bg-slate-50/90 text-slate-500 uppercase tracking-wider font-extrabold text-[10px]">
+                      <th className="py-3.5 px-4 whitespace-nowrap text-center w-16">Urutan</th>
+                      <th className="py-3.5 px-4 whitespace-nowrap w-28 text-center">Thumbnail</th>
+                      <th className="py-3.5 px-4 whitespace-nowrap">Judul &amp; Subjudul</th>
+                      <th className="py-3.5 px-4 whitespace-nowrap">Tombol Aksi (CTA)</th>
+                      <th className="py-3.5 px-4 whitespace-nowrap text-center">Status Tayang</th>
+                      <th className="py-3.5 px-4 whitespace-nowrap text-center w-28">Aksi</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100 bg-white">
+                    {heroSlides.length === 0 ? (
+                      <tr>
+                        <td colSpan={6} className="py-12 text-center text-slate-400">
+                          <span className="material-symbols-outlined text-4xl block mb-2 text-slate-300">view_carousel</span>
+                          Belum ada slide banner yang terdaftar. Klik tombol "+ Tambah Slide Baru" untuk membuat banner pertama.
+                        </td>
+                      </tr>
+                    ) : (
+                      heroSlides.map((slide) => (
+                        <tr key={slide.id} className="hover:bg-slate-50/80 transition-colors align-middle">
+                          {/* 1. Urutan Tampil */}
+                          <td className="py-3.5 px-4 text-center whitespace-nowrap">
+                            <span className="w-8 h-8 rounded-xl bg-slate-100 text-slate-700 font-mono font-black text-xs inline-flex items-center justify-center border border-slate-200">
+                              #{slide.order_index}
+                            </span>
+                          </td>
+
+                          {/* 2. Pratinjau Gambar (Thumbnail) */}
+                          <td className="py-3.5 px-4 text-center whitespace-nowrap">
+                            <div className="w-24 h-14 rounded-xl overflow-hidden border border-slate-200 bg-slate-100 mx-auto shadow-2xs relative group/thumb">
+                              <img
+                                src={slide.image_url}
+                                alt={slide.title}
+                                className="w-full h-full object-cover"
+                                onError={(e) => {
+                                  e.target.onerror = null;
+                                  e.target.src = 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=1200&auto=format&fit=crop&q=80';
+                                }}
+                              />
+                            </div>
+                          </td>
+
+                          {/* 3. Judul & Subjudul */}
+                          <td className="py-3.5 px-4">
+                            <p className="font-extrabold text-slate-900 text-xs">{slide.title}</p>
+                            {slide.subtitle && (
+                              <p className="text-[11px] text-slate-500 line-clamp-2 max-w-md mt-0.5 leading-relaxed">
+                                {slide.subtitle}
+                              </p>
+                            )}
+                          </td>
+
+                          {/* 4. Tombol Aksi (CTA) */}
+                          <td className="py-3.5 px-4 whitespace-nowrap">
+                            <div className="space-y-1">
+                              <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-lg bg-primary/10 text-primary font-bold text-[11px] border border-primary/20">
+                                <span className="material-symbols-outlined text-xs">touch_app</span>
+                                {slide.cta_text || 'Tanpa Teks CTA'}
+                              </span>
+                              <span className="text-[10px] text-slate-400 font-mono block truncate max-w-[160px]">
+                                {slide.cta_link || '-'}
+                              </span>
+                            </div>
+                          </td>
+
+                          {/* 5. Switch Toggle Langsung is_active */}
+                          <td className="py-3.5 px-4 text-center whitespace-nowrap">
+                            <div className="inline-flex flex-col items-center gap-1">
+                              <button
+                                type="button"
+                                onClick={() => handleToggleHeroSlideActive(slide)}
+                                className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
+                                  slide.is_active ? 'bg-emerald-500' : 'bg-slate-300'
+                                }`}
+                                title={slide.is_active ? 'Klik untuk nonaktifkan' : 'Klik untuk tayangkan'}
+                              >
+                                <span
+                                  className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow-md ring-0 transition duration-200 ease-in-out ${
+                                    slide.is_active ? 'translate-x-5' : 'translate-x-0'
+                                  }`}
+                                />
+                              </button>
+                              <span
+                                className={`text-[10px] font-extrabold ${
+                                  slide.is_active ? 'text-emerald-700' : 'text-slate-400'
+                                }`}
+                              >
+                                {slide.is_active ? 'Aktif' : 'Nonaktif'}
+                              </span>
+                            </div>
+                          </td>
+
+                          {/* 6. Aksi (Edit & Hapus) */}
+                          <td className="py-3.5 px-4 text-center whitespace-nowrap">
+                            <div className="inline-flex items-center gap-1 justify-center">
+                              <button
+                                type="button"
+                                onClick={() => handleOpenEditHeroModal(slide)}
+                                className="p-1.5 text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded-lg transition-colors cursor-pointer"
+                                title="Sunting Slide"
+                              >
+                                <span className="material-symbols-outlined text-lg">edit</span>
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => handleDeleteHeroSlide(slide.id, slide.title)}
+                                className="p-1.5 text-red-500 hover:text-red-700 hover:bg-red-50 rounded-lg transition-colors cursor-pointer"
+                                title="Hapus Slide"
+                              >
+                                <span className="material-symbols-outlined text-lg">delete</span>
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      ))
+                    )}
+                  </tbody>
+                </table>
               </div>
             </div>
           )}
@@ -2850,6 +3338,172 @@ export default function AdminDashboardPage() {
                 Terima &amp; Aktifkan Paket Pelanggan
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* ======================================================== */}
+      {/* MODAL HERO SLIDE (TAMBAH / EDIT DENGAN LIVE IMAGE PREVIEW) */}
+      {/* ======================================================== */}
+      {heroModalOpen && (
+        <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-white rounded-3xl max-w-lg w-full p-6 space-y-4 shadow-2xl border border-slate-200 animate-in zoom-in-95 duration-200 max-h-[90vh] overflow-y-auto">
+            <div className="flex justify-between items-center pb-3 border-b border-slate-100">
+              <div className="flex items-center gap-2">
+                <span className="material-symbols-outlined text-primary text-xl">view_carousel</span>
+                <h3 className="font-extrabold text-base text-slate-800">
+                  {editingHeroSlide ? 'Edit Hero Slide' : 'Tambah Hero Slide Baru'}
+                </h3>
+              </div>
+              <button
+                type="button"
+                onClick={() => setHeroModalOpen(false)}
+                className="w-7 h-7 rounded-full bg-slate-100 hover:bg-slate-200 flex items-center justify-center text-slate-500 cursor-pointer"
+              >
+                <span className="material-symbols-outlined text-base">close</span>
+              </button>
+            </div>
+
+            <form onSubmit={handleSaveHeroSlide} className="space-y-4 text-xs">
+              {/* Judul Utama Banner */}
+              <div className="space-y-1">
+                <label className="font-extrabold text-slate-700 block">
+                  Judul Utama Banner <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="text"
+                  required
+                  placeholder="Contoh: Buat Konten Konsisten Tanpa Stres"
+                  value={heroSlideForm.title}
+                  onChange={(e) => setHeroSlideForm({ ...heroSlideForm, title: e.target.value })}
+                  className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl font-medium text-slate-800 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
+                />
+              </div>
+
+              {/* Subjudul / Deskripsi */}
+              <div className="space-y-1">
+                <label className="font-extrabold text-slate-700 block">
+                  Subjudul / Deskripsi Singkat
+                </label>
+                <textarea
+                  rows={2}
+                  placeholder="Ubah cara Anda mengelola media sosial dengan kalender interaktif dan template Canva siap pakai..."
+                  value={heroSlideForm.subtitle}
+                  onChange={(e) => setHeroSlideForm({ ...heroSlideForm, subtitle: e.target.value })}
+                  className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl font-medium text-slate-800 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
+                />
+              </div>
+
+              {/* URL Gambar Banner & Live Preview */}
+              <div className="space-y-2">
+                <label className="font-extrabold text-slate-700 block">
+                  URL Gambar Banner / Ilustrasi <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="url"
+                  required
+                  placeholder="https://images.unsplash.com/photo-..."
+                  value={heroSlideForm.image_url}
+                  onChange={(e) => setHeroSlideForm({ ...heroSlideForm, image_url: e.target.value })}
+                  className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl font-mono text-[11px] text-slate-800 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
+                />
+
+                {/* Box Live Preview Gambar */}
+                <div className="mt-2 p-2.5 bg-slate-50 rounded-2xl border border-slate-200">
+                  <span className="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider block mb-1.5 flex items-center gap-1">
+                    <span className="material-symbols-outlined text-xs text-primary">image</span>
+                    Pratinjau Langsung Gambar (Live Preview)
+                  </span>
+                  {heroSlideForm.image_url ? (
+                    <div className="relative w-full h-36 rounded-xl overflow-hidden bg-slate-200 border border-slate-200 shadow-2xs">
+                      <img
+                        src={heroSlideForm.image_url}
+                        alt="Live Preview"
+                        className="w-full h-full object-cover"
+                        onError={(e) => {
+                          e.target.onerror = null;
+                          e.target.src = 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=1200&auto=format&fit=crop&q=80';
+                        }}
+                      />
+                    </div>
+                  ) : (
+                    <div className="w-full h-24 rounded-xl border-2 border-dashed border-slate-200 flex flex-col items-center justify-center text-slate-400 gap-1">
+                      <span className="material-symbols-outlined text-2xl text-slate-300">hide_image</span>
+                      <span className="text-[10px]">Masukkan URL gambar di atas untuk melihat preview langsung</span>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* CTA Text & Link */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div className="space-y-1">
+                  <label className="font-extrabold text-slate-700 block">Teks Tombol CTA</label>
+                  <input
+                    type="text"
+                    placeholder="Contoh: Mulai Sekarang"
+                    value={heroSlideForm.cta_text}
+                    onChange={(e) => setHeroSlideForm({ ...heroSlideForm, cta_text: e.target.value })}
+                    className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl font-medium text-slate-800 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
+                  />
+                </div>
+                <div className="space-y-1">
+                  <label className="font-extrabold text-slate-700 block">Tautan Tujuan CTA</label>
+                  <input
+                    type="text"
+                    placeholder="Contoh: #pricing atau /register"
+                    value={heroSlideForm.cta_link}
+                    onChange={(e) => setHeroSlideForm({ ...heroSlideForm, cta_link: e.target.value })}
+                    className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl font-mono text-[11px] text-slate-800 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
+                  />
+                </div>
+              </div>
+
+              {/* Urutan & Status Tayang */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 items-center pt-1">
+                <div className="space-y-1">
+                  <label className="font-extrabold text-slate-700 block">Urutan Tampil (Order Index)</label>
+                  <input
+                    type="number"
+                    min="0"
+                    value={heroSlideForm.order_index}
+                    onChange={(e) => setHeroSlideForm({ ...heroSlideForm, order_index: parseInt(e.target.value, 10) || 0 })}
+                    className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl font-bold text-slate-800 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
+                  />
+                </div>
+
+                <div className="pt-5">
+                  <label className="flex items-center gap-2 cursor-pointer select-none">
+                    <input
+                      type="checkbox"
+                      checked={heroSlideForm.is_active}
+                      onChange={(e) => setHeroSlideForm({ ...heroSlideForm, is_active: e.target.checked })}
+                      className="w-4 h-4 rounded text-primary focus:ring-primary"
+                    />
+                    <span className="font-bold text-slate-700">Tayangkan di Landing Page (Aktif)</span>
+                  </label>
+                </div>
+              </div>
+
+              {/* Modal Buttons */}
+              <div className="pt-3 flex justify-end gap-2 border-t border-slate-100">
+                <button
+                  type="button"
+                  onClick={() => setHeroModalOpen(false)}
+                  className="px-4 py-2 rounded-xl font-bold text-slate-500 hover:bg-slate-100 cursor-pointer"
+                >
+                  Batal
+                </button>
+                <button
+                  type="submit"
+                  disabled={savingHeroSlide}
+                  className="px-5 py-2 bg-primary text-white rounded-xl font-bold shadow-md hover:bg-primary/90 transition-all cursor-pointer disabled:opacity-50 flex items-center gap-1.5"
+                >
+                  {savingHeroSlide && <span className="material-symbols-outlined text-sm animate-spin">progress_activity</span>}
+                  <span>{editingHeroSlide ? 'Simpan Perubahan' : 'Tambah Slide'}</span>
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}
