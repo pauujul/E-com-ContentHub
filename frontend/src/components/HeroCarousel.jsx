@@ -2,31 +2,57 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import api from '../services/api';
 
+const DEFAULT_HERO_SLIDES = [
+  {
+    id: 1,
+    title: 'Buat Konten Konsisten Tanpa Stres',
+    subtitle: 'Ubah cara Anda mengelola media sosial. Dari ide, perancangan kalender interaktif, hingga template siap pakai Canva untuk mengelola semuanya dalam satu platform terpadu.',
+    image_url: 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=1200&auto=format&fit=crop&q=80',
+    cta_text: 'Pilih Paket Langganan',
+    cta_link: '#pricing',
+    order_index: 1,
+    is_active: true,
+  },
+  {
+    id: 2,
+    title: 'Rancang Strategi Visual Bersama Canva',
+    subtitle: 'Integrasi langsung ke ekosistem Canva Pro dengan 200+ template terkurasi khusus persona UMKM Indonesia. Desain cepat, rapi, dan langsung tersinkron ke kalender.',
+    image_url: 'https://images.unsplash.com/photo-1557804506-669a67965ba0?w=1200&auto=format&fit=crop&q=80',
+    cta_text: 'Jelajahi Template',
+    cta_link: '/templates',
+    order_index: 2,
+    is_active: true,
+  },
+  {
+    id: 3,
+    title: 'Otomasi Jadwal & Notifikasi Jam Emas',
+    subtitle: 'Maksimalkan jangkauan audiens dengan penjadwalan tepat waktu. Notifikasi email otomatis mengingatkan jadwal posting Instagram & TikTok Anda.',
+    image_url: 'https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=1200&auto=format&fit=crop&q=80',
+    cta_text: 'Coba Kalender Demo',
+    cta_link: '/calendar',
+    order_index: 3,
+    is_active: true,
+  },
+];
+
 export default function HeroCarousel() {
-  const [slides, setSlides] = useState([]);
+  const [slides, setSlides] = useState(DEFAULT_HERO_SLIDES);
   const [currentIndex, setCurrentIndex] = useState(0);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [isPaused, setIsPaused] = useState(false);
   const timerRef = useRef(null);
 
-  // Fetch active hero slides from API
+  // Fetch active hero slides from API (di background agar render awal instan tanpa delay 1 detik)
   useEffect(() => {
     let isMounted = true;
     const fetchSlides = async () => {
       try {
         const res = await api.getHeroSlides();
-        if (isMounted) {
-          if (res && res.success && Array.isArray(res.data) && res.data.length > 0) {
-            setSlides(res.data);
-          } else {
-            setSlides([]);
-          }
+        if (isMounted && res && res.success && Array.isArray(res.data) && res.data.length > 0) {
+          setSlides(res.data);
         }
       } catch (err) {
-        console.warn('Gagal memuat hero slides, beralih ke tampilan fallback:', err.message);
-        if (isMounted) setSlides([]);
-      } finally {
-        if (isMounted) setLoading(false);
+        console.warn('Hero slides API fallback ke slide default:', err.message);
       }
     };
 
@@ -254,8 +280,11 @@ export default function HeroCarousel() {
               <div className="relative w-full h-[320px] sm:h-[400px] rounded-2xl overflow-hidden bg-slate-100">
                 <img
                   key={currentSlide.id || currentIndex}
-                  src={currentSlide.image_url}
-                  alt={currentSlide.title || 'Hero Banner'}
+                  src={
+                    currentSlide.image_url ||
+                    'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=1200&auto=format&fit=crop&q=80'
+                  }
+                  alt={currentSlide.title || 'ContentHub Hero'}
                   className="w-full h-full object-cover object-center transition-all duration-700 ease-out animate-in fade-in zoom-in-95"
                   onError={(e) => {
                     e.target.onerror = null;
