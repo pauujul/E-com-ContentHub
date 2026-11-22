@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import Sidebar from '../components/Sidebar';
@@ -7,10 +7,10 @@ import { useAuth } from '../context/AuthContext';
 import api from '../services/api';
 
 export default function PartnershipPage() {
-  const { token } = useAuth();
-  const isLoggedIn =
-    (Boolean(token) || Boolean(localStorage.getItem('contenthub_user'))) &&
-    localStorage.getItem('contenthub_logged_out') !== 'true';
+  const [searchParams] = useSearchParams();
+  const { currentUser } = useAuth();
+  const isLandingMode = searchParams.get('mode') === 'landing';
+  const isInWorkspace = !isLandingMode;
 
   const [content, setContent] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -28,18 +28,18 @@ export default function PartnershipPage() {
 
   return (
     <div className="min-h-screen bg-slate-50/70 text-slate-800 flex flex-col justify-between">
-      {/* Jika login, tampilkan Sidebar Workspace. Jika pengunjung publik, tampilkan Navbar Landing */}
-      {isLoggedIn ? <Sidebar /> : <Navbar />}
+      {/* Tampilkan Sidebar untuk Workspace, atau Navbar jika mode landing */}
+      {isInWorkspace ? <Sidebar /> : <Navbar />}
 
       <main
         className={`flex-1 w-full space-y-10 transition-all ${
-          isLoggedIn
+          isInWorkspace
             ? 'ml-0 md:ml-64 p-6 sm:p-8 lg:p-10 max-w-6xl'
             : 'pt-24 pb-24 px-6 max-w-7xl mx-auto'
         }`}
       >
         {/* Navigasi Khusus Workspace (Anti Landing Page) */}
-        {isLoggedIn && (
+        {isInWorkspace && (
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-slate-200">
             <div className="flex items-center gap-2 text-xs font-bold text-slate-400">
               <Link
@@ -151,7 +151,7 @@ export default function PartnershipPage() {
         ) : null}
       </main>
 
-      {!isLoggedIn && <Footer />}
+      {!isInWorkspace && <Footer />}
     </div>
   );
 }

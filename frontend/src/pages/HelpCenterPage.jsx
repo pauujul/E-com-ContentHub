@@ -51,16 +51,9 @@ export default function HelpCenterPage() {
 
   return (
     <div className="min-h-screen bg-slate-50/70 text-slate-800">
+      <Sidebar />
 
-      {isLoggedIn ? <Sidebar /> : <Navbar publicMode />}
-
-      <main
-        className={`min-h-screen transition-all ${
-          isLoggedIn
-            ? 'ml-0 md:ml-64 p-6 sm:p-8 lg:p-10'
-            : 'pt-24 px-6 pb-6 sm:px-8 lg:px-10'
-        }`}
-      >
+      <main className="ml-0 md:ml-64 min-h-screen p-6 sm:p-8 lg:p-10 transition-all">
         <div className="max-w-6xl mx-auto space-y-10">
 
           {/* Top Breadcrumb & Page Title */}
@@ -68,13 +61,13 @@ export default function HelpCenterPage() {
             <div>
               <div className="flex items-center gap-2 text-xs font-bold text-slate-400 mb-1">
                 <Link
-                  to={isLoggedIn ? '/dashboard' : '/'}
-                  className="hover:text-primary transition-colors"
+                  to="/dashboard"
+                  className="hover:text-primary transition-colors font-bold text-slate-600"
                 >
-                  {isLoggedIn ? 'Workspace' : 'Home'}
+                  Workspace
                 </Link>
                 <span>/</span>
-                <span className="text-primary">Pusat Bantuan & Panduan</span>
+                <span className="text-primary font-bold">Pusat Bantuan & Panduan</span>
               </div>
 
               <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">
@@ -149,7 +142,7 @@ export default function HelpCenterPage() {
 
               {/* Card 1: Syarat & Ketentuan */}
               <Link
-                to="/terms"
+                to="/terms?mode=workspace"
                 className="group bg-white rounded-2xl p-6 border border-slate-200 shadow-xs hover:shadow-xl hover:border-blue-400 hover:-translate-y-1 transition-all duration-200 flex flex-col justify-between"
               >
                 <div>
@@ -180,7 +173,7 @@ export default function HelpCenterPage() {
 
               {/* Card 2: Kebijakan & Privasi */}
               <Link
-                to="/privacy"
+                to="/privacy?mode=workspace"
                 className="group bg-white rounded-2xl p-6 border border-slate-200 shadow-xs hover:shadow-xl hover:border-emerald-400 hover:-translate-y-1 transition-all duration-200 flex flex-col justify-between"
               >
                 <div>
@@ -211,7 +204,7 @@ export default function HelpCenterPage() {
 
               {/* Card 3: Blog & Edukasi */}
               <Link
-                to="/blog"
+                to="/blog?mode=workspace"
                 className="group bg-white rounded-2xl p-6 border border-slate-200 shadow-xs hover:shadow-xl hover:border-purple-400 hover:-translate-y-1 transition-all duration-200 flex flex-col justify-between"
               >
                 <div>
@@ -242,7 +235,7 @@ export default function HelpCenterPage() {
 
               {/* Card 4: Kerja Sama (Integrasi Canva) */}
               <Link
-                to="/partnership"
+                to="/partnership?mode=workspace"
                 className="group bg-white rounded-2xl p-6 border border-slate-200 shadow-xs hover:shadow-xl hover:border-cyan-400 hover:-translate-y-1 transition-all duration-200 flex flex-col justify-between"
               >
                 <div>

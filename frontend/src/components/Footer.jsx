@@ -55,12 +55,12 @@ export default function Footer() {
               </h5>
               <ul className="space-y-1.5 text-xs font-medium">
                 <li>
-                  <Link to="/terms" className="text-slate-600 hover:text-primary transition-colors block py-0.5 whitespace-nowrap">
+                  <Link to="/terms?mode=landing" className="text-slate-600 hover:text-primary transition-colors block py-0.5 whitespace-nowrap">
                     Syarat & Ketentuan
                   </Link>
                 </li>
                 <li>
-                  <Link to="/privacy" className="text-slate-600 hover:text-primary transition-colors block py-0.5 whitespace-nowrap">
+                  <Link to="/privacy?mode=landing" className="text-slate-600 hover:text-primary transition-colors block py-0.5 whitespace-nowrap">
                     Kebijakan & Privasi
                   </Link>
                 </li>
@@ -74,12 +74,12 @@ export default function Footer() {
               </h5>
               <ul className="space-y-1.5 text-xs font-medium">
                 <li>
-                  <Link to="/blog" className="text-slate-600 hover:text-primary transition-colors block py-0.5 whitespace-nowrap">
+                  <Link to="/blog?mode=landing" className="text-slate-600 hover:text-primary transition-colors block py-0.5 whitespace-nowrap">
                     Blog
                   </Link>
                 </li>
                 <li>
-                  <Link to="/partnership" className="text-slate-600 hover:text-primary transition-colors block py-0.5 whitespace-nowrap">
+                  <Link to="/partnership?mode=landing" className="text-slate-600 hover:text-primary transition-colors block py-0.5 whitespace-nowrap">
                     Kerja Sama (Canva)
                   </Link>
                 </li>
