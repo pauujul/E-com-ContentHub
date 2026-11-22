@@ -8,9 +8,7 @@ import api from '../services/api';
 
 export default function BlogPage() {
   const [searchParams] = useSearchParams();
-  const { currentUser } = useAuth();
-  const isLandingMode = searchParams.get('mode') === 'landing';
-  const isInWorkspace = !isLandingMode;
+  const isInWorkspace = searchParams.get('mode') === 'workspace';
 
   const [articles, setArticles] = useState([]);
   const [loading, setLoading] = useState(true);
