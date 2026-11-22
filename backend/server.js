@@ -53,6 +53,15 @@ const upload = multer({
 
 // Middlewares
 app.use(cors());
+
+// Normalisasi URL: Mendukung request dengan atau tanpa awalan /api secara otomatis
+app.use((req, res, next) => {
+  if (req.url !== '/' && !req.url.startsWith('/api') && !req.url.startsWith('/uploads')) {
+    req.url = '/api' + req.url;
+  }
+  next();
+});
+
 app.use(express.json({ limit: '20mb' }));
 app.use(express.urlencoded({ extended: true, limit: '20mb' }));
 app.use('/uploads', express.static(UPLOADS_DIR));
