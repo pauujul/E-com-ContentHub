@@ -1,9 +1,17 @@
 import React, { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
+import Sidebar from '../components/Sidebar';
+import { useAuth } from '../context/AuthContext';
 import api from '../services/api';
 
 export default function PrivacyPage() {
+  const { token } = useAuth();
+  const isLoggedIn =
+    (Boolean(token) || Boolean(localStorage.getItem('contenthub_user'))) &&
+    localStorage.getItem('contenthub_logged_out') !== 'true';
+
   const [content, setContent] = useState(null);
   const [loading, setLoading] = useState(true);
 
@@ -19,51 +27,80 @@ export default function PrivacyPage() {
   }, []);
 
   return (
-    <div className="min-h-screen bg-surface text-on-surface flex flex-col justify-between">
-      <Navbar />
+    <div className="min-h-screen bg-slate-50/70 text-slate-800 flex flex-col justify-between">
+      {/* Jika login, tampilkan Sidebar Workspace. Jika pengunjung publik, tampilkan Navbar Landing */}
+      {isLoggedIn ? <Sidebar /> : <Navbar />}
 
-      <main className="pt-24 pb-20 px-6 max-w-5xl mx-auto flex-1 w-full">
+      <main
+        className={`flex-1 w-full transition-all ${
+          isLoggedIn
+            ? 'ml-0 md:ml-64 p-6 sm:p-8 lg:p-10 max-w-5xl'
+            : 'pt-24 pb-20 px-6 max-w-5xl mx-auto'
+        }`}
+      >
+        {/* Navigasi Khusus Workspace (Anti Landing Page) */}
+        {isLoggedIn && (
+          <div className="mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-slate-200">
+            <div className="flex items-center gap-2 text-xs font-bold text-slate-400">
+              <Link
+                to="/help"
+                className="hover:text-primary transition-colors flex items-center gap-1 font-bold text-slate-600 hover:underline"
+              >
+                <span className="material-symbols-outlined text-base">arrow_back</span>
+                Kembali ke Pusat Bantuan
+              </Link>
+              <span>/</span>
+              <span className="text-emerald-700 font-black">Kebijakan & Privasi</span>
+            </div>
+            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-50 text-emerald-700 text-[10px] font-black uppercase tracking-wider border border-emerald-200 w-fit">
+              <span className="material-symbols-outlined text-xs">verified_user</span>
+              Keamanan Data Workspace
+            </span>
+          </div>
+        )}
+
         {loading ? (
           <div className="text-center py-24">
-            <div className="inline-block animate-spin rounded-full h-10 w-10 border-4 border-secondary border-t-transparent"></div>
+            <div className="inline-block animate-spin rounded-full h-10 w-10 border-4 border-emerald-600 border-t-transparent"></div>
             <p className="mt-4 text-xs font-bold text-slate-400">Memuat Kebijakan & Privasi dari database...</p>
           </div>
         ) : content ? (
-          <article className="space-y-8 animate-in fade-in duration-300">
+          <article className="space-y-6 animate-in fade-in duration-200">
             {/* Header Banner */}
-            <header className="space-y-3 pb-6 border-b border-outline-variant/15">
-              <span className="text-[10px] font-extrabold uppercase tracking-widest bg-amber-100 text-amber-800 px-3 py-1 rounded-full">
+            <header className="space-y-3 pb-6 border-b border-slate-200">
+              <span className="text-[10px] font-extrabold uppercase tracking-widest bg-emerald-100 text-emerald-800 px-3 py-1 rounded-full">
                 {content.category || 'Kebijakan Privasi'}
               </span>
-              <h1 className="text-3xl md:text-5xl font-extrabold text-on-surface leading-tight">
+              <h1 className="text-2xl sm:text-4xl font-extrabold text-slate-900 tracking-tight leading-tight">
                 {content.title}
               </h1>
-              <div className="flex flex-wrap items-center gap-4 text-xs text-slate-500 font-medium">
-                <span>Otoritas: {content.author}</span>
+              <div className="flex flex-wrap items-center gap-3 text-xs text-slate-500 font-medium">
+                <span>Otoritas: <strong className="text-slate-700">{content.author}</strong></span>
                 <span>•</span>
                 <span>Terakhir Diperbarui: {new Date(content.updated_at || content.created_at).toLocaleDateString('id-ID', { dateStyle: 'long' })}</span>
               </div>
             </header>
 
             {content.image_url && (
-              <div className="w-full h-64 md:h-80 rounded-3xl overflow-hidden shadow-sm border border-outline-variant/15">
+              <div className="w-full h-64 sm:h-80 rounded-2xl overflow-hidden shadow-xs border border-slate-200">
                 <img src={content.image_url} alt={content.title} className="w-full h-full object-cover" />
               </div>
             )}
 
             {/* Content Body */}
-            <div className="bg-white p-8 md:p-12 rounded-3xl border border-outline-variant/15 shadow-sm text-sm md:text-base leading-relaxed text-slate-700 whitespace-pre-line space-y-4">
+            <div className="bg-white p-6 sm:p-10 rounded-2xl border border-slate-200 shadow-xs text-sm sm:text-base leading-relaxed text-slate-700 whitespace-pre-line space-y-4">
               {content.description}
             </div>
           </article>
         ) : (
-          <div className="text-center py-20 bg-slate-100 rounded-3xl">
+          <div className="text-center py-20 bg-white rounded-2xl border border-slate-200">
             <p className="text-slate-500 font-bold">Dokumen Kebijakan & Privasi sedang dimuat.</p>
           </div>
         )}
       </main>
 
-      <Footer />
+      {/* Sembunyikan footer landing page jika sedang berada dalam workspace login */}
+      {!isLoggedIn && <Footer />}
     </div>
   );
 }
