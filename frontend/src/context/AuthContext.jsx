@@ -15,16 +15,8 @@ export function AuthProvider({ children }) {
     } catch (e) {
       console.warn('Gagal membaca sesi user dari localStorage:', e);
     }
-    // Default awal: Sesi pengguna default (Firman syah)
-    return {
-      id: 8,
-      name: 'Firman syah',
-      email: 'firmansyah.mks2006@gmail.com',
-      role: 'admin',
-      phone: '081234567899',
-      business_name: 'ContentHub HQ',
-      industry: 'Technology SaaS',
-    };
+    // Pengunjung belum login default-nya null
+    return null;
   });
 
   const [token, setToken] = useState(() => {
@@ -39,18 +31,15 @@ export function AuthProvider({ children }) {
   const [activeSubscription, setActiveSubscription] = useState(() => {
     try {
       const savedUser = localStorage.getItem('contenthub_user');
-      const uid = savedUser ? JSON.parse(savedUser)?.id : 8;
-      const cached = localStorage.getItem(`contenthub_sub_${uid}`);
-      if (cached) return JSON.parse(cached);
+      if (savedUser) {
+        const uid = JSON.parse(savedUser)?.id;
+        if (uid) {
+          const cached = localStorage.getItem(`contenthub_sub_${uid}`);
+          if (cached) return JSON.parse(cached);
+        }
+      }
     } catch (e) {}
-    return {
-      plan_id: 2,
-      plan_name: 'ContentHub Starter',
-      billing_cycle: 'Bulanan',
-      status: 'Paid',
-      status_label: 'Aktif',
-      is_active: true,
-    };
+    return null;
   });
   const [loadingSubscription, setLoadingSubscription] = useState(false);
 
