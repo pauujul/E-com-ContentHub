@@ -194,6 +194,9 @@ export default function HeroCarousel() {
                 alt="ContentHub Dashboard Preview"
                 className="rounded-xl w-full h-[400px] object-cover"
                 src="https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=1200&auto=format&fit=crop&q=80"
+                width="1200"
+                height="800"
+                loading="lazy"
               />
               <div className="absolute -bottom-6 -left-6 bg-secondary text-white p-6 rounded-2xl shadow-xl max-w-[200px]">
                 <p className="text-3xl font-extrabold">10x</p>
@@ -284,7 +287,10 @@ export default function HeroCarousel() {
                     currentSlide.image_url ||
                     'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=1200&auto=format&fit=crop&q=80'
                   }
-                  alt={currentSlide.title || 'ContentHub Hero'}
+                  alt={currentSlide.title || 'Visualisasi Fitur ContentHub'}
+                  width="1200"
+                  height="800"
+                  loading={currentIndex === 0 ? 'eager' : 'lazy'}
                   className="w-full h-full object-cover object-center transition-all duration-700 ease-out animate-in fade-in zoom-in-95"
                   onError={(e) => {
                     e.target.onerror = null;

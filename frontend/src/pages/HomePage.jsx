@@ -93,7 +93,7 @@ export default function HomePage() {
                 <div className="w-12 h-12 rounded-xl bg-secondary-fixed flex items-center justify-center text-secondary">
                   <span className="material-symbols-outlined text-2xl">auto_awesome_motion</span>
                 </div>
-                <h4 className="text-xl font-bold text-on-surface">50+ Library Template</h4>
+                <h3 className="text-xl font-bold text-on-surface">50+ Library Template</h3>
                 <p className="text-sm text-on-surface-variant leading-relaxed">
                   Pilihan desain siap pakai untuk bisnis Kuliner, Fashion, Jasa, Promo Diskon, hingga Edukasi Carousel.
                 </p>
@@ -107,9 +107,18 @@ export default function HomePage() {
                 <div className="w-12 h-12 rounded-xl bg-primary-fixed flex items-center justify-center text-primary">
                   <span className="material-symbols-outlined text-2xl">edit_note</span>
                 </div>
-                <h4 className="text-xl font-bold text-on-surface">Integrasi Desain Canva</h4>
+                <h3 className="text-xl font-bold text-on-surface">Integrasi Desain Canva</h3>
                 <p className="text-sm text-on-surface-variant leading-relaxed">
-                  Buka dan edit langsung template pilihan Anda di Canva dengan satu klik tanpa perlu download manual.
+                  Buka dan sesuaikan template desain langsung melalui{' '}
+                  <a
+                    href="https://www.canva.com/id_id/"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-primary font-bold hover:underline"
+                  >
+                    Canva
+                  </a>{' '}
+                  dengan satu klik tanpa perlu download manual.
                 </p>
                 <Link to="/templates/canva-transition" className="text-xs font-bold text-primary inline-block hover:underline">
                   Simulasi Buka Canva &rarr;
@@ -121,7 +130,7 @@ export default function HomePage() {
                 <div className="w-12 h-12 rounded-xl bg-tertiary-fixed flex items-center justify-center text-tertiary">
                   <span className="material-symbols-outlined text-2xl">admin_panel_settings</span>
                 </div>
-                <h4 className="text-xl font-bold text-on-surface">Multi-Role & Autentikasi</h4>
+                <h3 className="text-xl font-bold text-on-surface">Multi-Role & Autentikasi</h3>
                 <p className="text-sm text-on-surface-variant leading-relaxed">
                   Dukungan role Customer (UMKM) dan Admin Console dengan database PostgreSQL untuk pemantauan pesanan & data analitik.
                 </p>

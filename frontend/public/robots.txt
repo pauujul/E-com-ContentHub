@@ -1,0 +1,38 @@
+# robots.txt for E-Com-ContentHub
+# URL: https://e-com-content-hub.vercel.app
+
+User-agent: *
+Allow: /
+Allow: /pricing
+Allow: /about
+Allow: /help
+Allow: /blog
+Allow: /partnership
+Allow: /terms
+Allow: /privacy
+Allow: /syarat-ketentuan
+Allow: /kebijakan-privasi
+Allow: /kerja-sama
+Allow: /favicon.svg
+Allow: /favicon.ico
+Allow: /favicon-48x48.png
+Allow: /apple-touch-icon.png
+Allow: /og-image.png
+
+# Disallow Private & Workspace Application Routes
+Disallow: /dashboard
+Disallow: /admin
+Disallow: /profile
+Disallow: /switch-account
+Disallow: /checkout
+Disallow: /payment-confirmation
+Disallow: /transactions
+Disallow: /calendar/pick-date
+Disallow: /calendar/set-time
+Disallow: /calendar/edit-schedule
+Disallow: /calendar/add-label
+Disallow: /templates/add
+Disallow: /api/
+
+# Sitemap Location
+Sitemap: https://e-com-content-hub.vercel.app/sitemap.xml
