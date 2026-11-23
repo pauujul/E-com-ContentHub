@@ -255,7 +255,7 @@ export default function AdminDashboardPage() {
         name: user.name,
         email: user.email,
         password: '',
-        role: user.role || 'customer',
+        role: user.role === 'editor' ? 'customer' : (user.role || 'customer'),
         phone: user.phone || '',
         business_name: user.business_name || '',
         industry: user.industry || 'Kuliner & F&B',
@@ -2971,7 +2971,6 @@ export default function AdminDashboardPage() {
                   >
                     <option value="customer">Customer (Pelaku UMKM)</option>
                     <option value="admin">Administrator</option>
-                    <option value="editor">Editor Konten</option>
                   </select>
                 </div>
 
