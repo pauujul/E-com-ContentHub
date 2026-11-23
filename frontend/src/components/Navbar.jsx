@@ -19,7 +19,6 @@ export default function Navbar({ publicMode = false }) {
     '/admin',
     '/profile',
     '/switch-account',
-    '/help',
     '/search',
     '/label',
     '/checkout',

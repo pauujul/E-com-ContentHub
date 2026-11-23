@@ -112,7 +112,7 @@ export default function Sidebar() {
             <span>Template Library</span>
           </Link>
 
-          <Link to="/help" className={navItemClass('/help')}>
+          <Link to="/help?mode=workspace" className={navItemClass('/help')}>
             <span className="material-symbols-outlined text-xl">help</span>
             <span>Bantuan</span>
           </Link>

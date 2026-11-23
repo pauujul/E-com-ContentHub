@@ -1,11 +1,15 @@
 
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import Sidebar from '../components/Sidebar';
 import Navbar from '../components/Navbar';
+import Footer from '../components/Footer';
 import { useAuth } from '../context/AuthContext';
 
 export default function HelpCenterPage() {
+  const [searchParams] = useSearchParams();
+  const isInWorkspace = searchParams.get('mode') === 'workspace';
+
   const [searchQuery, setSearchQuery] = useState('');
   const [openFaq, setOpenFaq] = useState(0);
 
@@ -50,10 +54,17 @@ export default function HelpCenterPage() {
   );
 
   return (
-    <div className="min-h-screen bg-slate-50/70 text-slate-800">
-      <Sidebar />
+    <div className="min-h-screen bg-slate-50/70 text-slate-800 flex flex-col justify-between">
+      {/* Tampilkan Sidebar untuk Workspace, atau Navbar jika mode public landing */}
+      {isInWorkspace ? <Sidebar /> : <Navbar />}
 
-      <main className="ml-0 md:ml-64 min-h-screen p-6 sm:p-8 lg:p-10 transition-all">
+      <main
+        className={`flex-1 w-full space-y-10 transition-all ${
+          isInWorkspace
+            ? 'ml-0 md:ml-64 p-6 sm:p-8 lg:p-10 max-w-6xl'
+            : 'pt-24 sm:pt-28 pb-20 px-4 sm:px-6 lg:px-8 max-w-6xl mx-auto'
+        }`}
+      >
         <div className="max-w-6xl mx-auto space-y-10">
 
           {/* Top Breadcrumb & Page Title */}
@@ -61,10 +72,10 @@ export default function HelpCenterPage() {
             <div>
               <div className="flex items-center gap-2 text-xs font-bold text-slate-400 mb-1">
                 <Link
-                  to="/dashboard"
+                  to={isInWorkspace ? "/dashboard" : "/"}
                   className="hover:text-primary transition-colors font-bold text-slate-600"
                 >
-                  Workspace
+                  {isInWorkspace ? "Workspace" : "Beranda"}
                 </Link>
                 <span>/</span>
                 <span className="text-primary font-bold">Pusat Bantuan & Panduan</span>
@@ -142,7 +153,7 @@ export default function HelpCenterPage() {
 
               {/* Card 1: Syarat & Ketentuan */}
               <Link
-                to="/terms?mode=workspace"
+                to={isInWorkspace ? "/terms?mode=workspace" : "/terms"}
                 className="group bg-white rounded-2xl p-6 border border-slate-200 shadow-xs hover:shadow-xl hover:border-blue-400 hover:-translate-y-1 transition-all duration-200 flex flex-col justify-between"
               >
                 <div>
@@ -173,7 +184,7 @@ export default function HelpCenterPage() {
 
               {/* Card 2: Kebijakan & Privasi */}
               <Link
-                to="/privacy?mode=workspace"
+                to={isInWorkspace ? "/privacy?mode=workspace" : "/privacy"}
                 className="group bg-white rounded-2xl p-6 border border-slate-200 shadow-xs hover:shadow-xl hover:border-emerald-400 hover:-translate-y-1 transition-all duration-200 flex flex-col justify-between"
               >
                 <div>
@@ -204,7 +215,7 @@ export default function HelpCenterPage() {
 
               {/* Card 3: Blog & Edukasi */}
               <Link
-                to="/blog?mode=workspace"
+                to={isInWorkspace ? "/blog?mode=workspace" : "/blog"}
                 className="group bg-white rounded-2xl p-6 border border-slate-200 shadow-xs hover:shadow-xl hover:border-purple-400 hover:-translate-y-1 transition-all duration-200 flex flex-col justify-between"
               >
                 <div>
@@ -235,7 +246,7 @@ export default function HelpCenterPage() {
 
               {/* Card 4: Kerja Sama (Integrasi Canva) */}
               <Link
-                to="/partnership?mode=workspace"
+                to={isInWorkspace ? "/partnership?mode=workspace" : "/partnership"}
                 className="group bg-white rounded-2xl p-6 border border-slate-200 shadow-xs hover:shadow-xl hover:border-cyan-400 hover:-translate-y-1 transition-all duration-200 flex flex-col justify-between"
               >
                 <div>
@@ -357,6 +368,9 @@ export default function HelpCenterPage() {
 
         </div>
       </main>
+
+      {/* Tampilkan Footer hanya jika di mode public landing */}
+      {!isInWorkspace && <Footer />}
     </div>
   );
 }
