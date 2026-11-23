@@ -8,8 +8,8 @@ export default function PricingPage() {
     <div className="min-h-screen bg-surface text-on-surface flex flex-col justify-between">
       <Navbar />
 
-      <main className="pt-28 pb-20 flex-1 w-full">
-        <PricingSection showSupportBanner={true} />
+      <main className="pt-24 pb-16 flex-1 w-full">
+        <PricingSection showHeader={true} showSupportBanner={true} />
       </main>
 
       <Footer />

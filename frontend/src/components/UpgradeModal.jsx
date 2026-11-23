@@ -314,8 +314,8 @@ export default function UpgradeModal({ isOpen, onClose, config, setStep }) {
               </div>
               <div className="text-right">
                 <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider block">Total Tagihan:</span>
-                <div className="font-black text-base text-slate-900">
-                  Rp {parseFloat(activePlan.price).toLocaleString('id-ID')}
+                <div className="font-black text-base text-slate-900 whitespace-nowrap">
+                  Rp&nbsp;{parseFloat(activePlan.price).toLocaleString('id-ID')}
                 </div>
               </div>
             </div>

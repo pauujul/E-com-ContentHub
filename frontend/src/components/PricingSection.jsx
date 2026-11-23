@@ -43,11 +43,11 @@ const defaultPlans = [
   },
   {
     id: 3,
-    sku: 'CH-PLUS-1Y',
+    sku: 'CH-PRO-Y',
     name: 'ContentHub Plus',
     description: 'Paket komprehensif tahunan untuk UMKM berkembang dengan frekuensi konten tinggi, multi-admin, dan analitik jadwal posting.',
-    price: '699000.00',
-    billing_cycle: '1 Tahun',
+    price: '898000.00',
+    billing_cycle: 'Tahunan',
     badge: 'Paling Hemat',
     is_hero: false,
     features: [
@@ -95,7 +95,7 @@ export default function PricingSection({
           const filtered = res.data.filter(
             (p) => p.sku !== 'CH-ENT-Y' && !p.name?.toLowerCase().includes('enterprise') && p.is_active !== false
           );
-          // Sort by price ascending: Free (Rp 0), Pro (Rp 199.000), Plus (Rp 699.000)
+          // Sort by price ascending: Free (Rp 0), Pro (Rp 199.000), Plus (Rp 898.000)
           filtered.sort((a, b) => parseFloat(a.price) - parseFloat(b.price));
           if (filtered.length > 0) {
             setPlans(filtered);
@@ -136,17 +136,16 @@ export default function PricingSection({
 
   const formatPrice = (price) => {
     const num = parseFloat(price);
-    if (isNaN(num) || num === 0) return 'Rp 0';
-    return `Rp ${num.toLocaleString('id-ID')}`;
+    if (isNaN(num) || num === 0) return 'Rp\u00A00';
+    return `Rp\u00A0${num.toLocaleString('id-ID')}`;
   };
 
   const formatBillingCycle = (cycle, price) => {
     const num = parseFloat(price);
     if (isNaN(num) || num === 0) return '';
     if (!cycle) return '';
-    const clean = cycle.trim().toLowerCase();
-    if (clean.startsWith('/')) return ` ${clean}`;
-    return ` / ${clean}`;
+    const clean = cycle.trim().toLowerCase().replace(/^\/+/, '').trim();
+    return `/\u00A0${clean.replace(/\s+/g, '\u00A0')}`;
   };
 
   return (
@@ -206,10 +205,9 @@ export default function PricingSection({
             {(plans.length > 0 ? plans : defaultPlans).map((plan) => {
               // Highlight Pro card in the center with distinctive blue border and elevated elevation
               const isHero = Boolean(
-                plan.is_hero ||
+                (plan.is_hero && plan.sku !== 'CH-FREE' && plan.sku !== 'CH-PRO-Y') ||
                 plan.sku === 'CH-PRO-3M' ||
-                plan.sku === 'CH-START-M' ||
-                plan.name?.toLowerCase().includes('pro')
+                plan.sku === 'CH-START-M'
               );
 
               // Parse features safely
@@ -229,19 +227,19 @@ export default function PricingSection({
                 <div
                   key={plan.id}
                   className={`relative flex flex-col justify-between transition-all duration-300 ${
-                    compact ? 'p-5 rounded-2xl' : 'p-8 rounded-3xl'
+                    compact ? 'p-4 sm:p-5 rounded-2xl' : 'p-7 sm:p-8 rounded-3xl'
                   } ${
                     isHero
                       ? compact
                         ? 'bg-white shadow-lg shadow-primary/15 border-2 border-primary z-10'
-                        : 'bg-white shadow-[0_20px_45px_-6px_rgba(0,93,167,0.22)] border-2 border-primary z-10 md:scale-105'
+                        : 'bg-white shadow-[0_20px_45px_-6px_rgba(0,93,167,0.22)] border-2 border-primary z-10'
                       : 'bg-white border border-outline-variant/20 shadow-sm hover:shadow-lg hover:border-outline-variant/40'
                   }`}
                 >
                   {/* Floating Top Badge for Pro Hero Card */}
                   {isHero && (
                     <div
-                      className={`absolute left-1/2 -translate-x-1/2 bg-gradient-to-r from-primary to-primary-container text-white rounded-full font-extrabold tracking-wide shadow-md uppercase whitespace-nowrap ${
+                      className={`absolute left-1/2 -translate-x-1/2 bg-gradient-to-r from-primary to-primary-container text-white rounded-full font-extrabold tracking-wide shadow-md uppercase whitespace-nowrap z-20 ${
                         compact ? '-top-3 px-3 py-0.5 text-[9px]' : '-top-3.5 px-4 py-1 text-[11px]'
                       }`}
                     >
@@ -249,18 +247,18 @@ export default function PricingSection({
                     </div>
                   )}
 
-                  <div>
+                  <div className="flex flex-col h-full">
                     {/* Plan Header */}
-                    <div className={compact ? 'mb-3' : 'mb-6'}>
-                      <div className="flex justify-between items-center mb-1 gap-2">
-                        <h3 className={`${compact ? 'text-base' : 'text-xl'} font-extrabold text-on-surface`}>
+                    <div className={compact ? 'mb-3' : 'mb-5'}>
+                      <div className="flex justify-between items-center mb-1.5 gap-2 h-7">
+                        <h3 className={`${compact ? 'text-base' : 'text-xl'} font-extrabold text-on-surface truncate`}>
                           {plan.name}
                         </h3>
                         {plan.badge && !isHero ? (
                           <span
                             className={`${
                               compact ? 'text-[9px] px-2 py-0.5' : 'text-[10px] px-2.5 py-0.5'
-                            } font-extrabold uppercase tracking-wider text-primary bg-primary/10 rounded-full`}
+                            } font-extrabold uppercase tracking-wider text-primary bg-primary/10 rounded-full shrink-0`}
                           >
                             {plan.badge}
                           </span>
@@ -268,7 +266,7 @@ export default function PricingSection({
                           <span
                             className={`${
                               compact ? 'text-[8px] px-1.5 py-0.5' : 'text-[9px] px-2 py-0.5'
-                            } font-extrabold uppercase tracking-wider text-outline bg-surface-container-high rounded`}
+                            } font-extrabold uppercase tracking-wider text-outline bg-surface-container-high rounded shrink-0`}
                           >
                             {plan.sku}
                           </span>
@@ -276,8 +274,9 @@ export default function PricingSection({
                       </div>
                       <p
                         className={`text-on-surface-variant text-xs ${
-                          compact ? 'min-h-[36px] line-clamp-2 mt-1' : 'min-h-[44px] mt-2'
-                        } leading-relaxed`}
+                          compact ? 'h-10' : 'h-11'
+                        } line-clamp-2 leading-relaxed overflow-hidden`}
+                        title={plan.description}
                       >
                         {plan.description}
                       </p>
@@ -286,19 +285,27 @@ export default function PricingSection({
                     {/* Price & Billing Cycle Box */}
                     <div
                       className={`${
-                        compact ? 'mb-3 p-3' : 'mb-6 p-4'
-                      } rounded-2xl bg-surface-container-low flex items-baseline gap-1`}
+                        compact
+                          ? 'mb-3 px-3.5 py-2.5 h-[58px]'
+                          : 'mb-6 px-4 py-3 h-[72px]'
+                      } rounded-2xl bg-surface-container-low flex items-baseline justify-start gap-1.5 overflow-hidden`}
                     >
-                      <span className={`${compact ? 'text-xl sm:text-2xl' : 'text-3xl'} font-extrabold text-on-surface`}>
+                      <span
+                        className={`${
+                          compact
+                            ? 'text-lg sm:text-xl'
+                            : 'text-2xl sm:text-[28px]'
+                        } font-black text-on-surface whitespace-nowrap tracking-tight shrink-0`}
+                      >
                         {formatPrice(plan.price)}
                       </span>
-                      <span className="text-xs font-semibold text-outline">
+                      <span className="text-xs font-semibold text-outline whitespace-nowrap shrink-0 self-baseline">
                         {formatBillingCycle(plan.billing_cycle, plan.price)}
                       </span>
                     </div>
 
                     {/* Feature Checklist */}
-                    <div className={compact ? 'space-y-2 mb-4' : 'space-y-3 mb-8'}>
+                    <div className={compact ? 'space-y-2 mb-4 flex-1' : 'space-y-3 mb-8 flex-1'}>
                       <span className="text-[10px] font-extrabold uppercase tracking-wider text-outline block">
                         Fitur Termasuk:
                       </span>
@@ -313,26 +320,26 @@ export default function PricingSection({
                         ))}
                       </ul>
                     </div>
-                  </div>
 
-                  {/* CTA Button */}
-                  <div className={`${compact ? 'pt-2.5' : 'pt-4'} border-t border-slate-100 mt-auto`}>
-                    <button
-                      type="button"
-                      onClick={() => handleSelectPlan(plan)}
-                      className={`w-full ${
-                        compact ? 'py-2.5 text-xs' : 'py-3.5 text-sm'
-                      } rounded-xl font-extrabold transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
-                        isHero
-                          ? 'bg-gradient-to-r from-primary to-primary-container text-white shadow-md shadow-primary/25 hover:scale-[1.02] active:scale-95'
-                          : 'bg-primary text-white hover:bg-primary/90 hover:scale-[1.01] active:scale-95'
-                      }`}
-                    >
-                      <span className="material-symbols-outlined text-base">bolt</span>
-                      {parseFloat(plan.price) === 0
-                        ? (compact ? 'Paket Free (Aktif)' : 'Aktivasi Gratis')
-                        : `Pilih Paket ${plan.name.replace(/ContentHub\s*/i, '')}`}
-                    </button>
+                    {/* CTA Button */}
+                    <div className={`${compact ? 'pt-2.5' : 'pt-4'} border-t border-slate-100 mt-auto`}>
+                      <button
+                        type="button"
+                        onClick={() => handleSelectPlan(plan)}
+                        className={`w-full ${
+                          compact ? 'py-2.5 text-xs' : 'py-3.5 text-sm'
+                        } rounded-xl font-extrabold transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
+                          isHero
+                            ? 'bg-gradient-to-r from-primary to-primary-container text-white shadow-md shadow-primary/25 hover:scale-[1.02] active:scale-95'
+                            : 'bg-primary text-white hover:bg-primary/90 hover:scale-[1.01] active:scale-95'
+                        }`}
+                      >
+                        <span className="material-symbols-outlined text-base">bolt</span>
+                        {parseFloat(plan.price) === 0
+                          ? (compact ? 'Paket Free (Aktif)' : 'Aktivasi Gratis')
+                          : `Pilih Paket ${plan.name.replace(/ContentHub\s*/i, '')}`}
+                      </button>
+                    </div>
                   </div>
                 </div>
               );
