@@ -170,14 +170,14 @@ export default function SetTimePage() {
             <button
               type="button"
               onClick={() => navigate('/calendar')}
-              className="flex-1 py-3.5 bg-slate-100 hover:bg-slate-200 rounded-xl font-bold text-xs text-center text-slate-700 transition-colors"
+              className="flex-1 py-3.5 bg-slate-100 hover:bg-slate-200 rounded-xl font-bold text-xs text-center text-slate-700 transition-colors flex items-center justify-center"
             >
               Batal
             </button>
             <button
               type="button"
               onClick={handleContinue}
-              className="flex-2 py-3.5 bg-gradient-primary text-white font-bold text-xs rounded-xl shadow-md shadow-primary/20 hover:scale-[1.02] active:scale-95 transition-all text-center flex items-center justify-center gap-1.5"
+              className="flex-1 py-3.5 bg-gradient-primary text-white font-bold text-xs rounded-xl shadow-md shadow-primary/20 hover:scale-[1.02] active:scale-95 transition-all text-center flex items-center justify-center gap-1.5"
             >
               <span>Lanjut</span>
               <span className="material-symbols-outlined text-sm">arrow_forward</span>
