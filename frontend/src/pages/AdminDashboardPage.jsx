@@ -811,55 +811,53 @@ export default function AdminDashboardPage() {
       {/* ======================================================== */}
       {/* SIDEBAR ADMIN PANEL - TEMA RESMI CONTENTHUB (WHITE & BLUE) */}
       {/* ======================================================== */}
-      <aside className="fixed left-0 top-0 h-screen w-64 bg-white border-r border-slate-200 z-40 flex flex-col justify-between shadow-xs">
-        <div>
-          {/* Admin Brand Header */}
-          <div className="p-5 border-b border-slate-100 flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-gradient-primary flex items-center justify-center text-white shadow-md shadow-primary/20">
-                <span className="material-symbols-outlined text-2xl">admin_panel_settings</span>
-              </div>
-              <div>
-                <h2 className="text-base font-extrabold text-slate-800 leading-tight">Admin Console</h2>
-                <span className="text-[10px] uppercase font-bold tracking-wider text-primary">ContentHub HQ</span>
-              </div>
+      <aside className="fixed left-0 top-0 h-screen w-64 bg-white border-r border-slate-200 z-40 flex flex-col shadow-xs">
+        {/* Admin Brand Header */}
+        <div className="p-4 border-b border-slate-100 flex items-center justify-between flex-shrink-0">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-gradient-primary flex items-center justify-center text-white shadow-md shadow-primary/20 flex-shrink-0">
+              <span className="material-symbols-outlined text-2xl">admin_panel_settings</span>
+            </div>
+            <div>
+              <h2 className="text-base font-extrabold text-slate-800 leading-tight">Admin Console</h2>
+              <span className="text-[10px] uppercase font-bold tracking-wider text-primary">ContentHub HQ</span>
             </div>
           </div>
-
-          {/* Menu Navigasi Admin */}
-          <nav className="p-3 space-y-1 overflow-y-auto max-h-[calc(100vh-185px)]">
-            <span className="text-[10px] font-extrabold uppercase tracking-widest text-slate-400 px-3 py-2 block">
-              Menu Manajemen
-            </span>
-
-            {adminMenuItems.map((menu) => {
-              const isSelected = activeMenu === menu.key || (menu.key === 'legal' && (activeMenu === 'terms' || activeMenu === 'privacy'));
-              return (
-                <button
-                  key={menu.key}
-                  type="button"
-                  onClick={() => setActiveMenu(menu.key)}
-                  className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl font-medium text-xs text-left cursor-pointer transition-colors duration-100 outline-none focus:outline-none focus:ring-0 focus-visible:outline-none active:outline-none select-none border-0 ${
-                    isSelected
-                      ? 'bg-primary/10 text-primary font-bold'
-                      : 'text-slate-600 hover:bg-slate-100 hover:text-primary'
-                  }`}
-                  style={{ outline: 'none', WebkitTapHighlightColor: 'transparent', boxShadow: 'none' }}
-                >
-                  <span className={`material-symbols-outlined text-lg ${isSelected ? 'text-primary font-bold' : 'text-slate-400'}`}>
-                    {menu.icon}
-                  </span>
-                  <span className="truncate">{menu.label}</span>
-                </button>
-              );
-            })}
-          </nav>
         </div>
 
+        {/* Menu Navigasi Admin */}
+        <nav className="flex-1 min-h-0 p-3 space-y-1 overflow-y-auto">
+          <span className="text-[10px] font-extrabold uppercase tracking-widest text-slate-400 px-3 py-1.5 block">
+            Menu Manajemen
+          </span>
+
+          {adminMenuItems.map((menu) => {
+            const isSelected = activeMenu === menu.key || (menu.key === 'legal' && (activeMenu === 'terms' || activeMenu === 'privacy'));
+            return (
+              <button
+                key={menu.key}
+                type="button"
+                onClick={() => setActiveMenu(menu.key)}
+                className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl font-medium text-xs text-left cursor-pointer transition-colors duration-100 outline-none focus:outline-none focus:ring-0 focus-visible:outline-none active:outline-none select-none border-0 ${
+                  isSelected
+                    ? 'bg-primary/10 text-primary font-bold'
+                    : 'text-slate-600 hover:bg-slate-100 hover:text-primary'
+                }`}
+                style={{ outline: 'none', WebkitTapHighlightColor: 'transparent', boxShadow: 'none' }}
+              >
+                <span className={`material-symbols-outlined text-lg ${isSelected ? 'text-primary font-bold' : 'text-slate-400'}`}>
+                  {menu.icon}
+                </span>
+                <span className="truncate">{menu.label}</span>
+              </button>
+            );
+          })}
+        </nav>
+
         {/* Footer Admin Sidebar */}
-        <div className="p-3 border-t border-slate-100 bg-slate-50/50 space-y-2">
+        <div className="p-3 border-t border-slate-100 bg-slate-50/50 space-y-2 flex-shrink-0">
           <div className="flex items-center gap-2.5 p-2 rounded-xl bg-white border border-slate-200/80 shadow-xs">
-            <div className="w-8 h-8 rounded-full bg-primary text-white flex items-center justify-center font-bold text-xs uppercase shadow-xs">
+            <div className="w-8 h-8 rounded-full bg-primary text-white flex items-center justify-center font-bold text-xs uppercase shadow-xs flex-shrink-0">
               {currentUser?.name ? currentUser.name.charAt(0) : 'A'}
             </div>
             <div className="truncate flex-1">
@@ -870,10 +868,10 @@ export default function AdminDashboardPage() {
 
           <Link
             to="/dashboard"
-            className="w-full py-2 bg-slate-100 hover:bg-slate-200/80 text-slate-700 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 transition-colors"
+            className="w-full py-2.5 px-3 bg-primary/10 hover:bg-primary/20 text-primary border border-primary/20 rounded-xl text-xs font-bold flex items-center justify-center gap-2 transition-colors whitespace-nowrap shadow-xs"
           >
-            <span className="material-symbols-outlined text-sm">dashboard</span>
-            Buka Workspace User
+            <span className="material-symbols-outlined text-base">dashboard</span>
+            <span>Buka Workspace User</span>
           </Link>
 
           <button

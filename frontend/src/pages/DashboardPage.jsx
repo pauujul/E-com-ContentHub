@@ -15,6 +15,7 @@ export default function DashboardPage() {
 
   useEffect(() => {
     if (currentUser?.id) {
+      setLoadingOrders(true);
       api
         .getOrders(currentUser.id)
         .then((res) => {
@@ -25,11 +26,12 @@ export default function DashboardPage() {
         .catch((err) => console.warn('Could not load user orders:', err.message))
         .finally(() => setLoadingOrders(false));
 
+      setLoadingPosts(true);
       api
-        .getPosts()
+        .getPosts({ user_id: currentUser.id })
         .then((res) => {
           if (res.success && res.data) {
-            const filtered = res.data.filter((p) => !p.user_id || p.user_id === currentUser.id);
+            const filtered = res.data.filter((p) => Number(p.user_id) === Number(currentUser.id));
             setUserPosts(filtered);
           }
         })
@@ -45,6 +47,64 @@ export default function DashboardPage() {
         billing_cycle: 'Bulanan',
         status: 'Paid',
       });
+
+  // Perhitungan Konsistensi Posting Dinamis per Akun Pengguna
+  const calculateConsistency = (posts) => {
+    if (!posts || posts.length === 0) {
+      return {
+        percentage: '0%',
+        subtext: 'Susun jadwal untuk mulai ukur konsistensi',
+        colorClass: 'text-slate-400',
+        badgeBg: 'bg-slate-100 text-slate-600',
+      };
+    }
+
+    // Target kalender editorial UMKM: 12 post per bulan (3 post / minggu)
+    // Dihitung dengan bobot status jadwal:
+    // published: 100%, scheduled: 90%, review: 70%, draft: 50%
+    const totalScore = posts.reduce((sum, p) => {
+      const stage = (p.stage || p.status || '').toLowerCase();
+      if (stage === 'published') return sum + 1.0;
+      if (stage === 'scheduled') return sum + 0.9;
+      if (stage === 'review') return sum + 0.7;
+      return sum + 0.5; // draft
+    }, 0);
+
+    const rawPercentage = (totalScore / 12) * 100;
+    const finalPercentage = Math.min(100, Math.round(rawPercentage * 10) / 10);
+
+    if (finalPercentage >= 85) {
+      return {
+        percentage: `${finalPercentage}%`,
+        subtext: 'Performa Sangat Konsisten',
+        colorClass: 'text-emerald-600',
+        badgeBg: 'bg-emerald-50 text-emerald-700',
+      };
+    } else if (finalPercentage >= 60) {
+      return {
+        percentage: `${finalPercentage}%`,
+        subtext: 'Konsistensi Jadwal Baik',
+        colorClass: 'text-secondary',
+        badgeBg: 'bg-secondary-fixed text-secondary',
+      };
+    } else if (finalPercentage >= 30) {
+      return {
+        percentage: `${finalPercentage}%`,
+        subtext: 'Cukup Aktif, Tingkatkan Jadwal',
+        colorClass: 'text-amber-600',
+        badgeBg: 'bg-amber-50 text-amber-700',
+      };
+    } else {
+      return {
+        percentage: `${finalPercentage}%`,
+        subtext: `Target 3 post/minggu (${posts.length}/12 post)`,
+        colorClass: 'text-orange-500',
+        badgeBg: 'bg-orange-50 text-orange-700',
+      };
+    }
+  };
+
+  const consistency = calculateConsistency(userPosts);
 
   // Perhitungan Kalender Minggu Ini Dinamis (Bukan statis 24 Oktober)
   const today = new Date();
@@ -110,10 +170,20 @@ export default function DashboardPage() {
                   </span>
                 </div>
                 <div>
-                  <div className="text-3xl font-extrabold text-on-surface">{userPosts.length > 0 ? `${userPosts.length} Post` : '28 Post'}</div>
-                  <div className="text-[11px] text-green-600 font-bold mt-1 flex items-center gap-1">
-                    <span className="material-symbols-outlined text-xs">trending_up</span>
-                    +15% dari bulan lalu
+                  <div className="text-3xl font-extrabold text-on-surface">
+                    {loadingPosts ? 'Loading...' : `${userPosts.length} Post`}
+                  </div>
+                  <div className="text-[11px] font-bold mt-1 flex items-center gap-1">
+                    {loadingPosts ? (
+                      <span className="text-slate-400 font-medium">Loading...</span>
+                    ) : userPosts.length > 0 ? (
+                      <span className="text-green-600 flex items-center gap-1 font-bold">
+                        <span className="material-symbols-outlined text-xs">trending_up</span>
+                        {userPosts.length} post aktif di kalender
+                      </span>
+                    ) : (
+                      <span className="text-slate-400 font-medium">Belum ada post terjadwal</span>
+                    )}
                   </div>
                 </div>
               </div>
@@ -127,8 +197,12 @@ export default function DashboardPage() {
                   </span>
                 </div>
                 <div>
-                  <div className="text-3xl font-extrabold text-on-surface">94.8%</div>
-                  <div className="text-[11px] text-secondary font-bold mt-1">Performa Prime Time Optimal</div>
+                  <div className="text-3xl font-extrabold text-on-surface">
+                    {loadingPosts ? 'Loading...' : consistency.percentage}
+                  </div>
+                  <div className={`text-[11px] font-bold mt-1 ${consistency.colorClass}`}>
+                    {loadingPosts ? 'Loading...' : consistency.subtext}
+                  </div>
                 </div>
               </div>
 
@@ -225,21 +299,26 @@ export default function DashboardPage() {
                       </div>
                     );
                   })
+                ) : loadingPosts ? (
+                  <div className="text-center py-8 text-slate-400 text-sm font-medium">
+                    Loading...
+                  </div>
                 ) : (
-                  <div className="flex items-center justify-between p-4 bg-surface-container-low rounded-2xl">
-                    <div className="flex items-center gap-4">
-                      <div className="w-12 h-12 rounded-xl bg-pink-100 text-pink-700 flex items-center justify-center font-bold text-xs uppercase flex-shrink-0">IG</div>
-                      <div>
-                        <h4 className="font-bold text-sm text-on-surface">Promo Flash Sale Donat Glaze 30%</h4>
-                        <p className="text-xs text-on-surface-variant">Hari Ini • 19:00 WIB • Instagram Feed & Story</p>
-                      </div>
+                  <div className="text-center py-8 px-4 bg-surface-container-low rounded-2xl border border-dashed border-outline-variant/30">
+                    <div className="w-12 h-12 rounded-full bg-primary/10 text-primary flex items-center justify-center mx-auto mb-3">
+                      <span className="material-symbols-outlined text-2xl">event_available</span>
                     </div>
-                    <div className="flex items-center gap-3">
-                      <span className="text-xs font-bold bg-green-100 text-green-800 px-3 py-1 rounded-full">Siap Publish</span>
-                      <Link to="/calendar/agenda" className="p-2 text-slate-400 hover:text-primary rounded-lg">
-                        <span className="material-symbols-outlined text-lg">visibility</span>
-                      </Link>
-                    </div>
+                    <h4 className="font-bold text-sm text-on-surface">Belum Ada Agenda Konten Terjadwal</h4>
+                    <p className="text-xs text-on-surface-variant max-w-sm mx-auto mt-1 mb-4">
+                      Mulai susun kalender posting Anda agar konten bisnis dapat tayang secara otomatis dan konsisten.
+                    </p>
+                    <Link
+                      to="/calendar/pick-date"
+                      className="inline-flex items-center gap-2 px-4 py-2 bg-primary text-white text-xs font-bold rounded-xl shadow-xs hover:bg-primary/90 transition-colors"
+                    >
+                      <span className="material-symbols-outlined text-sm">add_circle</span>
+                      Buat Jadwal Pertama
+                    </Link>
                   </div>
                 )}
               </div>
