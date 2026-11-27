@@ -33,12 +33,8 @@ export default function Sidebar() {
       return calendarRoutes.includes(current);
     }
 
-    if (path === '/templates/add') {
-      return current === '/templates/add';
-    }
-
     if (path === '/templates') {
-      return current === '/templates' || (current.startsWith('/templates') && current !== '/templates/add');
+      return current === '/templates' || current.startsWith('/templates');
     }
 
     if (path === '/help') {

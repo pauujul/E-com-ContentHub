@@ -1,238 +1,336 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import Navbar from '../components/Navbar';
 import Sidebar from '../components/Sidebar';
+import api from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import { useUpgradeModal } from '../context/UpgradeModalContext';
 
 export default function TemplatesPage() {
+  const [templates, setTemplates] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [activeFilter, setActiveFilter] = useState('All');
   const [searchTerm, setSearchTerm] = useState('');
+
   const navigate = useNavigate();
-  const { isFreeTier } = useAuth();
+  const { isFreeTier, currentUser } = useAuth();
   const { openUpgradeModal } = useUpgradeModal();
 
-  const templates = [
-    {
-      id: 1,
-      title: 'Flash Sale Minimalist Neon',
-      category: 'Promosi',
-      format: '9:16 Vertical',
-      channel: 'Instagram Story / Reels',
-      tier: 'free',
-      image:
-        'https://lh3.googleusercontent.com/aida-public/AB6AXuBbIgOIY1vEqSgoHHMLzpfb_ErzCGmQ2WW9DAvI5yFxoDcZQNnob255a9mBzum9u5mTcazxGoFAlSqDmfxQ7K-LxgzRVtGbDAOMJUVW5buFf-2GdnFNWvBqRqmaknbYQrJpR7VGk5pTrJA_jAtArxcGoQGtkabBKNojLodvshv8Lntke92kuqwA1f42TnTU73jaARKcvtMnKm-7SN9TmHm2fDQ_dT-j8nh9hl3txOlydwZnMu0XV-0dFKi4twGjPtPGLm3Z2sDrOg',
-    },
-    {
-      id: 2,
-      title: 'Edu-Carousel Insights UMKM',
-      category: 'Edukasi',
-      format: '1:1 Square',
-      channel: 'Carousel Post',
-      tier: 'free',
-      image:
-        'https://lh3.googleusercontent.com/aida-public/AB6AXuCzaSCcgIdELtlVju__2yV1C5xRAAqT1_Ih0Af_8N2nr4vqM_nmgyFzqzATn-jSz2tms20F1mwCqKUzou_FEX7VO_DPlzlw6m6wrFTquLL-Xb3H4g-ix8AMCo66mxeKSicc8JbZe4jaAbugAT2Ew7yRiZzYV2fAb3aKaFPLKkvZ2VgnDSVyr8ad30VrVu01cgQ5u-h4ANcXsZVEQTq1Ymui1vrwmLxPmjFqQoOxP2zye7-Vs_CbBuL26HYG2MtT0zif5hMUk0401Q',
-    },
-    {
-      id: 3,
-      title: 'Fashion Elegant Lookbook Beige',
-      category: 'Promosi',
-      format: '4:5 Portrait',
-      channel: 'Instagram Feed',
-      tier: 'premium',
-      image:
-        'https://lh3.googleusercontent.com/aida-public/AB6AXuC-4_5RKg-umRzvjp_x7_KGRHOe9pv-Xfqgk0C6rpcjUYblvr5cUsN4FlcPKeZMajfPdDRIWuY5Eo5BT9Hl2riJTxOMYcykhpmUESis1dBTFu7Ls3_2TpJAmhZyG1Rpm7YpB9A3Zv5XtcWuZnVOZUuVonJ_70aKYxMWQK35Gh3KA0DH3hKfxqV_74EmQ4iTenfuUBttqpx9K8pIUYJxrE-b9feY9b4uZY2dWgYhIDB1PPC5gxB7qOB12AwE0o6MnTIU_lW9yDcj-Q',
-    },
-    {
-      id: 4,
-      title: 'Kuliner Donat Madu Warmth Studio',
-      category: 'Promosi',
-      format: '1:1 Square',
-      channel: 'Instagram / WhatsApp',
-      tier: 'premium',
-      image:
-        'https://lh3.googleusercontent.com/aida-public/AB6AXuANRHb_9iflOTj_ZWoImgNhEi4mcqVVt1UCiPwPLtgRMRzwCJo8IMItFx9LB1ypFoUubjRV9mSVUwF6343FhjS-cQUKhHRj_YWY8ZzuRrysVtIgUMep0IPh14VPTnNzt3GM__Ak36syv8XbAWzIT7hsWA8aWWggqQhv8VcYfghxL06IDi-_W5GIDAiZCmuKxU_KlkuwAdLmjFp3E1mZNuJ4FwCfBLpewG0yakz9PvYAA9bfweMAgw3waKSVMl44S3hKfGaXXNux4Q',
-    },
-    {
-      id: 5,
-      title: 'Quotes Inspirasi & Motivasi Bisnis',
-      category: 'Engagement',
-      format: '1:1 Square',
-      channel: 'Daily Story',
-      tier: 'free',
-      image:
-        'https://lh3.googleusercontent.com/aida-public/AB6AXuAfLJh7RN9TgJ2cILn3EtmgBWR6xOMzLX16G1Wu4AQlbdIDTeobeF5c4Tyqce90WUIDTIZAG7i3DLIKHbhNNIV5vGBLz7GT0gcIRAxzArxKRlFmTdlf_JfFbOEFuN_G9Uh46CcAUSGJyzhG5thwjQnlXTM6mAIPDDUlH8dcexqk_mdoI-682Z9gBoLKNUPUOfslYxuP_SWW8HgpOJGCbTOQ-emZ0QWJF4B9WfXfVDSZCD18Cmj2jSeaYmDoto5QnwG6NSgduFcEoA',
-    },
-    {
-      id: 6,
-      title: 'Customer Review & Rating Showcase',
-      category: 'Engagement',
-      format: '9:16 Vertical',
-      channel: 'TikTok / Story',
-      tier: 'premium',
-      image:
-        'https://lh3.googleusercontent.com/aida-public/AB6AXuBfoPAIgrso-NHEurkslE8-Op6KOwjQNK9T8qX-bFyGghhi2re3u8gsYyaqTZ7-Sq6ZPAJa2rOHSFHKDFiDj4ETYiaex6GPSVPJ9f1hibtDf_YGfrciy7D6DObnB5QdZHBf8VS_wZtv3fXb1Yp9ktjVuGWRYuRmQqwQ_gBnWNXB7NHIEmKCMtJqRvzovJHP-Ej7t9UQp8b1B4XIKODUJP2RVfgzJ-wcSDDaPpgMAkQI4N0Ulef1FxKgVOckBGIDwzPW5AyAX2yW8w',
-    },
-  ];
+  // Reset scroll ke atas saat halaman dibuka
+  useEffect(() => {
+    window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
+  }, []);
+
+  // Fetch templates secara dinamis dari API
+  const fetchTemplates = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const res = await api.getTemplates();
+      if (res && res.success && Array.isArray(res.data)) {
+        setTemplates(res.data);
+      } else {
+        setTemplates([]);
+      }
+    } catch (err) {
+      console.error('Error fetching templates:', err);
+      setError(err.response?.data?.message || err.message || 'Gagal memuat pustaka template.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchTemplates();
+  }, []);
 
   const handleTemplateClick = (tpl) => {
-    if (isFreeTier && tpl.tier === 'premium') {
+    const isPremium = (tpl.access_tier || tpl.tier || '').toLowerCase() === 'premium' || Boolean(tpl.is_premium);
+    const isLocked = Boolean(tpl.is_locked) || (isFreeTier && isPremium);
+
+    if (isLocked) {
       openUpgradeModal({
         reason: 'premium_template',
         templateTitle: tpl.title,
       });
       return;
     }
-    navigate(`/templates/preview/${tpl.id}`);
-  };
 
-  const handleSearchSubmit = (e) => {
-    e.preventDefault();
-    if (searchTerm.trim()) {
-      navigate(`/templates/results?q=${encodeURIComponent(searchTerm.trim())}`);
+    const canvaLink = tpl.canva_url || tpl.canva_link;
+    if (canvaLink) {
+      window.open(canvaLink, '_blank', 'noopener,noreferrer');
+    } else {
+      navigate(`/templates/preview/${tpl.id}`);
     }
   };
 
+  // Filter 6 Kategori & Format + Real-Time Search Term
   const filteredTemplates = templates.filter((t) => {
-    if (activeFilter === 'All') return true;
-    if (activeFilter === 'Promosi' && t.category === 'Promosi') return true;
-    if (activeFilter === 'Edukasi' && t.category === 'Edukasi') return true;
-    if (activeFilter === 'Engagement' && t.category === 'Engagement') return true;
-    if (activeFilter === '1:1' && t.format.includes('1:1')) return true;
-    if (activeFilter === '9:16' && t.format.includes('9:16')) return true;
-    return true;
+    const q = searchTerm.trim().toLowerCase();
+    const matchesSearch =
+      q === '' ||
+      (t.title && t.title.toLowerCase().includes(q)) ||
+      (t.description && t.description.toLowerCase().includes(q)) ||
+      (t.category && t.category.toLowerCase().includes(q));
+
+    let matchesFilter = true;
+    if (activeFilter === 'Promosi' || activeFilter === 'Edukasi' || activeFilter === 'Engagement') {
+      matchesFilter = t.category === activeFilter;
+    } else if (activeFilter === '1:1') {
+      const fmt = t.format_ratio || t.format || '';
+      matchesFilter = fmt.includes('1:1');
+    } else if (activeFilter === '9:16') {
+      const fmt = t.format_ratio || t.format || '';
+      matchesFilter = fmt.includes('9:16');
+    }
+
+    return matchesSearch && matchesFilter;
   });
 
+  const filterButtons = [
+    { key: 'All', label: 'Semua Template' },
+    { key: 'Promosi', label: 'Promosi' },
+    { key: 'Edukasi', label: 'Edukasi' },
+    { key: 'Engagement', label: 'Engagement' },
+    { key: '1:1', label: 'Format 1:1' },
+    { key: '9:16', label: 'Format 9:16' },
+  ];
+
   return (
-    <div className="min-h-screen bg-surface text-on-surface">
+    <div className="min-h-screen bg-slate-50 text-slate-800">
       <Navbar />
       <Sidebar />
 
-      <main className="ml-64 flex-1 p-8 pt-6 min-h-screen">
+      <main className="ml-0 md:ml-64 flex-1 p-6 sm:p-8 pt-6 min-h-screen">
         <div className="max-w-7xl mx-auto space-y-8">
           {/* Top Search & Title Header */}
           <section className="flex flex-col md:flex-row md:items-end justify-between gap-6">
             <div>
-              <span className="text-xs font-bold text-primary uppercase tracking-widest bg-primary-fixed px-3 py-1 rounded-full mb-2 inline-block">Curated Design Assets</span>
-              <h1 className="text-3xl md:text-4xl font-extrabold tracking-tight text-on-background">Template Library</h1>
-              <p className="text-sm text-on-surface-variant max-w-lg mt-1">Koleksi aset desain visual siap pakai Canva yang dirancang profesional untuk kebutuhan UMKM.</p>
+              <span className="text-xs font-bold text-primary uppercase tracking-widest bg-primary/10 px-3 py-1 rounded-full mb-2 inline-block">
+                Curated Design Assets
+              </span>
+              <h1 className="text-3xl md:text-4xl font-extrabold tracking-tight text-slate-900">
+                Template Library
+              </h1>
+              <p className="text-sm text-slate-500 max-w-lg mt-1">
+                Koleksi aset desain visual siap pakai Canva yang dirancang profesional untuk kebutuhan UMKM.
+              </p>
             </div>
 
-            {/* Search Input Box */}
-            <form onSubmit={handleSearchSubmit} className="relative w-full md:w-96">
-              <span className="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-outline">search</span>
+            {/* Real-time Search Input Box */}
+            <div className="relative w-full md:w-96">
+              <span className="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-slate-400">
+                search
+              </span>
               <input
                 type="text"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 placeholder="Cari template (Fashion, Kuliner, Promo)..."
-                className="w-full pl-12 pr-4 py-3 bg-surface-container-high border-none rounded-2xl focus:ring-2 focus:ring-primary focus:bg-white transition-all text-sm text-on-surface placeholder:text-outline/50 shadow-sm"
+                className="w-full pl-12 pr-10 py-3 bg-white border border-slate-200 rounded-2xl focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all text-sm text-slate-800 placeholder:text-slate-400 shadow-xs outline-none"
               />
-            </form>
+              {searchTerm && (
+                <button
+                  type="button"
+                  onClick={() => setSearchTerm('')}
+                  className="absolute right-3.5 top-1/2 -translate-y-1/2 w-5 h-5 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-500 flex items-center justify-center cursor-pointer text-xs"
+                >
+                  <span className="material-symbols-outlined text-sm">close</span>
+                </button>
+              )}
+            </div>
           </section>
 
-          {/* Filter Chips */}
+          {/* 6 Filter Buttons (Solid Blue Active State) */}
           <div className="flex flex-wrap gap-2.5 items-center">
-            {['All', 'Promosi', 'Edukasi', 'Engagement'].map((f) => (
-              <button
-                key={f}
-                onClick={() => setActiveFilter(f)}
-                className={`px-4 py-2 rounded-full text-xs font-bold transition-all ${
-                  activeFilter === f ? 'bg-primary text-white shadow-md shadow-primary/20' : 'bg-surface-container-highest text-on-surface-variant hover:bg-surface-container-high'
-                }`}
-              >
-                {f === 'All' ? 'Semua Template' : f}
-              </button>
-            ))}
-
-            <div className="h-6 w-px bg-outline-variant/30 mx-2"></div>
-
-            {['1:1', '9:16'].map((format) => (
-              <button
-                key={format}
-                onClick={() => setActiveFilter(format)}
-                className={`px-4 py-2 rounded-full text-xs font-bold transition-all ${activeFilter === format ? 'bg-secondary text-white shadow-sm' : 'bg-secondary-fixed text-on-secondary-fixed-variant hover:opacity-90'}`}
-              >
-                Format {format}
-              </button>
-            ))}
-
-            <Link to="/templates/search" className="ml-auto text-xs font-bold text-primary hover:underline flex items-center gap-1">
-              <span className="material-symbols-outlined text-sm">tune</span>
-              Pencarian Lanjutan &rarr;
-            </Link>
-          </div>
-
-          {/* Pinterest / Bento Grid */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 gap-8">
-            {filteredTemplates.map((tpl) => {
-              const isLockedForUser = isFreeTier && tpl.tier === 'premium';
+            {filterButtons.map((btn, index) => {
+              const isActive = activeFilter === btn.key;
               return (
-                <div
-                  key={tpl.id}
-                  onClick={() => handleTemplateClick(tpl)}
-                  className={`group cursor-pointer bg-surface-container-lowest rounded-3xl overflow-hidden border shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col justify-between ${
-                    isLockedForUser
-                      ? 'border-amber-300/60 ring-1 ring-amber-300/30'
-                      : 'border-outline-variant/15'
-                  }`}
-                >
-                  <div className="relative aspect-[4/5] overflow-hidden bg-surface-container-low">
-                    <img alt={tpl.title} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" src={tpl.image} />
-
-                    {/* Premium / Lock Badge */}
-                    {tpl.tier === 'premium' && (
-                      <div
-                        className={`absolute top-4 left-4 text-[10px] font-black px-2.5 py-1 rounded-full uppercase tracking-wider shadow-sm flex items-center gap-1 z-10 ${
-                          isLockedForUser ? 'bg-amber-600 text-white' : 'bg-emerald-600 text-white'
-                        }`}
-                      >
-                        <span className="material-symbols-outlined text-xs">
-                          {isLockedForUser ? 'lock' : 'workspace_premium'}
-                        </span>
-                        <span>{isLockedForUser ? 'Terkunci (Free)' : 'Pro & Plus'}</span>
-                      </div>
-                    )}
-
-                    {/* Format Badge */}
-                    <div className="absolute top-4 right-4 bg-white/90 backdrop-blur-md text-[10px] font-bold px-2.5 py-1 rounded-full uppercase tracking-wider text-primary shadow-xs z-10">
-                      {tpl.format}
-                    </div>
-
-                    {/* Hover Overlay Button */}
-                    <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center p-6 z-20">
-                      {isLockedForUser ? (
-                        <button className="px-6 py-3 bg-amber-500 text-white font-extrabold text-xs rounded-xl shadow-lg hover:scale-105 transition-transform flex items-center gap-1.5 cursor-pointer">
-                          <span className="material-symbols-outlined text-base">lock</span>
-                          Upgrade ke Pro / Plus
-                        </button>
-                      ) : (
-                        <button className="px-6 py-3 bg-white text-primary font-bold text-xs rounded-xl shadow-lg hover:scale-105 transition-transform flex items-center gap-1.5 cursor-pointer">
-                          <span className="material-symbols-outlined text-base">visibility</span>
-                          Lihat Preview & Edit di Canva
-                        </button>
-                      )}
-                    </div>
-                  </div>
-
-                  <div className="p-5">
-                    <div className="flex items-center justify-between text-[11px] font-bold text-outline uppercase tracking-wider mb-1">
-                      <span>{tpl.category}</span>
-                      <span className="text-secondary">{tpl.channel}</span>
-                    </div>
-                    <h3 className="font-bold text-base text-on-surface group-hover:text-primary transition-colors flex items-center justify-between">
-                      <span>{tpl.title}</span>
-                      {isLockedForUser && (
-                        <span className="material-symbols-outlined text-sm text-amber-500" title="Khusus Pro & Plus">
-                          lock
-                        </span>
-                      )}
-                    </h3>
-                  </div>
-                </div>
+                <React.Fragment key={btn.key}>
+                  {index === 4 && <div className="h-6 w-px bg-slate-300 mx-1 hidden sm:block"></div>}
+                  <button
+                    type="button"
+                    onClick={() => setActiveFilter(btn.key)}
+                    className={`px-4 py-2 rounded-xl text-xs transition-all cursor-pointer select-none ${
+                      isActive
+                        ? 'bg-primary text-white shadow-md shadow-primary/25 font-extrabold scale-[1.02]'
+                        : 'bg-white border border-slate-200 text-slate-600 hover:bg-slate-100 hover:text-slate-900 font-semibold shadow-2xs'
+                    }`}
+                  >
+                    {btn.label}
+                  </button>
+                </React.Fragment>
               );
             })}
+
+            <span className="ml-auto text-xs font-bold text-slate-400 hidden sm:inline-block">
+              Menampilkan {filteredTemplates.length} Template
+            </span>
           </div>
+
+          {/* Loading State */}
+          {loading && (
+            <div className="py-24 flex flex-col items-center justify-center text-slate-400">
+              <span className="material-symbols-outlined text-4xl animate-spin text-primary mb-3">
+                progress_activity
+              </span>
+              <p className="text-sm font-bold text-slate-600">Memuat koleksi template Canva...</p>
+              <p className="text-xs text-slate-400 mt-1">Mengambil desain terbaru dari database</p>
+            </div>
+          )}
+
+          {/* Error State */}
+          {!loading && error && (
+            <div className="py-16 text-center bg-red-50/60 rounded-3xl border border-red-200 p-8 space-y-3">
+              <span className="material-symbols-outlined text-4xl text-red-500">error</span>
+              <h3 className="text-base font-extrabold text-red-800">Gagal Memuat Template</h3>
+              <p className="text-xs text-red-600 max-w-md mx-auto">{error}</p>
+              <button
+                type="button"
+                onClick={fetchTemplates}
+                className="px-4 py-2 bg-red-600 text-white rounded-xl text-xs font-bold hover:bg-red-700 transition-all cursor-pointer shadow-sm"
+              >
+                Coba Lagi
+              </button>
+            </div>
+          )}
+
+          {/* Empty State */}
+          {!loading && !error && filteredTemplates.length === 0 && (
+            <div className="py-20 text-center bg-white rounded-3xl border border-dashed border-slate-200 p-8 space-y-3 shadow-xs">
+              <div className="w-16 h-16 rounded-2xl bg-slate-100 text-slate-400 flex items-center justify-center mx-auto">
+                <span className="material-symbols-outlined text-3xl">auto_awesome_motion</span>
+              </div>
+              <h3 className="text-base font-extrabold text-slate-800">Tidak Ada Template Ditemukan</h3>
+              <p className="text-xs text-slate-500 max-w-sm mx-auto">
+                {searchTerm
+                  ? `Tidak ada template yang cocok dengan kata kunci "${searchTerm}" pada filter yang dipilih.`
+                  : 'Belum ada template aktif pada kategori ini.'}
+              </p>
+              <button
+                type="button"
+                onClick={() => {
+                  setActiveFilter('All');
+                  setSearchTerm('');
+                }}
+                className="mt-2 px-4 py-2 bg-primary text-white rounded-xl text-xs font-bold hover:bg-primary/90 transition-all cursor-pointer shadow-sm"
+              >
+                Reset Filter & Pencarian
+              </button>
+            </div>
+          )}
+
+          {/* Pinterest / Bento Grid Template Cards */}
+          {!loading && !error && filteredTemplates.length > 0 && (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 gap-6 animate-in fade-in duration-200">
+              {filteredTemplates.map((tpl) => {
+                const isPremium = (tpl.access_tier || tpl.tier || '').toLowerCase() === 'premium' || Boolean(tpl.is_premium);
+                const isLockedForUser = Boolean(tpl.is_locked) || (isFreeTier && isPremium);
+                const formatLabel = tpl.format_ratio || tpl.format || '1:1';
+                const thumbnailSrc = tpl.thumbnail_url || tpl.image;
+
+                let catBadgeStyle = 'bg-amber-50 text-amber-700 border-amber-200';
+                if (tpl.category === 'Edukasi') catBadgeStyle = 'bg-blue-50 text-blue-700 border-blue-200';
+                if (tpl.category === 'Engagement') catBadgeStyle = 'bg-purple-50 text-purple-700 border-purple-200';
+
+                return (
+                  <div
+                    key={tpl.id}
+                    onClick={() => handleTemplateClick(tpl)}
+                    className={`group cursor-pointer bg-white rounded-3xl overflow-hidden border shadow-xs hover:shadow-xl transition-all duration-300 flex flex-col justify-between ${
+                      isLockedForUser
+                        ? 'border-amber-300/60 ring-1 ring-amber-300/30'
+                        : 'border-slate-200 hover:border-primary/40'
+                    }`}
+                  >
+                    <div className="relative aspect-[4/5] overflow-hidden bg-slate-100">
+                      <img
+                        alt={tpl.title}
+                        className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                        src={thumbnailSrc}
+                        onError={(e) => {
+                          e.target.onerror = null;
+                          e.target.src = 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=800&auto=format&fit=crop&q=80';
+                        }}
+                      />
+
+                      {/* Tier Badge: Free vs Premium */}
+                      {isPremium ? (
+                        <div
+                          className={`absolute top-4 left-4 text-[10px] font-extrabold px-2.5 py-1 rounded-full uppercase tracking-wider shadow-sm flex items-center gap-1 z-10 ${
+                            isLockedForUser ? 'bg-amber-600 text-white' : 'bg-amber-500 text-white'
+                          }`}
+                        >
+                          <span className="material-symbols-outlined text-xs">
+                            {isLockedForUser ? 'lock' : 'workspace_premium'}
+                          </span>
+                          <span>{isLockedForUser ? 'Terkunci (Free)' : 'Pro & Plus'}</span>
+                        </div>
+                      ) : (
+                        <div className="absolute top-4 left-4 bg-emerald-600 text-white text-[10px] font-extrabold px-2.5 py-1 rounded-full uppercase tracking-wider shadow-sm flex items-center gap-1 z-10">
+                          <span className="material-symbols-outlined text-xs">check_circle</span>
+                          <span>Free</span>
+                        </div>
+                      )}
+
+                      {/* Format Badge (1:1 / 9:16) */}
+                      <div className="absolute top-4 right-4 bg-white/90 backdrop-blur-md text-[10px] font-bold px-2.5 py-1 rounded-full uppercase tracking-wider text-slate-700 border border-slate-200/60 shadow-xs z-10">
+                        {formatLabel}
+                      </div>
+
+                      {/* Hover Overlay Button */}
+                      <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center p-6 z-20">
+                        {isLockedForUser ? (
+                          <button
+                            type="button"
+                            className="px-5 py-2.5 bg-amber-500 text-white font-extrabold text-xs rounded-xl shadow-lg hover:scale-105 transition-transform flex items-center gap-1.5 cursor-pointer"
+                          >
+                            <span className="material-symbols-outlined text-base">lock</span>
+                            Upgrade ke Pro / Plus
+                          </button>
+                        ) : (
+                          <button
+                            type="button"
+                            className="px-5 py-2.5 bg-white text-primary font-bold text-xs rounded-xl shadow-lg hover:scale-105 transition-transform flex items-center gap-1.5 cursor-pointer"
+                          >
+                            <span className="material-symbols-outlined text-base">open_in_new</span>
+                            Buka Template di Canva
+                          </button>
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="p-5 space-y-2">
+                      <div className="flex items-center justify-between text-[11px] font-bold">
+                        <span className={`px-2 py-0.5 rounded-md border text-[10px] uppercase tracking-wider ${catBadgeStyle}`}>
+                          {tpl.category || 'Promosi'}
+                        </span>
+                        <span className="text-slate-400 font-mono text-[10px]">
+                          {formatLabel}
+                        </span>
+                      </div>
+
+                      <h3 className="font-extrabold text-sm text-slate-800 group-hover:text-primary transition-colors flex items-center justify-between">
+                        <span className="truncate">{tpl.title}</span>
+                        {isLockedForUser && (
+                          <span className="material-symbols-outlined text-sm text-amber-500 flex-shrink-0 ml-1" title="Khusus Pro & Plus">
+                            lock
+                          </span>
+                        )}
+                      </h3>
+
+                      {tpl.description && (
+                        <p className="text-xs text-slate-500 line-clamp-2 leading-relaxed">
+                          {tpl.description}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
         </div>
       </main>
     </div>

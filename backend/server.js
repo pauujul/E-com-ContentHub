@@ -3408,6 +3408,337 @@ app.get('/api/admin/stats', async (req, res) => {
   }
 });
 
+// ==========================================
+// MODUL CMS KELOLA TEMPLATE & TEMPLATE LIBRARY
+// (Admin CRUD & User Workspace Library)
+// ==========================================
+
+// Helper validasi tautan Canva
+function validateCanvaUrl(url) {
+  if (!url || typeof url !== 'string') {
+    return { valid: false, message: 'URL template Canva wajib diisi.' };
+  }
+  const trimmed = url.trim();
+  if (!trimmed.toLowerCase().includes('canva.com')) {
+    return { valid: false, message: 'URL template harus berasal dari domain resmi Canva (canva.com).' };
+  }
+  if (trimmed.toLowerCase().includes('/edit')) {
+    return { valid: false, message: 'Gunakan Template Link Canva (mode=preview), bukan link editor (/edit) agar desain master tidak rusak.' };
+  }
+  if (!trimmed.includes('mode=preview')) {
+    return { valid: false, message: 'Gunakan Template Link Canva (mode=preview), bukan link editor (/edit) agar desain master tidak rusak.' };
+  }
+  return { valid: true, cleanUrl: trimmed };
+}
+
+// Helper ekstraksi user id dan role dari request
+function extractUserFromRequest(req) {
+  let userId = req.query.user_id || req.query.id || req.headers['x-user-id'];
+  let role = null;
+  const authHeader = req.headers.authorization;
+  if (authHeader && authHeader.startsWith('Bearer ')) {
+    try {
+      const raw = authHeader.split(' ')[1];
+      if (raw.includes('.')) {
+        const decoded = JSON.parse(Buffer.from(raw.split('.')[1], 'base64').toString('utf8'));
+        if (!userId) userId = decoded.id || decoded.userId || decoded.sub;
+        if (!role) role = decoded.role;
+      } else {
+        const decoded = JSON.parse(Buffer.from(raw, 'base64').toString('ascii'));
+        if (!userId) userId = decoded.id || decoded.userId;
+        if (!role) role = decoded.role;
+      }
+    } catch (e) {}
+  }
+  return { userId: userId ? parseInt(userId, 10) : null, role };
+}
+
+// GET /api/template-categories - Daftar kategori template
+app.get('/api/template-categories', async (req, res) => {
+  try {
+    const result = await db.query('SELECT * FROM template_categories ORDER BY id ASC');
+    res.json({ success: true, data: result.rows });
+  } catch (error) {
+    res.status(500).json({ success: false, message: 'Gagal memuat kategori template.' });
+  }
+});
+
+// 1. GET /api/admin/templates - Daftar seluruh template untuk Admin
+app.get('/api/admin/templates', async (req, res) => {
+  try {
+    const { search, category, format, tier } = req.query;
+    let query = 'SELECT * FROM content_templates WHERE 1=1';
+    const params = [];
+
+    if (category && category !== 'all' && category !== 'Semua') {
+      params.push(category);
+      query += ` AND category = $${params.length}`;
+    }
+
+    if (format && format !== 'all' && format !== 'Semua') {
+      params.push(format);
+      query += ` AND format_ratio = $${params.length}`;
+    }
+
+    if (tier && tier !== 'all' && tier !== 'Semua') {
+      params.push(tier.toLowerCase());
+      query += ` AND LOWER(access_tier) = $${params.length}`;
+    }
+
+    if (search && search.trim()) {
+      params.push(`%${search.trim().toLowerCase()}%`);
+      query += ` AND (LOWER(title) LIKE $${params.length} OR LOWER(COALESCE(description, '')) LIKE $${params.length})`;
+    }
+
+    query += ' ORDER BY created_at DESC';
+
+    const result = await db.query(query, params);
+    res.json({
+      success: true,
+      data: result.rows,
+      total: result.rows.length
+    });
+  } catch (error) {
+    console.error('Error fetching admin templates:', error);
+    res.status(500).json({ success: false, message: 'Gagal memuat daftar template.', error: error.message });
+  }
+});
+
+// 2. POST /api/admin/templates - Tambah template baru
+app.post('/api/admin/templates', async (req, res) => {
+  try {
+    const {
+      title,
+      description = '',
+      category = 'Promosi',
+      format_ratio = '1:1',
+      access_tier = 'free',
+      thumbnail_url,
+      canva_url,
+      is_active = true
+    } = req.body;
+
+    if (!title || !title.trim()) {
+      return res.status(400).json({ success: false, message: 'Judul template wajib diisi.' });
+    }
+
+    if (!thumbnail_url || !thumbnail_url.trim()) {
+      return res.status(400).json({ success: false, message: 'URL thumbnail desain wajib diisi.' });
+    }
+
+    const canvaVal = validateCanvaUrl(canva_url);
+    if (!canvaVal.valid) {
+      return res.status(400).json({ success: false, message: canvaVal.message });
+    }
+
+    const cleanTitle = title.trim();
+    const cleanDesc = (description || '').trim();
+    const cleanCategory = category || 'Promosi';
+    const cleanFormat = format_ratio || '1:1';
+    const cleanTier = (access_tier || 'free').toLowerCase() === 'premium' ? 'premium' : 'free';
+    const cleanThumbnail = thumbnail_url.trim();
+    const cleanCanvaUrl = canvaVal.cleanUrl;
+    const activeBool = is_active !== false;
+    const isPremiumBool = cleanTier === 'premium';
+
+    const result = await db.query(
+      `INSERT INTO content_templates (
+        title, description, category, format_ratio, access_tier, thumbnail_url, canva_url, is_active, created_at, updated_at,
+        copywriting_idea, canva_link, is_premium
+      )
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, NOW(), NOW(), $9, $10, $11)
+      RETURNING *;`,
+      [
+        cleanTitle, cleanDesc, cleanCategory, cleanFormat, cleanTier, cleanThumbnail, cleanCanvaUrl, activeBool,
+        cleanDesc, cleanCanvaUrl, isPremiumBool
+      ]
+    );
+
+    res.status(201).json({
+      success: true,
+      message: 'Template berhasil ditambahkan.',
+      data: result.rows[0]
+    });
+  } catch (error) {
+    console.error('Error creating template:', error);
+    res.status(500).json({ success: false, message: 'Gagal menambahkan template.', error: error.message });
+  }
+});
+
+// 3. PUT /api/admin/templates/:id - Update template yang ada
+app.put('/api/admin/templates/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const resolvedId = parseInt(id, 10);
+    if (!resolvedId) {
+      return res.status(400).json({ success: false, message: 'ID template tidak valid.' });
+    }
+
+    const existingRes = await db.query('SELECT * FROM content_templates WHERE id = $1', [resolvedId]);
+    if (existingRes.rows.length === 0) {
+      return res.status(404).json({ success: false, message: 'Template tidak ditemukan.' });
+    }
+    const current = existingRes.rows[0];
+
+    const {
+      title = current.title,
+      description = current.description,
+      category = current.category,
+      format_ratio = current.format_ratio,
+      access_tier = current.access_tier,
+      thumbnail_url = current.thumbnail_url,
+      canva_url = current.canva_url,
+      is_active = current.is_active
+    } = req.body;
+
+    if (canva_url) {
+      const canvaVal = validateCanvaUrl(canva_url);
+      if (!canvaVal.valid) {
+        return res.status(400).json({ success: false, message: canvaVal.message });
+      }
+    }
+
+    const cleanTitle = (title || current.title).trim();
+    const cleanDesc = (description !== undefined ? description : current.description || '').trim();
+    const cleanCategory = category || current.category || 'Promosi';
+    const cleanFormat = format_ratio || current.format_ratio || '1:1';
+    const cleanTier = ((access_tier || current.access_tier || 'free').toLowerCase() === 'premium') ? 'premium' : 'free';
+    const cleanThumbnail = (thumbnail_url || current.thumbnail_url).trim();
+    const cleanCanvaUrl = (canva_url || current.canva_url).trim();
+    const activeBool = is_active !== undefined ? Boolean(is_active) : current.is_active;
+    const isPremiumBool = cleanTier === 'premium';
+
+    const updateRes = await db.query(
+      `UPDATE content_templates
+       SET title = $1, description = $2, category = $3, format_ratio = $4, access_tier = $5,
+           thumbnail_url = $6, canva_url = $7, is_active = $8, updated_at = NOW(),
+           copywriting_idea = $9, canva_link = $10, is_premium = $11
+       WHERE id = $12
+       RETURNING *;`,
+      [
+        cleanTitle, cleanDesc, cleanCategory, cleanFormat, cleanTier,
+        cleanThumbnail, cleanCanvaUrl, activeBool,
+        cleanDesc, cleanCanvaUrl, isPremiumBool,
+        resolvedId
+      ]
+    );
+
+    res.json({
+      success: true,
+      message: 'Template berhasil diperbarui.',
+      data: updateRes.rows[0]
+    });
+  } catch (error) {
+    console.error('Error updating template:', error);
+    res.status(500).json({ success: false, message: 'Gagal memperbarui template.', error: error.message });
+  }
+});
+
+// 4. DELETE /api/admin/templates/:id - Hapus template
+app.delete('/api/admin/templates/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const resolvedId = parseInt(id, 10);
+    if (!resolvedId) {
+      return res.status(400).json({ success: false, message: 'ID template tidak valid.' });
+    }
+
+    const deleteRes = await db.query('DELETE FROM content_templates WHERE id = $1 RETURNING id;', [resolvedId]);
+    if (deleteRes.rows.length === 0) {
+      return res.status(404).json({ success: false, message: 'Template tidak ditemukan atau sudah dihapus.' });
+    }
+
+    res.json({
+      success: true,
+      message: 'Template berhasil dihapus secara permanen.'
+    });
+  } catch (error) {
+    console.error('Error deleting template:', error);
+    res.status(500).json({ success: false, message: 'Gagal menghapus template.', error: error.message });
+  }
+});
+
+// 5. GET /api/templates - Endpoint Template Library Workspace Pengguna (dengan Tier Protection)
+app.get('/api/templates', async (req, res) => {
+  try {
+    const { category, format, search, tier: filterTier } = req.query;
+    const { userId } = extractUserFromRequest(req);
+
+    // Cek tier user saat ini (default 'free' jika tidak login atau belum langganan)
+    let userTier = 'free';
+    if (userId) {
+      userTier = await getUserSubscriptionTier(userId);
+    }
+    const hasFullAccess = userTier === 'pro' || userTier === 'plus' || userTier === 'admin';
+
+    let query = 'SELECT * FROM content_templates WHERE is_active = TRUE';
+    const params = [];
+
+    // Filter kategori
+    if (category && category !== 'all' && category !== 'Semua' && category !== 'Semua Template') {
+      params.push(category);
+      query += ` AND category = $${params.length}`;
+    }
+
+    // Filter format rasio (1:1, 9:16)
+    if (format && format !== 'all' && format !== 'Semua') {
+      params.push(format);
+      query += ` AND format_ratio = $${params.length}`;
+    }
+
+    // Filter tier (jika dipanggil spesifik)
+    if (filterTier && filterTier !== 'all' && filterTier !== 'Semua') {
+      params.push(filterTier.toLowerCase());
+      query += ` AND LOWER(access_tier) = $${params.length}`;
+    }
+
+    // Filter search keyword
+    if (search && search.trim()) {
+      params.push(`%${search.trim().toLowerCase()}%`);
+      query += ` AND (LOWER(title) LIKE $${params.length} OR LOWER(COALESCE(description, '')) LIKE $${params.length})`;
+    }
+
+    query += ' ORDER BY created_at DESC';
+
+    const result = await db.query(query, params);
+
+    // Keamanan / Proteksi Tier: Sembunyikan canva_url untuk template premium jika pengguna masih Free
+    const securedTemplates = result.rows.map((tmpl) => {
+      const isPremium = (tmpl.access_tier || '').toLowerCase() === 'premium';
+      const isLocked = isPremium && !hasFullAccess;
+
+      return {
+        id: tmpl.id,
+        title: tmpl.title,
+        description: tmpl.description || tmpl.copywriting_idea || '',
+        category: tmpl.category || 'Promosi',
+        format_ratio: tmpl.format_ratio || '1:1',
+        access_tier: tmpl.access_tier || (tmpl.is_premium ? 'premium' : 'free'),
+        thumbnail_url: tmpl.thumbnail_url,
+        canva_url: isLocked ? null : (tmpl.canva_url || tmpl.canva_link),
+        is_locked: isLocked,
+        is_active: tmpl.is_active,
+        created_at: tmpl.created_at,
+        updated_at: tmpl.updated_at
+      };
+    });
+
+    res.json({
+      success: true,
+      data: securedTemplates,
+      meta: {
+        total: securedTemplates.length,
+        user_tier: userTier,
+        has_full_access: hasFullAccess
+      }
+    });
+  } catch (error) {
+    console.error('Error fetching workspace templates:', error);
+    res.status(500).json({ success: false, message: 'Gagal memuat template library.', error: error.message });
+  }
+});
+
+
 // Jalankan Server Backend dengan fallback port otomatis jika port default terisi
 function startServer(portToUse) {
   const currentPort = parseInt(portToUse, 10) || 5000;

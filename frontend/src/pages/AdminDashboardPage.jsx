@@ -90,6 +90,26 @@ export default function AdminDashboardPage() {
   });
   const [savingHeroSlide, setSavingHeroSlide] = useState(false);
 
+  // 3C. Content Templates CMS State (Kelola Template Canva)
+  const [adminTemplates, setAdminTemplates] = useState([]);
+  const [templateSearchQuery, setTemplateSearchQuery] = useState('');
+  const [templateCategoryFilter, setTemplateCategoryFilter] = useState('all');
+  const [templateFormatFilter, setTemplateFormatFilter] = useState('all');
+  const [templateTierFilter, setTemplateTierFilter] = useState('all');
+  const [templateModalOpen, setTemplateModalOpen] = useState(false);
+  const [editingTemplate, setEditingTemplate] = useState(null);
+  const [templateForm, setTemplateForm] = useState({
+    title: '',
+    description: '',
+    category: 'Promosi',
+    format_ratio: '1:1',
+    access_tier: 'free',
+    thumbnail_url: '',
+    canva_url: '',
+    is_active: true,
+  });
+  const [savingTemplate, setSavingTemplate] = useState(false);
+
   // 4 & 5. Legal State & Sub-tab
   const [legalSubTab, setLegalSubTab] = useState('terms'); // 'terms' | 'privacy'
   const [termsData, setTermsData] = useState(null);
@@ -165,6 +185,7 @@ export default function AdminDashboardPage() {
         settingsRes,
         postsRes,
         heroSlidesRes,
+        templatesRes,
       ] = await Promise.all([
         api.getAdminStats().catch((e) => { console.warn('stats err:', e); return { success: false, data: null }; }),
         api.getOrders().catch((e) => { console.warn('orders err:', e); return { success: false, data: [] }; }),
@@ -178,6 +199,7 @@ export default function AdminDashboardPage() {
         api.getSettings().catch((e) => { console.warn('settings err:', e); return { success: false, data: null }; }),
         api.getPosts().catch((e) => { console.warn('posts err:', e); return { success: false, data: [] }; }),
         api.getAdminHeroSlides().catch((e) => { console.warn('hero slides err:', e); return { success: false, data: [] }; }),
+        api.getAdminTemplates().catch((e) => { console.warn('admin templates err:', e); return { success: false, data: [] }; }),
       ]);
 
       if (statsRes.success) setStats(statsRes.data);
@@ -186,6 +208,7 @@ export default function AdminDashboardPage() {
       if (productsRes.success) setPlans(productsRes.data);
       if (postsRes && postsRes.success) setAllUserPosts(postsRes.data);
       if (heroSlidesRes && heroSlidesRes.success) setHeroSlides(heroSlidesRes.data);
+      if (templatesRes && templatesRes.success) setAdminTemplates(templatesRes.data);
       if (termsRes.success && termsRes.data?.length > 0) setTermsData(termsRes.data[0]);
       if (privacyRes.success && privacyRes.data?.length > 0) setPrivacyData(privacyRes.data[0]);
       if (partnershipsRes.success && partnershipsRes.data?.length > 0) setPartnershipData(partnershipsRes.data[0]);
@@ -497,6 +520,129 @@ export default function AdminDashboardPage() {
     }
   };
 
+  // 3C. Content Templates CMS Handlers (Kelola Template)
+  const handleOpenAddTemplateModal = () => {
+    setEditingTemplate(null);
+    setTemplateForm({
+      title: '',
+      description: '',
+      category: 'Promosi',
+      format_ratio: '1:1',
+      access_tier: 'free',
+      thumbnail_url: '',
+      canva_url: '',
+      is_active: true,
+    });
+    setTemplateModalOpen(true);
+  };
+
+  const handleOpenEditTemplateModal = (template) => {
+    setEditingTemplate(template);
+    setTemplateForm({
+      title: template.title || '',
+      description: template.description || '',
+      category: template.category || 'Promosi',
+      format_ratio: template.format_ratio || '1:1',
+      access_tier: template.access_tier || 'free',
+      thumbnail_url: template.thumbnail_url || '',
+      canva_url: template.canva_url || '',
+      is_active: template.is_active !== false,
+    });
+    setTemplateModalOpen(true);
+  };
+
+  const handleToggleTemplateActive = async (template) => {
+    try {
+      const updatedStatus = !template.is_active;
+      // Optimistic update
+      setAdminTemplates((prev) =>
+        prev.map((t) => (t.id === template.id ? { ...t, is_active: updatedStatus } : t))
+      );
+      const res = await api.updateTemplate(template.id, { is_active: updatedStatus });
+      if (res.success) {
+        showToast(`Template "${template.title}" ${updatedStatus ? 'berhasil diaktifkan' : 'dinonaktifkan'}.`);
+      } else {
+        const refreshed = await api.getAdminTemplates();
+        if (refreshed.success) setAdminTemplates(refreshed.data);
+      }
+    } catch (err) {
+      const refreshed = await api.getAdminTemplates();
+      if (refreshed.success) setAdminTemplates(refreshed.data);
+      alert(err.response?.data?.message || err.message || 'Gagal mengubah status template');
+    }
+  };
+
+  const handleDeleteTemplate = async (templateId, templateTitle) => {
+    if (!window.confirm(`Apakah Anda yakin ingin menghapus template "${templateTitle}" secara permanen?`)) {
+      return;
+    }
+    try {
+      const res = await api.deleteTemplate(templateId);
+      if (res.success) {
+        setAdminTemplates((prev) => prev.filter((t) => t.id !== templateId));
+        showToast(`Template "${templateTitle}" berhasil dihapus.`);
+      }
+    } catch (err) {
+      alert(err.response?.data?.message || err.message || 'Gagal menghapus template');
+    }
+  };
+
+  const handleSaveTemplate = async (e) => {
+    e.preventDefault();
+    if (!templateForm.title.trim()) {
+      alert('Judul template wajib diisi!');
+      return;
+    }
+    if (!templateForm.thumbnail_url.trim()) {
+      alert('URL thumbnail wajib diisi!');
+      return;
+    }
+    if (!templateForm.canva_url.trim()) {
+      alert('URL template Canva wajib diisi!');
+      return;
+    }
+
+    // Validasi Canva URL
+    const canvaUrlLower = templateForm.canva_url.toLowerCase();
+    if (!canvaUrlLower.includes('canva.com')) {
+      alert('URL template harus berasal dari domain resmi Canva (canva.com).');
+      return;
+    }
+    if (canvaUrlLower.includes('/edit')) {
+      alert('Gunakan Template Link Canva (mode=preview), bukan link editor (/edit) agar desain master tidak rusak.');
+      return;
+    }
+    if (!templateForm.canva_url.includes('mode=preview')) {
+      alert('Gunakan Template Link Canva (mode=preview), bukan link editor (/edit) agar desain master tidak rusak.');
+      return;
+    }
+
+    setSavingTemplate(true);
+    try {
+      if (editingTemplate) {
+        const res = await api.updateTemplate(editingTemplate.id, templateForm);
+        if (res.success) {
+          setAdminTemplates((prev) =>
+            prev.map((t) => (t.id === editingTemplate.id ? res.data : t))
+          );
+          setTemplateModalOpen(false);
+          showToast(`Template "${res.data.title}" berhasil diperbarui!`);
+        }
+      } else {
+        const res = await api.createTemplate(templateForm);
+        if (res.success) {
+          setAdminTemplates((prev) => [res.data, ...prev]);
+          setTemplateModalOpen(false);
+          showToast(`Template "${res.data.title}" berhasil ditambahkan!`);
+        }
+      }
+    } catch (err) {
+      alert(err.response?.data?.message || err.message || 'Gagal menyimpan template');
+    } finally {
+      setSavingTemplate(false);
+    }
+  };
+
   // 4-6. Content Saves (Terms, Privacy, Partnerships, About)
   const handleSaveTerms = async (e) => {
     e.preventDefault();
@@ -652,6 +798,7 @@ export default function AdminDashboardPage() {
     { key: 'user_posts', label: 'Jadwal Konten Pengguna', icon: 'event_note' },
     { key: 'catalog', label: 'Katalog Paket Langganan', icon: 'loyalty' },
     { key: 'hero_slides', label: 'Kelola Hero Slide', icon: 'view_carousel' },
+    { key: 'templates', label: 'Kelola Template', icon: 'auto_awesome_motion' },
     { key: 'legal', label: 'S&K & Kebijakan Privasi', icon: 'policy' },
     { key: 'partnerships', label: 'Kerja Sama (Canva)', icon: 'handshake' },
     { key: 'blog', label: 'Kelola Artikel Blog', icon: 'menu_book' },
@@ -1884,6 +2031,297 @@ export default function AdminDashboardPage() {
               </div>
             </div>
           )}
+
+          {/* ======================================================== */}
+          {/* 3C. CMS KELOLA TEMPLATE CANVA (ADMIN PANEL) */}
+          {/* ======================================================== */}
+          {activeMenu === 'templates' && (() => {
+            const filteredAdminTemplates = adminTemplates.filter((item) => {
+              const q = templateSearchQuery.trim().toLowerCase();
+              const matchesSearch =
+                q === '' ||
+                (item.title && item.title.toLowerCase().includes(q)) ||
+                (item.category && item.category.toLowerCase().includes(q)) ||
+                (item.description && item.description.toLowerCase().includes(q));
+
+              const matchesCategory =
+                templateCategoryFilter === 'all' || item.category === templateCategoryFilter;
+
+              const matchesFormat =
+                templateFormatFilter === 'all' || item.format_ratio === templateFormatFilter;
+
+              const matchesTier =
+                templateTierFilter === 'all' ||
+                (item.access_tier || 'free').toLowerCase() === templateTierFilter.toLowerCase();
+
+              return matchesSearch && matchesCategory && matchesFormat && matchesTier;
+            });
+
+            const totalCount = adminTemplates.length;
+            const freeCount = adminTemplates.filter((t) => (t.access_tier || 'free').toLowerCase() === 'free').length;
+            const premiumCount = adminTemplates.filter((t) => (t.access_tier || '').toLowerCase() === 'premium').length;
+
+            return (
+              <div className="bg-white rounded-3xl border border-slate-200/80 shadow-xs p-6 space-y-6 animate-in fade-in duration-200">
+                {/* Header Kelola Template */}
+                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                  <div>
+                    <h2 className="text-lg font-extrabold text-slate-900 flex items-center gap-2">
+                      <span className="material-symbols-outlined text-primary text-2xl">auto_awesome_motion</span>
+                      Kelola Template (Canva Library)
+                    </h2>
+                    <p className="text-xs text-slate-500 mt-1">
+                      Kelola pustaka template desain Canva untuk pengguna workspace, atur kategori konten, format rasio, tier akses paket, dan tautan preview Canva.
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={handleOpenAddTemplateModal}
+                    className="px-4 py-2.5 bg-gradient-primary text-white rounded-xl text-xs font-bold shadow-md shadow-primary/20 hover:scale-[1.02] active:scale-95 transition-all flex items-center gap-1.5 cursor-pointer flex-shrink-0"
+                  >
+                    <span className="material-symbols-outlined text-sm">add</span>
+                    + Tambah Template Canva
+                  </button>
+                </div>
+
+                {/* Ringkasan Statistik Template */}
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                  <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200/80 flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-xl bg-blue-100 text-blue-700 flex items-center justify-center font-bold">
+                      <span className="material-symbols-outlined text-xl">auto_awesome_motion</span>
+                    </div>
+                    <div>
+                      <p className="text-xs font-bold text-slate-500">Total Template</p>
+                      <p className="text-lg font-extrabold text-slate-800">{totalCount} Desain</p>
+                    </div>
+                  </div>
+
+                  <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200/80 flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-xl bg-emerald-100 text-emerald-700 flex items-center justify-center font-bold">
+                      <span className="material-symbols-outlined text-xl">lock_open</span>
+                    </div>
+                    <div>
+                      <p className="text-xs font-bold text-slate-500">Template Free / Basic</p>
+                      <p className="text-lg font-extrabold text-emerald-700">{freeCount} Desain</p>
+                    </div>
+                  </div>
+
+                  <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200/80 flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-xl bg-amber-100 text-amber-700 flex items-center justify-center font-bold">
+                      <span className="material-symbols-outlined text-xl">workspace_premium</span>
+                    </div>
+                    <div>
+                      <p className="text-xs font-bold text-slate-500">Template Premium</p>
+                      <p className="text-lg font-extrabold text-amber-700">{premiumCount} Desain</p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Filter & Pencarian Admin */}
+                <div className="flex flex-col md:flex-row items-stretch md:items-center gap-3 p-3.5 bg-slate-50 rounded-2xl border border-slate-200/80">
+                  <div className="relative flex-1">
+                    <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-lg">
+                      search
+                    </span>
+                    <input
+                      type="text"
+                      placeholder="Cari judul, kategori, atau deskripsi template..."
+                      value={templateSearchQuery}
+                      onChange={(e) => setTemplateSearchQuery(e.target.value)}
+                      className="w-full pl-9 pr-4 py-2 bg-white border border-slate-200 rounded-xl text-xs font-medium text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
+                    />
+                  </div>
+
+                  <div className="flex flex-wrap sm:flex-nowrap items-center gap-2">
+                    <select
+                      value={templateCategoryFilter}
+                      onChange={(e) => setTemplateCategoryFilter(e.target.value)}
+                      className="px-3 py-2 bg-white border border-slate-200 rounded-xl text-xs font-bold text-slate-700 focus:outline-none focus:ring-2 focus:ring-primary/20 cursor-pointer"
+                    >
+                      <option value="all">Semua Kategori</option>
+                      <option value="Promosi">Promosi</option>
+                      <option value="Edukasi">Edukasi</option>
+                      <option value="Engagement">Engagement</option>
+                    </select>
+
+                    <select
+                      value={templateFormatFilter}
+                      onChange={(e) => setTemplateFormatFilter(e.target.value)}
+                      className="px-3 py-2 bg-white border border-slate-200 rounded-xl text-xs font-bold text-slate-700 focus:outline-none focus:ring-2 focus:ring-primary/20 cursor-pointer"
+                    >
+                      <option value="all">Semua Format</option>
+                      <option value="1:1">Format 1:1 (Square)</option>
+                      <option value="9:16">Format 9:16 (Story/Reels)</option>
+                    </select>
+
+                    <select
+                      value={templateTierFilter}
+                      onChange={(e) => setTemplateTierFilter(e.target.value)}
+                      className="px-3 py-2 bg-white border border-slate-200 rounded-xl text-xs font-bold text-slate-700 focus:outline-none focus:ring-2 focus:ring-primary/20 cursor-pointer"
+                    >
+                      <option value="all">Semua Akses Tier</option>
+                      <option value="free">Free / Basic</option>
+                      <option value="premium">Premium (Pro & Plus)</option>
+                    </select>
+                  </div>
+                </div>
+
+                {/* Tabel Daftar Template */}
+                <div className="overflow-x-auto rounded-2xl border border-slate-200 shadow-xs">
+                  <table className="w-full text-left border-collapse text-xs min-w-[950px]">
+                    <thead>
+                      <tr className="border-b border-slate-200 bg-slate-50/90 text-slate-500 uppercase tracking-wider font-extrabold text-[10px]">
+                        <th className="py-3.5 px-4 whitespace-nowrap text-center w-28">Thumbnail</th>
+                        <th className="py-3.5 px-4 whitespace-nowrap">Detail Template</th>
+                        <th className="py-3.5 px-4 whitespace-nowrap text-center w-32">Kategori</th>
+                        <th className="py-3.5 px-4 whitespace-nowrap text-center w-32">Akses Tier</th>
+                        <th className="py-3.5 px-4 whitespace-nowrap text-center w-28">Status Aktif</th>
+                        <th className="py-3.5 px-4 whitespace-nowrap text-center w-36">Aksi</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-100 bg-white">
+                      {filteredAdminTemplates.length === 0 ? (
+                        <tr>
+                          <td colSpan={6} className="py-12 text-center text-slate-400">
+                            <span className="material-symbols-outlined text-4xl block mb-2 text-slate-300">auto_awesome_motion</span>
+                            {adminTemplates.length === 0
+                              ? 'Belum ada template Canva yang terdaftar. Klik tombol "+ Tambah Template Canva" untuk membuat template pertama.'
+                              : 'Tidak ada template yang cocok dengan kriteria pencarian dan filter.'}
+                          </td>
+                        </tr>
+                      ) : (
+                        filteredAdminTemplates.map((template) => {
+                          const isPremium = (template.access_tier || '').toLowerCase() === 'premium';
+                          const cat = template.category || 'Promosi';
+                          let catBadgeStyle = 'bg-amber-50 text-amber-700 border-amber-200';
+                          if (cat === 'Edukasi') catBadgeStyle = 'bg-blue-50 text-blue-700 border-blue-200';
+                          if (cat === 'Engagement') catBadgeStyle = 'bg-purple-50 text-purple-700 border-purple-200';
+
+                          return (
+                            <tr key={template.id} className="hover:bg-slate-50/80 transition-colors align-middle">
+                              {/* 1. Thumbnail */}
+                              <td className="py-3.5 px-4 text-center whitespace-nowrap">
+                                <div className="w-20 h-16 rounded-xl overflow-hidden border border-slate-200 bg-slate-100 mx-auto shadow-2xs relative">
+                                  <img
+                                    src={template.thumbnail_url}
+                                    alt={template.title}
+                                    className="w-full h-full object-cover"
+                                    onError={(e) => {
+                                      e.target.onerror = null;
+                                      e.target.src = 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=600&auto=format&fit=crop&q=80';
+                                    }}
+                                  />
+                                </div>
+                              </td>
+
+                              {/* 2. Detail Template */}
+                              <td className="py-3.5 px-4">
+                                <div className="space-y-1">
+                                  <div className="flex items-center gap-2">
+                                    <p className="font-extrabold text-slate-900 text-xs">{template.title}</p>
+                                    <span className="px-2 py-0.5 rounded-md bg-slate-100 border border-slate-200 text-slate-600 font-mono font-bold text-[10px]">
+                                      {template.format_ratio || '1:1'}
+                                    </span>
+                                  </div>
+                                  {template.description && (
+                                    <p className="text-[11px] text-slate-500 line-clamp-2 max-w-lg leading-relaxed">
+                                      {template.description}
+                                    </p>
+                                  )}
+                                </div>
+                              </td>
+
+                              {/* 3. Kategori */}
+                              <td className="py-3.5 px-4 text-center whitespace-nowrap">
+                                <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-lg font-bold text-[11px] border ${catBadgeStyle}`}>
+                                  {cat}
+                                </span>
+                              </td>
+
+                              {/* 4. Akses Tier */}
+                              <td className="py-3.5 px-4 text-center whitespace-nowrap">
+                                {isPremium ? (
+                                  <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-amber-50 text-amber-700 font-extrabold text-[11px] border border-amber-200 shadow-2xs">
+                                    <span className="material-symbols-outlined text-xs text-amber-500">workspace_premium</span>
+                                    Premium
+                                  </span>
+                                ) : (
+                                  <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-emerald-50 text-emerald-700 font-bold text-[11px] border border-emerald-200">
+                                    <span className="material-symbols-outlined text-xs text-emerald-500">check_circle</span>
+                                    Free
+                                  </span>
+                                )}
+                              </td>
+
+                              {/* 5. Status Aktif Toggle */}
+                              <td className="py-3.5 px-4 text-center whitespace-nowrap">
+                                <div className="inline-flex flex-col items-center gap-1">
+                                  <button
+                                    type="button"
+                                    onClick={() => handleToggleTemplateActive(template)}
+                                    className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
+                                      template.is_active ? 'bg-emerald-500' : 'bg-slate-300'
+                                    }`}
+                                    title={template.is_active ? 'Klik untuk nonaktifkan' : 'Klik untuk aktifkan'}
+                                  >
+                                    <span
+                                      className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow-md ring-0 transition duration-200 ease-in-out ${
+                                        template.is_active ? 'translate-x-5' : 'translate-x-0'
+                                      }`}
+                                    />
+                                  </button>
+                                  <span
+                                    className={`text-[10px] font-extrabold ${
+                                      template.is_active ? 'text-emerald-700' : 'text-slate-400'
+                                    }`}
+                                  >
+                                    {template.is_active ? 'Aktif' : 'Nonaktif'}
+                                  </span>
+                                </div>
+                              </td>
+
+                              {/* 6. Aksi */}
+                              <td className="py-3.5 px-4 text-center whitespace-nowrap">
+                                <div className="inline-flex items-center gap-1 justify-center">
+                                  {template.canva_url && (
+                                    <a
+                                      href={template.canva_url}
+                                      target="_blank"
+                                      rel="noopener noreferrer"
+                                      className="p-1.5 text-primary hover:text-primary-dark hover:bg-primary/10 rounded-lg transition-colors cursor-pointer inline-flex items-center justify-center"
+                                      title="Buka Canva (Preview)"
+                                    >
+                                      <span className="material-symbols-outlined text-lg">open_in_new</span>
+                                    </a>
+                                  )}
+                                  <button
+                                    type="button"
+                                    onClick={() => handleOpenEditTemplateModal(template)}
+                                    className="p-1.5 text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded-lg transition-colors cursor-pointer inline-flex items-center justify-center"
+                                    title="Sunting Template"
+                                  >
+                                    <span className="material-symbols-outlined text-lg">edit</span>
+                                  </button>
+                                  <button
+                                    type="button"
+                                    onClick={() => handleDeleteTemplate(template.id, template.title)}
+                                    className="p-1.5 text-red-500 hover:text-red-700 hover:bg-red-50 rounded-lg transition-colors cursor-pointer inline-flex items-center justify-center"
+                                    title="Hapus Template"
+                                  >
+                                    <span className="material-symbols-outlined text-lg">delete</span>
+                                  </button>
+                                </div>
+                              </td>
+                            </tr>
+                          );
+                        })
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            );
+          })()}
 
           {/* ======================================================== */}
           {/* 4 & 5. MENU TERPADU: KELOLA S&K & KEBIJAKAN PRIVASI */}
@@ -3515,6 +3953,262 @@ export default function AdminDashboardPage() {
           </div>
         </div>
       )}
+
+      {/* ======================================================== */}
+      {/* MODAL TEMPLATE CANVA (TAMBAH / EDIT DENGAN LIVE PREVIEWS) */}
+      {/* ======================================================== */}
+      {templateModalOpen && (() => {
+        const isCanvaEditorLink = templateForm.canva_url.toLowerCase().includes('/edit');
+
+        return (
+          <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-xs flex items-center justify-center p-4">
+            <div className="bg-white rounded-3xl max-w-xl w-full p-6 space-y-4 shadow-2xl border border-slate-200 animate-in zoom-in-95 duration-200 max-h-[92vh] overflow-y-auto">
+              <div className="flex justify-between items-center pb-3 border-b border-slate-100">
+                <div className="flex items-center gap-2">
+                  <span className="material-symbols-outlined text-primary text-xl">auto_awesome_motion</span>
+                  <h3 className="font-extrabold text-base text-slate-800">
+                    {editingTemplate ? 'Edit Template Canva' : 'Tambah Template Canva Baru'}
+                  </h3>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setTemplateModalOpen(false)}
+                  className="w-7 h-7 rounded-full bg-slate-100 hover:bg-slate-200 flex items-center justify-center text-slate-500 cursor-pointer"
+                >
+                  <span className="material-symbols-outlined text-base">close</span>
+                </button>
+              </div>
+
+              <form onSubmit={handleSaveTemplate} className="space-y-4 text-xs">
+                {/* Judul Template */}
+                <div className="space-y-1">
+                  <label className="font-extrabold text-slate-700 block">
+                    Judul Template <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    placeholder="Contoh: Promo Flash Sale UMKM"
+                    value={templateForm.title}
+                    onChange={(e) => setTemplateForm({ ...templateForm, title: e.target.value })}
+                    className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl font-medium text-slate-800 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
+                  />
+                </div>
+
+                {/* Deskripsi Singkat */}
+                <div className="space-y-1">
+                  <label className="font-extrabold text-slate-700 block">
+                    Deskripsi Singkat Kegunaan Template
+                  </label>
+                  <textarea
+                    rows={2}
+                    placeholder="Contoh: Desain promosi kilat dengan diskon menarik untuk feed Instagram..."
+                    value={templateForm.description}
+                    onChange={(e) => setTemplateForm({ ...templateForm, description: e.target.value })}
+                    className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl font-medium text-slate-800 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
+                  />
+                </div>
+
+                {/* Kategori & Format Rasio */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div className="space-y-1">
+                    <label className="font-extrabold text-slate-700 block">
+                      Kategori Konten <span className="text-red-500">*</span>
+                    </label>
+                    <select
+                      value={templateForm.category}
+                      onChange={(e) => setTemplateForm({ ...templateForm, category: e.target.value })}
+                      className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl font-bold text-slate-700 focus:outline-none focus:ring-2 focus:ring-primary/20 cursor-pointer"
+                    >
+                      <option value="Promosi">Promosi</option>
+                      <option value="Edukasi">Edukasi</option>
+                      <option value="Engagement">Engagement</option>
+                    </select>
+                  </div>
+
+                  <div className="space-y-1">
+                    <label className="font-extrabold text-slate-700 block">
+                      Format Rasio Desain <span className="text-red-500">*</span>
+                    </label>
+                    <select
+                      value={templateForm.format_ratio}
+                      onChange={(e) => setTemplateForm({ ...templateForm, format_ratio: e.target.value })}
+                      className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl font-bold text-slate-700 focus:outline-none focus:ring-2 focus:ring-primary/20 cursor-pointer"
+                    >
+                      <option value="1:1">1:1 (Square Feed)</option>
+                      <option value="9:16">9:16 (Story / Reels / TikTok)</option>
+                    </select>
+                  </div>
+                </div>
+
+                {/* Hak Akses Paket (Tier) */}
+                <div className="space-y-1.5">
+                  <label className="font-extrabold text-slate-700 block">
+                    Hak Akses Paket (Access Tier) <span className="text-red-500">*</span>
+                  </label>
+                  <div className="grid grid-cols-2 gap-3">
+                    <label
+                      className={`p-3 rounded-xl border flex items-center gap-2 cursor-pointer transition-all ${
+                        templateForm.access_tier === 'free'
+                          ? 'bg-emerald-50/60 border-emerald-300 text-emerald-800'
+                          : 'bg-slate-50 border-slate-200 text-slate-600 hover:bg-slate-100'
+                      }`}
+                    >
+                      <input
+                        type="radio"
+                        name="access_tier"
+                        value="free"
+                        checked={templateForm.access_tier === 'free'}
+                        onChange={() => setTemplateForm({ ...templateForm, access_tier: 'free' })}
+                        className="text-emerald-600 focus:ring-emerald-500"
+                      />
+                      <div>
+                        <p className="font-bold text-xs flex items-center gap-1">
+                          <span className="material-symbols-outlined text-sm text-emerald-600">lock_open</span>
+                          Free (Gratis)
+                        </p>
+                        <p className="text-[10px] text-slate-500">Bisa dibuka semua pengguna</p>
+                      </div>
+                    </label>
+
+                    <label
+                      className={`p-3 rounded-xl border flex items-center gap-2 cursor-pointer transition-all ${
+                        templateForm.access_tier === 'premium'
+                          ? 'bg-amber-50/60 border-amber-300 text-amber-800'
+                          : 'bg-slate-50 border-slate-200 text-slate-600 hover:bg-slate-100'
+                      }`}
+                    >
+                      <input
+                        type="radio"
+                        name="access_tier"
+                        value="premium"
+                        checked={templateForm.access_tier === 'premium'}
+                        onChange={() => setTemplateForm({ ...templateForm, access_tier: 'premium' })}
+                        className="text-amber-600 focus:ring-amber-500"
+                      />
+                      <div>
+                        <p className="font-bold text-xs flex items-center gap-1">
+                          <span className="material-symbols-outlined text-sm text-amber-600">workspace_premium</span>
+                          Premium
+                        </p>
+                        <p className="text-[10px] text-slate-500">Khusus pelanggan Pro & Plus</p>
+                      </div>
+                    </label>
+                  </div>
+                </div>
+
+                {/* URL Thumbnail & Live Image Preview */}
+                <div className="space-y-2">
+                  <label className="font-extrabold text-slate-700 block">
+                    URL Thumbnail Gambar Desain <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="url"
+                    required
+                    placeholder="https://images.unsplash.com/photo-... atau URL gambar desain"
+                    value={templateForm.thumbnail_url}
+                    onChange={(e) => setTemplateForm({ ...templateForm, thumbnail_url: e.target.value })}
+                    className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl font-mono text-[11px] text-slate-800 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
+                  />
+
+                  {/* Box Live Preview Gambar */}
+                  <div className="p-2.5 bg-slate-50 rounded-2xl border border-slate-200">
+                    <span className="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider block mb-1.5 flex items-center gap-1">
+                      <span className="material-symbols-outlined text-xs text-primary">image</span>
+                      Pratinjau Langsung Thumbnail Desain
+                    </span>
+                    {templateForm.thumbnail_url ? (
+                      <div className="relative w-32 h-32 rounded-xl overflow-hidden bg-slate-200 border border-slate-200 shadow-2xs mx-auto">
+                        <img
+                          src={templateForm.thumbnail_url}
+                          alt="Live Preview"
+                          className="w-full h-full object-cover"
+                          onError={(e) => {
+                            e.target.onerror = null;
+                            e.target.src = 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=600&auto=format&fit=crop&q=80';
+                          }}
+                        />
+                      </div>
+                    ) : (
+                      <div className="w-32 h-32 rounded-xl border-2 border-dashed border-slate-300 flex flex-col items-center justify-center text-slate-400 mx-auto">
+                        <span className="material-symbols-outlined text-2xl">add_photo_alternate</span>
+                        <span className="text-[9px] mt-1 font-bold">Masukkan URL</span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* URL Template Canva & Real-time Validation Warning */}
+                <div className="space-y-1.5">
+                  <label className="font-extrabold text-slate-700 block">
+                    URL Template Link Canva (Wajib mode=preview) <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="url"
+                    required
+                    placeholder="https://www.canva.com/design/.../view?mode=preview"
+                    value={templateForm.canva_url}
+                    onChange={(e) => setTemplateForm({ ...templateForm, canva_url: e.target.value })}
+                    className={`w-full p-2.5 bg-slate-50 border rounded-xl font-mono text-[11px] text-slate-800 focus:outline-none focus:ring-2 ${
+                      isCanvaEditorLink
+                        ? 'border-red-400 focus:ring-red-200 focus:border-red-500'
+                        : 'border-slate-200 focus:ring-primary/20 focus:border-primary'
+                    }`}
+                  />
+                  <p className="text-[11px] text-slate-500 flex items-center gap-1">
+                    <span className="material-symbols-outlined text-xs text-primary">info</span>
+                    Gunakan Template Link resmi Canva (akhiri dengan ?mode=preview). Jangan gunakan link editor biasa.
+                  </p>
+
+                  {/* Real-time warning jika pengguna menempel link /edit */}
+                  {isCanvaEditorLink && (
+                    <div className="p-2.5 rounded-xl bg-red-50 border border-red-200 text-red-700 text-[11px] font-semibold flex items-center gap-2 animate-in fade-in duration-200">
+                      <span className="material-symbols-outlined text-base text-red-600 flex-shrink-0">warning</span>
+                      <span>Gunakan Template Link Canva (mode=preview), bukan link editor (/edit) agar desain master tidak rusak.</span>
+                    </div>
+                  )}
+                </div>
+
+                {/* Switch Status Penayangan (is_active) */}
+                <div className="flex items-center justify-between p-3 rounded-xl bg-slate-50 border border-slate-200">
+                  <div>
+                    <p className="font-bold text-xs text-slate-800">Status Penayangan Template</p>
+                    <p className="text-[10px] text-slate-500">Tampilkan template ini ke seluruh pengguna di Workspace Template Library</p>
+                  </div>
+                  <label className="relative inline-flex items-center cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={templateForm.is_active}
+                      onChange={(e) => setTemplateForm({ ...templateForm, is_active: e.target.checked })}
+                      className="sr-only peer"
+                    />
+                    <div className="w-11 h-6 bg-slate-300 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-500"></div>
+                  </label>
+                </div>
+
+                {/* Action Buttons */}
+                <div className="flex justify-end gap-2 pt-3 border-t border-slate-100">
+                  <button
+                    type="button"
+                    onClick={() => setTemplateModalOpen(false)}
+                    className="px-4 py-2 rounded-xl font-bold text-slate-500 hover:bg-slate-100 cursor-pointer"
+                  >
+                    Batal
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={savingTemplate || isCanvaEditorLink}
+                    className="px-5 py-2 bg-primary text-white rounded-xl font-bold shadow-md hover:bg-primary/90 transition-all cursor-pointer disabled:opacity-50 flex items-center gap-1.5"
+                  >
+                    {savingTemplate && <span className="material-symbols-outlined text-sm animate-spin">progress_activity</span>}
+                    <span>{editingTemplate ? 'Simpan Perubahan' : 'Tambah Template'}</span>
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        );
+      })()}
 
       {/* Modal Struk Digital Resmi untuk Admin */}
       {previewReceiptOrder && (

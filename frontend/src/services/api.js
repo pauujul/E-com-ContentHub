@@ -360,6 +360,39 @@ export const api = {
     const res = await apiClient.delete(`/admin/hero-slides/${id}`);
     return res.data;
   },
+
+  // ==========================================
+  // 10. CONTENT TEMPLATES & CMS KELOLA TEMPLATE
+  // ==========================================
+  getTemplates: async (params = {}) => {
+    const res = await apiClient.get('/templates', { params });
+    return res.data;
+  },
+
+  getTemplateCategories: async () => {
+    const res = await apiClient.get('/template-categories');
+    return res.data;
+  },
+
+  getAdminTemplates: async (params = {}) => {
+    const res = await apiClient.get('/admin/templates', { params });
+    return res.data;
+  },
+
+  createTemplate: async (data) => {
+    const res = await apiClient.post('/admin/templates', data);
+    return res.data;
+  },
+
+  updateTemplate: async (id, data) => {
+    const res = await apiClient.put(`/admin/templates/${id}`, data);
+    return res.data;
+  },
+
+  deleteTemplate: async (id) => {
+    const res = await apiClient.delete(`/admin/templates/${id}`);
+    return res.data;
+  },
 };
 
 export default api;
