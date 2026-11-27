@@ -132,7 +132,7 @@ export default function HomePage() {
                 </div>
                 <h3 className="text-xl font-bold text-on-surface">Multi-Role & Autentikasi</h3>
                 <p className="text-sm text-on-surface-variant leading-relaxed">
-                  Dukungan role Customer (UMKM) dan Admin Console dengan database PostgreSQL untuk pemantauan pesanan & data analitik.
+                  Dukungan role Customer (UMKM) dan Admin Console terintegrasi untuk pemantauan pesanan & data analitik.
                 </p>
                 <Link to="/login" className="text-xs font-bold text-tertiary inline-block hover:underline">
                   Login & Switch Role &rarr;

@@ -128,7 +128,7 @@ export default function PickDatePage() {
                 {monthNames[curMonth]} {curYear}
               </span>
               <span className="text-[10px] text-slate-400 uppercase tracking-widest font-bold">
-                Kalender PostgreSQL Neon
+                Kalender Interaktif
               </span>
             </div>
 

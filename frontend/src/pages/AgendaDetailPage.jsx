@@ -87,7 +87,7 @@ export default function AgendaDetailPage() {
                 <Link to="/calendar" className="text-xs font-bold text-slate-500 hover:text-primary flex items-center gap-1">
                   <span className="material-symbols-outlined text-sm">arrow_back</span> Kembali ke Kalender
                 </Link>
-                <span className="text-xs text-outline">• Sinkronisasi Live PostgreSQL</span>
+                <span className="text-xs text-outline">• Tersinkronisasi Otomatis</span>
               </div>
               <h1 className="text-3xl font-extrabold text-on-surface">Detail Agenda Terjadwal</h1>
               <p className="text-sm text-on-surface-variant mt-1">
@@ -101,7 +101,7 @@ export default function AgendaDetailPage() {
                 className="px-5 py-2 bg-gradient-primary text-white rounded-xl text-xs font-bold shadow-md flex items-center gap-1.5 hover:scale-105 active:scale-95 transition-all"
               >
                 <span className="material-symbols-outlined text-base">add</span>
-                Buat Agenda Baru
+                + Buat Agenda Baru
               </Link>
 
               <div className="flex gap-1.5 p-1 bg-surface-container-low rounded-2xl border border-outline-variant/15">
@@ -131,7 +131,7 @@ export default function AgendaDetailPage() {
           {loading ? (
             <div className="text-center py-24">
               <div className="inline-block animate-spin rounded-full h-8 w-8 border-4 border-primary border-t-transparent"></div>
-              <p className="mt-3 text-xs font-bold text-slate-400">Memuat detail agenda dari database...</p>
+              <p className="mt-3 text-xs font-bold text-slate-400">Loading...</p>
             </div>
           ) : filteredPosts.length === 0 ? (
             <div className="text-center py-20 bg-white rounded-3xl border border-slate-200 p-8 space-y-3">

@@ -158,7 +158,7 @@ export default function OrderHistory({ refreshKey, currentUser, onOpenLogin }) {
           <div className="admin-stat-card">
             <div className="stat-title">Total Pelanggan UMKM</div>
             <div className="stat-value text-primary">{stats.total_customers} UMKM</div>
-            <div className="stat-desc">Terdaftar di database users</div>
+            <div className="stat-desc">Terdaftar di sistem</div>
           </div>
         </div>
       )}
@@ -201,7 +201,7 @@ export default function OrderHistory({ refreshKey, currentUser, onOpenLogin }) {
         </div>
       )}
 
-      {loading && <p style={{ textAlign: 'center', padding: '30px', color: '#64748b' }}>Memuat transaksi dari PostgreSQL...</p>}
+      {loading && <p style={{ textAlign: 'center', padding: '30px', color: '#64748b' }}>Loading transaksi...</p>}
 
       {error && <div style={{ background: '#fef2f2', color: '#991b1b', padding: '12px 16px', borderRadius: '8px' }}>{error}</div>}
 

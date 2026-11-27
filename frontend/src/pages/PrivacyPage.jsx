@@ -60,7 +60,7 @@ export default function PrivacyPage() {
         {loading ? (
           <div className="text-center py-24">
             <div className="inline-block animate-spin rounded-full h-10 w-10 border-4 border-emerald-600 border-t-transparent"></div>
-            <p className="mt-4 text-xs font-bold text-slate-400">Memuat Kebijakan & Privasi dari database...</p>
+            <p className="mt-4 text-xs font-bold text-slate-400">Loading...</p>
           </div>
         ) : content ? (
           <article className="space-y-6 animate-in fade-in duration-200">

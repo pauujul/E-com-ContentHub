@@ -42,7 +42,7 @@ export default function SwitchAccountPage() {
               </div>
               <h2 className="text-2xl font-extrabold text-on-surface tracking-tight">Ganti Akun Pengguna</h2>
               <p className="text-xs text-on-surface-variant mt-1">
-                Pilih persona akun dari database untuk menguji role-based routing (Customer vs Admin).
+                Pilih persona akun untuk menguji role-based routing (Customer vs Admin).
               </p>
             </div>
 
@@ -110,7 +110,7 @@ export default function SwitchAccountPage() {
                 className="w-full py-3 bg-gradient-primary text-white font-bold rounded-xl text-xs text-center shadow-md hover:scale-[1.01] active:scale-95 transition-all flex items-center justify-center gap-1.5"
               >
                 <span className="material-symbols-outlined text-sm">person_add</span>
-                + Daftarkan Akun Baru ke Database
+                + Daftarkan Akun Baru
               </Link>
               <button
                 type="button"

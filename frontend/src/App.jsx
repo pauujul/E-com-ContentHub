@@ -6,6 +6,7 @@ import { UpgradeModalProvider } from './context/UpgradeModalContext';
 import { ScheduleProvider } from './context/ScheduleContext';
 import CartDrawer from './components/CartDrawer';
 import ErrorBoundary from './components/ErrorBoundary';
+import ScrollToTop from './components/ScrollToTop';
 
 // Pages
 import HomePage from './pages/HomePage';
@@ -71,6 +72,7 @@ export default function App() {
   return (
     <ErrorBoundary>
       <BrowserRouter>
+        <ScrollToTop />
         <AuthProvider>
           <UpgradeModalProvider>
             <ScheduleProvider>

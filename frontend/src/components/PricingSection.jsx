@@ -171,7 +171,7 @@ export default function PricingSection({
           <div className={`text-center ${compact ? 'py-12' : 'py-20'}`}>
             <div className="inline-block animate-spin rounded-full h-8 w-8 sm:h-10 sm:w-10 border-4 border-primary border-t-transparent"></div>
             <p className="mt-3 text-on-surface-variant text-xs sm:text-sm font-semibold">
-              Memuat data paket langganan dari database PostgreSQL/Neon...
+              Loading data paket langganan...
             </p>
           </div>
         )}
@@ -181,7 +181,7 @@ export default function PricingSection({
           <div className="text-center py-8 px-6 bg-red-50 text-red-700 rounded-2xl max-w-xl mx-auto border border-red-200">
             <span className="material-symbols-outlined text-3xl text-red-500 mb-1">error</span>
             <p className="font-bold text-xs sm:text-sm mb-1">{error}</p>
-            <p className="text-xs text-red-600 mb-3">Pastikan koneksi database aktif.</p>
+            <p className="text-xs text-red-600 mb-3">Pastikan koneksi internet stabil.</p>
             <button
               type="button"
               onClick={fetchPlans}

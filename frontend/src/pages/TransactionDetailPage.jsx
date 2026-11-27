@@ -226,7 +226,7 @@ export default function TransactionDetailPage() {
                   <span className="material-symbols-outlined text-sm">check</span>
                 </div>
                 <span className="text-xs font-bold text-slate-800 mt-2">Pesanan Dibuat</span>
-                <span className="text-[10px] text-slate-400">Tersimpan di Neon</span>
+                <span className="text-[10px] text-slate-400">Tersimpan Otomatis</span>
               </div>
 
               {/* Step 2: Menunggu Pembayaran */}

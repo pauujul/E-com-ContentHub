@@ -251,7 +251,7 @@ export default function UpgradeModal({ isOpen, onClose, config, setStep }) {
                 <span className="text-[10px] font-extrabold uppercase tracking-widest text-primary">Langkah 1 dari 2</span>
                 <h2 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">Pilih Paket Langganan</h2>
                 <p className="text-xs text-slate-500 mt-0.5">
-                  Katalog resmi tersinkronisasi langsung dari database PostgreSQL/Neon Cloud.
+                  Katalog resmi tersinkronisasi otomatis secara langsung.
                 </p>
               </div>
               <button
@@ -509,7 +509,7 @@ export default function UpgradeModal({ isOpen, onClose, config, setStep }) {
             </div>
 
             <p className="text-xs sm:text-sm text-slate-500 max-w-md mx-auto leading-relaxed">
-              Status akun Anda di database PostgreSQL Neon telah sukses diperbarui ke{' '}
+              Status akun Anda telah sukses diperbarui ke{' '}
               <strong className="text-primary">{activePlan?.name || 'Paket Baru'}</strong>. Hak akses fitur di dalam
               workspace langsung terbuka secara realtime tanpa perlu refresh manual.
             </p>

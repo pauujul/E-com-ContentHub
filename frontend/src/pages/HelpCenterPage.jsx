@@ -31,7 +31,7 @@ export default function HelpCenterPage() {
     },
     {
       q: 'Metode pembayaran apa saja yang didukung untuk Paket Hero Rp98k?',
-      a: 'Kami mendukung transfer Virtual Account otomatis (BCA, Mandiri, BRI), E-Wallet (GoPay, OVO, DANA), QRIS Nasional, serta verifikasi otomatis 24/7 yang terhubung langsung ke database PostgreSQL.',
+      a: 'Kami mendukung transfer Virtual Account otomatis (BCA, Mandiri, BRI), E-Wallet (GoPay, OVO, DANA), QRIS Nasional, serta verifikasi otomatis 24/7 yang terverifikasi instan.',
     },
     {
       q: 'Bagaimana cara mengubah profil dan mengamankan kata sandi akun?',
@@ -39,11 +39,11 @@ export default function HelpCenterPage() {
     },
     {
       q: 'Apakah pesanan langganan saya langsung aktif setelah pembayaran?',
-      a: 'Ya, sistem transaksi terhubung secara otomatis ke database PostgreSQL/Neon. Begitu pembayaran berhasil, status order langsung berubah menjadi Paid dan akun Anda otomatis mendapatkan fasilitas paket tersebut.',
+      a: 'Ya, sistem transaksi terhubung secara otomatis dan instan. Begitu pembayaran berhasil, status order langsung berubah menjadi Paid dan akun Anda otomatis mendapatkan fasilitas paket tersebut.',
     },
     {
       q: 'Bagaimana cara memindahkan status konten di Kanban Planner?',
-      a: 'Buka menu Drag & Drop Planner dari sidebar atau kalender. Anda dapat menggeser kartu dari Ide Konten (Backlog), Desain Canva, Siap Publish, hingga Terjadwal di Kalender. Posisi kartu tersimpan permanen secara real-time ke database.',
+      a: 'Buka menu Drag & Drop Planner dari sidebar atau kalender. Anda dapat menggeser kartu dari Ide Konten (Backlog), Desain Canva, Siap Publish, hingga Terjadwal di Kalender. Posisi kartu tersimpan secara real-time.',
     },
   ];
 

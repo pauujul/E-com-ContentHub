@@ -105,7 +105,7 @@ export default function AddTemplatePage() {
                 Pukul {timeParam} WIB
               </p>
               <p className="text-slate-500 max-w-md mx-auto text-xs font-medium leading-relaxed">
-                Slot waktu posting Anda telah dikonfirmasi. Tentukan judul postingan dan Anda dapat langsung menyimpannya ke database atau mengedit visual template Canva.
+                Slot waktu posting Anda telah dikonfirmasi. Tentukan judul postingan dan Anda dapat langsung menyimpannya atau mengedit visual template Canva.
               </p>
             </div>
 
@@ -177,7 +177,7 @@ export default function AddTemplatePage() {
                 className="w-full py-3.5 rounded-xl text-white font-extrabold text-xs sm:text-sm flex items-center justify-center gap-2 bg-gradient-primary shadow-md shadow-primary/25 hover:scale-[1.01] active:scale-95 transition-all"
               >
                 <span className="material-symbols-outlined text-lg">check_circle</span>
-                <span>{saving ? 'Menyimpan ke Database Neon...' : 'Simpan Jadwal ke Kalender Sekarang'}</span>
+                <span>{saving ? 'Menyimpan...' : 'Simpan Jadwal ke Kalender Sekarang'}</span>
               </button>
 
               <Link
@@ -192,7 +192,7 @@ export default function AddTemplatePage() {
             <div className="mt-6 pt-4 border-t border-slate-100 flex justify-between items-center text-[11px] uppercase tracking-wider font-bold text-slate-400">
               <div className="flex items-center gap-1">
                 <span className="material-symbols-outlined text-xs text-emerald-600">cloud_done</span>
-                <span>PostgreSQL Neon Live Sync</span>
+                <span>Tersinkronisasi Otomatis</span>
               </div>
               <span>Canva Ready</span>
             </div>

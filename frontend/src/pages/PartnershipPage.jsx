@@ -123,7 +123,7 @@ export default function PartnershipPage() {
           </div>
         </section>
 
-        {/* Database Content Details */}
+        {/* Dynamic Content Details */}
         {loading ? (
           <div className="text-center py-12">
             <div className="inline-block animate-spin rounded-full h-8 w-8 border-4 border-primary border-t-transparent"></div>

@@ -228,7 +228,7 @@ export default function UserProfilePage() {
                 <span className="text-[10px] font-extrabold uppercase tracking-widest bg-primary-fixed text-primary px-3 py-1 rounded-full">
                   User Account Center
                 </span>
-                <span className="text-xs text-outline">• Terhubung ke Database PostgreSQL / Neon</span>
+                <span className="text-xs text-outline">• Tersinkronisasi Otomatis</span>
               </div>
               <h1 className="text-3xl font-extrabold text-on-surface">Pengaturan Profil & Keamanan Akun</h1>
               <p className="text-sm text-on-surface-variant mt-1">

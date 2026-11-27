@@ -100,7 +100,7 @@ export default function DragDropContentPage() {
     try {
       const res = await api.updatePostStage(item.id, targetCol, targetList.length - 1);
       if (res.success) {
-        setFeedbackMsg(`Kartu '${item.judul}' berhasil dipindahkan ke tahapan '${getStageTitle(targetCol)}' dan tersimpan ke database Neon.`);
+        setFeedbackMsg(`Kartu '${item.judul}' berhasil dipindahkan ke tahapan '${getStageTitle(targetCol)}'.`);
         setTimeout(() => setFeedbackMsg(''), 3500);
       }
     } catch (err) {
@@ -185,7 +185,7 @@ export default function DragDropContentPage() {
           scheduled_date: new Date().toISOString().split('T')[0],
           scheduled_time: '19:00',
         });
-        setFeedbackMsg(`Kartu baru '${res.data.judul}' berhasil disimpan permanen ke database!`);
+        setFeedbackMsg(`Kartu baru '${res.data.judul}' berhasil disimpan!`);
         setTimeout(() => setFeedbackMsg(''), 3500);
         loadPosts();
       }
@@ -242,7 +242,7 @@ export default function DragDropContentPage() {
       if (res.success) {
         setIsEditModalOpen(false);
         setEditingCard(null);
-        setFeedbackMsg(`Perubahan kartu '${res.data.judul}' berhasil diperbarui di database Neon!`);
+        setFeedbackMsg(`Perubahan kartu '${res.data.judul}' berhasil diperbarui!`);
         setTimeout(() => setFeedbackMsg(''), 3500);
         loadPosts();
       }
@@ -257,7 +257,7 @@ export default function DragDropContentPage() {
   // Hapus kartu
   const handleDeleteCard = async (postId, title, e) => {
     e.stopPropagation();
-    if (!window.confirm(`Apakah Anda yakin ingin menghapus kartu '${title}' dari database?`)) return;
+    if (!window.confirm(`Apakah Anda yakin ingin menghapus kartu '${title}'?`)) return;
 
     try {
       const res = await api.deletePost(postId);
@@ -373,7 +373,7 @@ export default function DragDropContentPage() {
                 <Link to="/calendar" className="text-xs font-bold text-slate-400 hover:text-primary flex items-center gap-1 transition-colors">
                   <span className="material-symbols-outlined text-sm">arrow_back</span> Kembali ke Kalender
                 </Link>
-                <span className="text-xs text-slate-400 font-semibold">• Live PostgreSQL Neon Sync</span>
+                <span className="text-xs text-slate-400 font-semibold">• Tersinkronisasi Otomatis</span>
               </div>
               <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">
                 Drag & Drop Content Planner
@@ -387,7 +387,7 @@ export default function DragDropContentPage() {
               <button
                 onClick={loadPosts}
                 className="px-3.5 py-2.5 bg-white hover:bg-slate-100 rounded-xl text-xs font-bold text-slate-700 flex items-center gap-1.5 transition-colors border border-slate-200 shadow-xs"
-                title="Sinkronkan data dari Neon Cloud"
+                title="Sinkronkan data"
               >
                 <span className="material-symbols-outlined text-base">refresh</span>
                 Refresh
@@ -404,9 +404,9 @@ export default function DragDropContentPage() {
                 className="px-4 py-2.5 bg-gradient-primary text-white font-extrabold text-xs rounded-xl shadow-md shadow-primary/20 flex items-center gap-1.5 hover:scale-[1.02] active:scale-95 transition-all cursor-pointer"
               >
                 <span className="material-symbols-outlined text-base">
-                  {isFreeTier ? 'lock' : 'add'}
+                  {isFreeTier ? 'lock' : 'add_photo_alternate'}
                 </span>
-                <span>Buat Kartu Baru</span>
+                <span>+ Buat Kartu Baru {isFreeTier ? '(Terkunci)' : '(Ada Gambar)'}</span>
               </button>
             </div>
           </div>
@@ -423,7 +423,7 @@ export default function DragDropContentPage() {
           {loading ? (
             <div className="text-center py-24">
               <div className="inline-block animate-spin rounded-full h-10 w-10 border-4 border-primary border-t-transparent"></div>
-              <p className="mt-3 text-xs font-bold text-slate-400">Sinkronisasi kartu planner dengan database PostgreSQL Neon...</p>
+              <p className="mt-3 text-xs font-bold text-slate-400">Loading...</p>
             </div>
           ) : (
             <div className="relative">
@@ -766,7 +766,7 @@ export default function DragDropContentPage() {
                       className="px-5 py-2.5 bg-gradient-primary text-white rounded-xl text-xs font-extrabold shadow-md hover:scale-[1.02] active:scale-95 transition-all flex items-center gap-1.5"
                     >
                       <span className="material-symbols-outlined text-sm">save</span>
-                      <span>{loading ? 'Menyimpan...' : 'Simpan Kartu ke Database'}</span>
+                      <span>{loading ? 'Menyimpan...' : 'Simpan Kartu'}</span>
                     </button>
                   </div>
                 </form>

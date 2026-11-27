@@ -281,7 +281,7 @@ export default function DashboardPage() {
               </div>
 
               <div className="mt-6 pt-4 border-t border-outline-variant/15 flex justify-between items-center">
-                <span className="text-xs text-on-surface-variant">PostgreSQL Neon Sync</span>
+                <span className="text-xs text-on-surface-variant">Tersinkronisasi Otomatis</span>
                 <Link to="/calendar" className="text-xs font-bold text-primary hover:underline">
                   Buka Kalender
                 </Link>

@@ -98,7 +98,7 @@ export default function Footer() {
           <p>Dikembangkan secara terstruktur & profesional oleh Amigos Team.</p>
           <div className="flex items-center gap-1.5 text-slate-500 font-medium">
             <span className="w-1.5 h-1.5 rounded-full bg-green-500"></span>
-            <span>PostgreSQL Neon Cloud Connected</span>
+            <span>Sistem Cloud Terhubung</span>
           </div>
         </div>
       </div>

@@ -123,7 +123,7 @@ export default function SetTimePage() {
             </div>
 
             <p className="text-xs font-bold text-slate-500">
-              Jadwal otomatis tersimpan ke PostgreSQL Neon Cloud
+              Jadwal tersimpan otomatis
             </p>
           </div>
 

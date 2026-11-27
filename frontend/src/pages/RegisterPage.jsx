@@ -305,7 +305,7 @@ export default function RegisterPage() {
                     {loading ? (
                       <>
                         <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                        <span>Mendaftarkan ke database PostgreSQL...</span>
+                        <span>Mendaftarkan akun...</span>
                       </>
                     ) : (
                       <span>Selesaikan Pendaftaran & Masuk</span>
@@ -322,7 +322,7 @@ export default function RegisterPage() {
                 <span className="material-symbols-outlined text-4xl">check_circle</span>
               </div>
               <h2 className="text-3xl font-extrabold text-on-surface">Pendaftaran Berhasil!</h2>
-              <p className="text-sm text-on-surface-variant max-w-sm mx-auto">Akun Anda telah berhasil dibuat di database PostgreSQL ContentHub. Mengarahkan Anda ke Dashboard...</p>
+              <p className="text-sm text-on-surface-variant max-w-sm mx-auto">Akun Anda telah berhasil dibuat. Mengarahkan Anda ke Dashboard...</p>
             </div>
           )}
 

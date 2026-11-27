@@ -22,7 +22,7 @@ export default function InvoiceReceiptPage() {
         })
         .catch(err => {
           console.error('Error fetching receipt order:', err);
-          setError('Gagal memuat struk transaksi dari database.');
+          setError('Gagal memuat struk transaksi.');
         })
         .finally(() => setLoading(false));
     }
@@ -45,7 +45,7 @@ export default function InvoiceReceiptPage() {
         <div className="max-w-md bg-white p-8 rounded-3xl border border-slate-200 shadow-md space-y-4">
           <span className="material-symbols-outlined text-4xl text-red-500">error</span>
           <h2 className="text-lg font-black text-slate-800">Struk Tidak Ditemukan</h2>
-          <p className="text-xs text-slate-500">{error || 'Nomor faktur tidak terdaftar di database.'}</p>
+          <p className="text-xs text-slate-500">{error || 'Nomor faktur tidak ditemukan.'}</p>
           <Link
             to="/transactions"
             className="inline-block py-2.5 px-5 bg-primary text-white rounded-xl text-xs font-bold shadow-xs hover:bg-primary/90"

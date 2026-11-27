@@ -13,6 +13,15 @@ export default function AdminDashboardPage() {
   // Active Admin Menu (1 s.d. 9 sesuai spesifikasi)
   const [activeMenu, setActiveMenu] = useState('dashboard');
 
+  // Reset scroll ke atas saat tab menu admin berganti
+  useEffect(() => {
+    window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
+    const mainEl = document.querySelector('main');
+    if (mainEl && typeof mainEl.scrollTo === 'function') {
+      mainEl.scrollTo({ top: 0, left: 0, behavior: 'instant' });
+    }
+  }, [activeMenu]);
+
   // Loading & Feedback
   const [loading, setLoading] = useState(true);
   const [feedbackMsg, setFeedbackMsg] = useState('');
@@ -493,7 +502,7 @@ export default function AdminDashboardPage() {
     e.preventDefault();
     try {
       const res = await api.updateContent('terms', termsData.id, termsData);
-      if (res.success) showToast('Konten Syarat & Ketentuan berhasil disimpan ke database!');
+      if (res.success) showToast('Konten Syarat & Ketentuan berhasil disimpan!');
     } catch (err) {
       alert(err.message);
     }
@@ -503,7 +512,7 @@ export default function AdminDashboardPage() {
     e.preventDefault();
     try {
       const res = await api.updateContent('privacy', privacyData.id, privacyData);
-      if (res.success) showToast('Konten Kebijakan & Privasi berhasil disimpan ke database!');
+      if (res.success) showToast('Konten Kebijakan & Privasi berhasil disimpan!');
     } catch (err) {
       alert(err.message);
     }
@@ -513,7 +522,7 @@ export default function AdminDashboardPage() {
     e.preventDefault();
     try {
       const res = await api.updateContent('partnerships', partnershipData.id, partnershipData);
-      if (res.success) showToast('Konten Kerja Sama & Integrasi Canva berhasil disimpan ke database!');
+      if (res.success) showToast('Konten Kerja Sama & Integrasi Canva berhasil disimpan!');
     } catch (err) {
       alert(err.message);
     }
@@ -523,7 +532,7 @@ export default function AdminDashboardPage() {
     e.preventDefault();
     try {
       const res = await api.updateContent('about', aboutData.id, aboutData);
-      if (res.success) showToast('Konten Profil Perusahaan About berhasil disimpan ke database!');
+      if (res.success) showToast('Konten Profil Perusahaan About berhasil disimpan!');
     } catch (err) {
       alert(err.message);
     }
@@ -744,7 +753,7 @@ export default function AdminDashboardPage() {
                 <span className="text-[10px] font-extrabold uppercase px-2.5 py-0.5 rounded-full bg-primary/10 text-primary">
                   Panel Administrator
                 </span>
-                <span className="text-xs text-slate-400">• Database: PostgreSQL / Neon</span>
+                <span className="text-xs text-slate-400">• Status: Tersinkronisasi Otomatis</span>
               </div>
               <h1 className="text-2xl md:text-3xl font-extrabold text-slate-900">
                 {adminMenuItems.find((m) => m.key === activeMenu)?.label || 'Dashboard'}
@@ -785,7 +794,7 @@ export default function AdminDashboardPage() {
                     </p>
                     <span className="text-[10px] font-bold text-green-600 flex items-center gap-1">
                       <span className="material-symbols-outlined text-xs">verified</span>
-                      Terverifikasi Database
+                      Terverifikasi Sistem
                     </span>
                   </div>
 
@@ -874,7 +883,7 @@ export default function AdminDashboardPage() {
                           Daftar Transaksi Pembelian Subscription (Tabel Orders)
                         </h2>
                         <p className="text-xs text-slate-500 mt-0.5">
-                          Terhubung langsung ke tabel PostgreSQL <code className="text-primary font-mono font-bold">orders</code> Neon Cloud dengan timestamp presisi zona waktu WITA.
+                          Terhubung langsung ke sistem pencatatan transaksi dengan timestamp presisi zona waktu WITA.
                         </p>
                       </div>
                       <div className="flex items-center gap-2">
@@ -1277,7 +1286,7 @@ export default function AdminDashboardPage() {
                 <div>
                   <div className="flex items-center gap-2 mb-1">
                     <span className="text-[10px] font-extrabold uppercase tracking-widest bg-purple-50 text-purple-700 px-2.5 py-0.5 rounded-md border border-purple-200">
-                      PostgreSQL Neon Live Database
+                      Live System Sync
                     </span>
                     <span className="text-xs text-slate-400 font-semibold">• Monitoring Seluruh UMKM</span>
                   </div>
@@ -2227,7 +2236,7 @@ export default function AdminDashboardPage() {
                     className="px-6 py-2.5 bg-cyan-700 text-white rounded-xl text-xs font-bold shadow-md hover:bg-cyan-800 flex items-center gap-1.5"
                   >
                     <span className="material-symbols-outlined text-sm">save</span>
-                    Simpan Konten Kerja Sama ke Database
+                    Simpan Konten Kerja Sama
                   </button>
                 </div>
               </form>
@@ -2312,7 +2321,7 @@ export default function AdminDashboardPage() {
                       Riwayat Aktivitas & Audit Log Artikel (Catatan Semua Admin)
                     </h3>
                     <p className="text-xs text-slate-500">
-                      Seluruh pembaruan, penambahan, dan penghapusan artikel oleh Admin (Jerry Hernis, Fauzul Rozaq, Firman syah, Zico) otomatis tercatat permanen di database Neon.
+                      Seluruh pembaruan, penambahan, dan penghapusan artikel oleh Admin (Jerry Hernis, Fauzul Rozaq, Firman syah, Zico) otomatis tersimpan di sistem.
                     </p>
                   </div>
                   <span className="px-3 py-1 bg-primary/10 text-primary text-xs font-bold rounded-full w-fit">
@@ -2449,7 +2458,7 @@ export default function AdminDashboardPage() {
                     className="px-6 py-2.5 bg-primary text-white rounded-xl text-xs font-bold shadow-md hover:bg-primary/90 flex items-center gap-1.5"
                   >
                     <span className="material-symbols-outlined text-sm">save</span>
-                    Simpan Profil About ke Database
+                    Simpan Profil About
                   </button>
                 </div>
               </form>

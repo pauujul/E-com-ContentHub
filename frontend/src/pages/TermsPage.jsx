@@ -60,7 +60,7 @@ export default function TermsPage() {
         {loading ? (
           <div className="text-center py-24">
             <div className="inline-block animate-spin rounded-full h-10 w-10 border-4 border-primary border-t-transparent"></div>
-            <p className="mt-4 text-xs font-bold text-slate-400">Memuat Syarat & Ketentuan dari database...</p>
+            <p className="mt-4 text-xs font-bold text-slate-400">Loading...</p>
           </div>
         ) : content ? (
           <article className="space-y-6 animate-in fade-in duration-200">

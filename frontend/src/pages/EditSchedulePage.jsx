@@ -95,7 +95,7 @@ export default function EditSchedulePage() {
       }, 1000);
     } catch (err) {
       console.error('Error updating post:', err);
-      setErrorMsg('Gagal menyimpan perubahan ke database.');
+      setErrorMsg('Gagal menyimpan perubahan jadwal.');
     }
   };
 
@@ -115,7 +115,7 @@ export default function EditSchedulePage() {
                 {postId ? 'Edit Jadwal Konten' : 'Buat Jadwal Baru'}
               </h1>
               <p className="text-xs text-slate-500 mt-1">
-                Perubahan tersimpan secara instan dan permanen ke database PostgreSQL Neon.
+                Perubahan tersimpan secara instan dan otomatis.
               </p>
             </div>
             <div className="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center text-primary flex-shrink-0">
@@ -126,7 +126,7 @@ export default function EditSchedulePage() {
           {savedAlert && (
             <div className="p-4 bg-emerald-50 text-emerald-700 rounded-xl text-xs font-bold flex items-center gap-2 border border-emerald-200">
               <span className="material-symbols-outlined text-base">check_circle</span>
-              Perubahan jadwal berhasil disimpan ke database Neon!
+              Perubahan jadwal berhasil disimpan!
             </div>
           )}
 
@@ -254,7 +254,7 @@ export default function EditSchedulePage() {
                   className="px-6 py-3 bg-gradient-primary text-white font-extrabold text-xs rounded-xl shadow-md hover:scale-[1.02] active:scale-95 transition-all flex items-center gap-1.5"
                 >
                   <span className="material-symbols-outlined text-sm">save</span>
-                  Simpan ke Database PostgreSQL
+                  Simpan Perubahan Jadwal
                 </button>
               </div>
             </form>

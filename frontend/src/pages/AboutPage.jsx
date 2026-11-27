@@ -9,7 +9,7 @@ export default function AboutPage() {
     {
       name: 'Jerry Hernis',
       role: 'Lead Architect & Product Owner',
-      desc: 'Sistem Arsitektur Backend & Database Neon',
+      desc: 'Sistem Arsitektur Backend & Cloud Platform',
       initials: 'JH',
       bgStyle: 'bg-primary-fixed text-primary',
       photo_url: '/4.jpg',
