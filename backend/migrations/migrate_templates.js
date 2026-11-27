@@ -67,6 +67,26 @@ const sampleTemplates = [
     thumbnail_url: 'https://images.unsplash.com/photo-1522202176988-66273c2fd55f?w=800&fit=crop',
     canva_url: 'https://www.canva.com/design/DAGTemplatePollingStory/view?mode=preview',
     is_active: true
+  },
+  {
+    title: 'Fashion Elegant Lookbook Beige',
+    description: 'Format feed portrait elegan 4:5 untuk katalog koleksi pakaian, model OOTD, dan produk fashion.',
+    category: 'Promosi',
+    format_ratio: '4:5',
+    access_tier: 'premium',
+    thumbnail_url: 'https://images.unsplash.com/photo-1490481651871-ab68de25d43d?w=800&fit=crop',
+    canva_url: 'https://www.canva.com/design/DAGTemplateFashionLookbook/view?mode=preview',
+    is_active: true
+  },
+  {
+    title: 'Inspirasi Visual & Ide Konten Estetik',
+    description: 'Template feed portrait 4:5 dengan tipografi bersih untuk berbagi inspirasi visual dan moodboard harian.',
+    category: 'Engagement',
+    format_ratio: '4:5',
+    access_tier: 'free',
+    thumbnail_url: 'https://images.unsplash.com/photo-1445205170230-053b83016050?w=800&fit=crop',
+    canva_url: 'https://www.canva.com/design/DAGTemplateVisualInspirasi/view?mode=preview',
+    is_active: true
   }
 ];
 

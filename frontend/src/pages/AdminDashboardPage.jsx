@@ -2048,7 +2048,9 @@ export default function AdminDashboardPage() {
                 templateCategoryFilter === 'all' || item.category === templateCategoryFilter;
 
               const matchesFormat =
-                templateFormatFilter === 'all' || item.format_ratio === templateFormatFilter;
+                templateFormatFilter === 'all' ||
+                item.format_ratio === templateFormatFilter ||
+                (item.format_ratio && item.format_ratio.includes(templateFormatFilter));
 
               const matchesTier =
                 templateTierFilter === 'all' ||
@@ -2151,6 +2153,7 @@ export default function AdminDashboardPage() {
                     >
                       <option value="all">Semua Format</option>
                       <option value="1:1">Format 1:1 (Square)</option>
+                      <option value="4:5">Format 4:5 (Portrait Feed)</option>
                       <option value="9:16">Format 9:16 (Story/Reels)</option>
                     </select>
 
@@ -4036,6 +4039,7 @@ export default function AdminDashboardPage() {
                       className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl font-bold text-slate-700 focus:outline-none focus:ring-2 focus:ring-primary/20 cursor-pointer"
                     >
                       <option value="1:1">1:1 (Square Feed)</option>
+                      <option value="4:5">4:5 (Portrait Feed Instagram)</option>
                       <option value="9:16">9:16 (Story / Reels / TikTok)</option>
                     </select>
                   </div>

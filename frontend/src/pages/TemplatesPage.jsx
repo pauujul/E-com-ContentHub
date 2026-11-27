@@ -80,6 +80,9 @@ export default function TemplatesPage() {
     } else if (activeFilter === '1:1') {
       const fmt = t.format_ratio || t.format || '';
       matchesFilter = fmt.includes('1:1');
+    } else if (activeFilter === '4:5') {
+      const fmt = t.format_ratio || t.format || '';
+      matchesFilter = fmt.includes('4:5');
     } else if (activeFilter === '9:16') {
       const fmt = t.format_ratio || t.format || '';
       matchesFilter = fmt.includes('9:16');
@@ -94,6 +97,7 @@ export default function TemplatesPage() {
     { key: 'Edukasi', label: 'Edukasi' },
     { key: 'Engagement', label: 'Engagement' },
     { key: '1:1', label: 'Format 1:1' },
+    { key: '4:5', label: 'Format 4:5' },
     { key: '9:16', label: 'Format 9:16' },
   ];
 
