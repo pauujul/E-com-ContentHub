@@ -360,7 +360,7 @@ export default function PricingSection({
             </div>
             {navigate ? (
               <Link
-                to="/help"
+                to={typeof window !== 'undefined' && window.location.search.includes('mode=workspace') ? '/help?mode=workspace' : '/help'}
                 className="px-6 py-3 bg-white border border-slate-200 rounded-xl text-xs font-bold text-slate-800 hover:bg-slate-50 transition-colors whitespace-nowrap shadow-xs"
               >
                 Buka Pusat Bantuan

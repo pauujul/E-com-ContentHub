@@ -387,7 +387,7 @@ export default function DashboardPage() {
                   <span>Pilih Desain Template</span>
                 </Link>
 
-                <Link to="/pricing" className="flex items-center gap-3 p-3 rounded-xl hover:bg-surface-container-low transition-colors text-sm font-semibold text-on-surface">
+                <Link to="/pricing?mode=workspace" className="flex items-center gap-3 p-3 rounded-xl hover:bg-surface-container-low transition-colors text-sm font-semibold text-on-surface">
                   <span className="material-symbols-outlined text-green-600">credit_card</span>
                   <span>Paket Hero Rp98rb & Invoice</span>
                 </Link>

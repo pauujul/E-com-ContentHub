@@ -180,7 +180,7 @@ export default function PaymentMethodPage() {
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
           <div className="flex items-center gap-3">
             <Link
-              to="/pricing"
+              to={currentUser ? "/pricing?mode=workspace" : "/pricing"}
               className="p-2.5 rounded-2xl border border-outline-variant/30 text-on-surface-variant hover:text-primary hover:border-primary/50 transition-all shadow-xs"
               title="Kembali ke Pilihan Paket"
             >
@@ -453,7 +453,7 @@ export default function PaymentMethodPage() {
                   <span className="block font-bold text-sm text-on-surface">{plan?.name}</span>
                   <span className="text-xs text-on-surface-variant">Siklus: {plan?.billing_cycle}</span>
                 </div>
-                <Link to="/pricing" className="text-xs font-bold text-primary hover:underline">
+                <Link to={currentUser ? "/pricing?mode=workspace" : "/pricing"} className="text-xs font-bold text-primary hover:underline">
                   Ubah
                 </Link>
               </div>
